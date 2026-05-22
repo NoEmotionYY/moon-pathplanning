@@ -1,0 +1,2 @@
+// Core search types do not import other Moon PathPlanning packages.
+

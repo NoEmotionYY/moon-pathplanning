@@ -17,6 +17,7 @@
 - 已创建 README 基础框架，后续阶段补充示例和运行说明。
 - 已创建中文执行日志，后续每个实质阶段随代码和文档一起更新。
 - 已补充设计、迁移、API 和路线图文档，明确参考项目归属与阶段路线。
+- 已实现 `src/core` 坐标、搜索状态、搜索结果和搜索错误类型。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -29,7 +30,8 @@
 
 ### 核心模块
 
-- 尚未开始源码模块。
+- 已实现 `Point` / `Coord` 坐标类型与坐标 key 转换。
+- 已实现 `SearchStatus`、`SearchError` 和 `PathResult` 统一结果模型。
 
 ### 算法模块
 
@@ -51,13 +53,14 @@
 
 ## 未完成内容
 
-- 需要实现基础类型、网格地图、图结构、启发函数和五类搜索算法。
+- 需要实现网格地图、图结构、启发函数和五类搜索算法。
 - 需要补充 Planner、JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
 
 ## 当前 commit 记录摘要
 
 ```bash
+b814715 添加项目设计文档与迁移说明
 f18cf61 初始化 MoonBit 项目结构与许可证
 ```
 
@@ -85,6 +88,7 @@ git add .
 git commit -m "初始化 MoonBit 项目结构与许可证"
 git log --oneline -n 20
 git show --stat --oneline HEAD
+git commit -m "添加项目设计文档与迁移说明"
 ```
 
 ## 测试结果记录
@@ -102,9 +106,8 @@ git show --stat --oneline HEAD
 
 ## 下一次执行必须从这里继续
 
-下一次执行应从 `src/core/point.mbt`、`src/core/result.mbt` 和
-`src/core/error.mbt` 开始，实现坐标、搜索状态、搜索结果与错误类型。不要重复
-初始化 Git 仓库，不要重复创建设计与迁移文档。
+下一次执行应从 `src/grid/grid_map.mbt` 开始，实现网格尺寸、端点、障碍物和地形
+代价存储，再在移动阶段补充邻居生成。不要重复实现 `src/core` 基础类型。
 
 ## 不要重复执行的事项
 
@@ -115,9 +118,9 @@ git show --stat --oneline HEAD
 
 ## 本次执行结束状态
 
-- 本次完成：已完成工程根骨架、中文执行日志、设计文档和迁移说明。
-- 本次新增 commit：已创建 `初始化 MoonBit 项目结构与许可证`，文档阶段提交待创建。
+- 本次完成：已完成工程根骨架、文档说明和 `src/core` 基础类型。
+- 本次新增 commit：已创建前两条有效 commit，核心类型阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交文档阶段后开始实现 `src/core` 基础类型。
+- 下一步：提交核心类型后实现二维网格地图模型。
