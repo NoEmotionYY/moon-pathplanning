@@ -26,3 +26,20 @@ test "astar avoids expensive weighted cell" {
   assert_eq(result.total_cost, 4.0)
 }
 
+///|
+test "bidirectional astar merges both search fronts" {
+  let map = @grid.new_grid(
+    5,
+    3,
+    @core.point(0, 1),
+    @core.point(4, 1),
+  ).with_obstacles([@core.point(2, 1)])
+  let result = @algorithms.bidirectional_astar(
+    map,
+    @grid.FourWay,
+    @heuristics.Manhattan,
+  )
+  assert_eq(result.status is @core.Found, true)
+  assert_eq(result.path.length(), 7)
+}
+
