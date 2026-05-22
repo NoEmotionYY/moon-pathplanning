@@ -1,0 +1,9 @@
+target/
+.mooncakes/
+.DS_Store
+Thumbs.db
+*.wasm
+*.wat
+*.core
+*.log
+
