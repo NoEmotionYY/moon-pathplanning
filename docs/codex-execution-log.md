@@ -14,8 +14,9 @@
 - 本次启动时工作目录为空，未发现已有用户文件。
 - 本次启动时目录不是 Git 仓库，已初始化 `main` 分支仓库。
 - 已创建 MoonBit 模块配置、根包描述文件、忽略规则和 MIT 许可证。
-- 已创建 README 基础框架，后续阶段补充 API、示例和运行说明。
+- 已创建 README 基础框架，后续阶段补充示例和运行说明。
 - 已创建中文执行日志，后续每个实质阶段随代码和文档一起更新。
+- 已补充设计、迁移、API 和路线图文档，明确参考项目归属与阶段路线。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -42,6 +43,7 @@
 
 - 已创建 README 基础介绍。
 - 已创建本执行日志。
+- 已创建设计说明、迁移说明、API 草案和路线图。
 
 ### CI / CLI / 示例
 
@@ -49,7 +51,6 @@
 
 ## 未完成内容
 
-- 需要补充设计、迁移、API 和路线图文档。
 - 需要实现基础类型、网格地图、图结构、启发函数和五类搜索算法。
 - 需要补充 Planner、JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
@@ -57,7 +58,7 @@
 ## 当前 commit 记录摘要
 
 ```bash
-尚无 commit
+f18cf61 初始化 MoonBit 项目结构与许可证
 ```
 
 ## 当前远程仓库状态
@@ -80,6 +81,10 @@ git log --oneline -n 20
 Get-ChildItem -File -Recurse -Depth 2 -Force
 moon version
 git init -b main
+git add .
+git commit -m "初始化 MoonBit 项目结构与许可证"
+git log --oneline -n 20
+git show --stat --oneline HEAD
 ```
 
 ## 测试结果记录
@@ -92,13 +97,14 @@ git init -b main
 ## 当前已知问题
 
 - 当前环境缺少可调用的 MoonBit 工具链，无法在本地验证 MoonBit 源码语法和测试。
+- 沙箱用户与仓库所有者不同，Git 命令需要带 `safe.directory` 参数避免所有权拦截。
 - 当前远程仓库尚未配置，push 与双端同步尚未验证。
 
 ## 下一次执行必须从这里继续
 
-下一次执行应先补充 `docs/design.md`、`docs/migration-from-pathplanning.md`、
-`docs/api.md` 和 `docs/roadmap.md`，然后开始 `src/core` 基础类型实现。不要重复
-初始化 Git 仓库，不要重复创建 MIT 许可证。
+下一次执行应从 `src/core/point.mbt`、`src/core/result.mbt` 和
+`src/core/error.mbt` 开始，实现坐标、搜索状态、搜索结果与错误类型。不要重复
+初始化 Git 仓库，不要重复创建设计与迁移文档。
 
 ## 不要重复执行的事项
 
@@ -109,10 +115,9 @@ git init -b main
 
 ## 本次执行结束状态
 
-- 本次完成：已完成第一阶段工程根骨架与中文执行日志。
-- 本次新增 commit：首个有效 commit 待创建。
+- 本次完成：已完成工程根骨架、中文执行日志、设计文档和迁移说明。
+- 本次新增 commit：已创建 `初始化 MoonBit 项目结构与许可证`，文档阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交工程骨架后补充项目设计与迁移文档。
-
+- 下一步：提交文档阶段后开始实现 `src/core` 基础类型。
