@@ -26,6 +26,7 @@
 - 已实现 Dijkstra 按移动和地形代价求解加权网格路径。
 - 已实现 A 星启发式搜索并接入启发函数选择。
 - 已实现双向 A 星的双 frontier 推进、会合路径合并和路径代价计算。
+- 已实现 Planner 算法调度入口、默认选项和八方向选项。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -51,6 +52,7 @@
 - 已实现 Dijkstra 加权路径搜索。
 - 已实现 A 星加权启发式搜索。
 - 已实现双向 A 星搜索。
+- 已实现 Planner 对五类算法的统一 `plan()` 调度。
 
 ### 测试模块
 
@@ -59,6 +61,7 @@
 - 已创建 `test/bfs_test.mbt`，覆盖 BFS 绕行路径与 DFS 可达场景。
 - 已创建 `test/dijkstra_test.mbt`，覆盖高代价 terrain 绕行。
 - 已创建 `test/astar_test.mbt`，覆盖 A 星权重绕行、BFS/Dijkstra 一致性和双向 A 星合并路径。
+- 已创建 `test/planner_test.mbt` 和 `test/no_path_test.mbt`，覆盖调度、八方向、无路径和非法端点。
 
 ### 文档模块
 
@@ -72,12 +75,13 @@
 
 ## 未完成内容
 
-- 需要补充 Planner、JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
+- 需要补充 JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
 
 ## 当前 commit 记录摘要
 
 ```bash
+704ba9f 实现双向 A 星路径搜索
 af18a6f 实现 A 星启发式路径搜索
 4281ba7 实现 Dijkstra 加权路径搜索
 a7cb3ab 实现 BFS 与 DFS 网格搜索
@@ -123,6 +127,7 @@ git commit -m "实现路径搜索启发函数模块"
 git commit -m "实现 BFS 与 DFS 网格搜索"
 git commit -m "实现 Dijkstra 加权路径搜索"
 git commit -m "实现 A 星启发式路径搜索"
+git commit -m "实现双向 A 星路径搜索"
 ```
 
 ## 测试结果记录
@@ -140,8 +145,8 @@ git commit -m "实现 A 星启发式路径搜索"
 
 ## 下一次执行必须从这里继续
 
-下一次执行应从 `src/planner/planner.mbt` 开始，实现 `AlgorithmType`、
-`PlannerOptions` 与统一 `plan()` 调度，并补充 Planner 和无路径测试。
+下一次执行应从 `src/io/json_map.mbt` 和 `examples/*.json` 开始，固定示例地图
+schema 与基础序列化，并记录 JSON 文件解析限制。
 
 ## 不要重复执行的事项
 
@@ -152,9 +157,9 @@ git commit -m "实现 A 星启发式路径搜索"
 
 ## 本次执行结束状态
 
-- 本次完成：已完成 BFS、DFS、Dijkstra、A 星和双向 A 星搜索。
-- 本次新增 commit：已创建前十条有效 commit，双向 A 星阶段提交待创建。
+- 本次完成：已完成五类搜索算法与统一 Planner 调度测试。
+- 本次新增 commit：已创建前十一条有效 commit，Planner 阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交双向 A 星阶段后实现统一 Planner。
+- 下一步：提交 Planner 阶段后实现 JSON 示例与序列化。

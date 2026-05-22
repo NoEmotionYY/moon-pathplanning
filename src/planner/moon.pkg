@@ -3,5 +3,5 @@ import {
   "NoEmotionYY/moon-pathplanning/src/grid" @grid,
   "NoEmotionYY/moon-pathplanning/src/heuristics" @heuristics,
   "NoEmotionYY/moon-pathplanning/src/algorithms" @algorithms,
-  "NoEmotionYY/moon-pathplanning/src/planner" @planner,
 }
+
