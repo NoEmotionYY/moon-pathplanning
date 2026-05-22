@@ -20,6 +20,7 @@
 - 已实现 `src/core` 坐标、搜索状态、搜索结果和搜索错误类型。
 - 已实现 `src/grid` 网格尺寸、端点、障碍物与地形代价基础模型。
 - 已实现四方向与八方向移动邻居生成，并创建网格基础测试。
+- 已实现加权图节点、边、邻接查询和基础增删接口。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -36,6 +37,7 @@
 - 已实现 `SearchStatus`、`SearchError` 和 `PathResult` 统一结果模型。
 - 已实现 `GridMap` 合法性检查、障碍物判断和地形代价查询。
 - 已实现 `MovementMode`、邻居点和移动代价生成。
+- 已实现 `WeightedGraph` 与 `WeightedEdge` 的基础图结构接口。
 
 ### 算法模块
 
@@ -57,13 +59,14 @@
 
 ## 未完成内容
 
-- 需要实现图结构、启发函数和五类搜索算法。
+- 需要实现启发函数和五类搜索算法。
 - 需要补充 Planner、JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
 
 ## 当前 commit 记录摘要
 
 ```bash
+db88579 添加四方向与八方向移动支持
 a74bfc8 实现二维网格地图基础模型
 7c07ec4 实现核心坐标与搜索结果类型
 b814715 添加项目设计文档与迁移说明
@@ -97,6 +100,7 @@ git show --stat --oneline HEAD
 git commit -m "添加项目设计文档与迁移说明"
 git commit -m "实现核心坐标与搜索结果类型"
 git commit -m "实现二维网格地图基础模型"
+git commit -m "添加四方向与八方向移动支持"
 ```
 
 ## 测试结果记录
@@ -114,8 +118,8 @@ git commit -m "实现二维网格地图基础模型"
 
 ## 下一次执行必须从这里继续
 
-下一次执行应从 `src/graph/weighted_graph.mbt` 开始，实现节点、边和邻接查询，再
-继续启发函数模块。不要重复补充网格移动模式。
+下一次执行应从 `src/heuristics/heuristics.mbt` 开始，实现 Manhattan、Euclidean、
+Chebyshev 与 Octile 启发函数并补充测试。不要重复实现 `WeightedGraph`。
 
 ## 不要重复执行的事项
 
@@ -126,9 +130,9 @@ git commit -m "实现二维网格地图基础模型"
 
 ## 本次执行结束状态
 
-- 本次完成：已完成工程根骨架、文档说明、核心类型、网格模型和移动测试。
-- 本次新增 commit：已创建前四条有效 commit，网格移动阶段提交待创建。
+- 本次完成：已完成工程根骨架、核心类型、网格模型、移动测试和通用加权图。
+- 本次新增 commit：已创建前五条有效 commit，加权图阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交网格移动阶段后实现通用加权图。
+- 下一步：提交加权图阶段后实现启发函数模块。
