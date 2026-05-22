@@ -24,6 +24,7 @@
 - 已实现 Manhattan、Euclidean、Chebyshev 与 Octile 启发函数。
 - 已实现 BFS、DFS、路径回溯和算法包内部搜索辅助结构。
 - 已实现 Dijkstra 按移动和地形代价求解加权网格路径。
+- 已实现 A 星启发式搜索并接入启发函数选择。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -47,6 +48,7 @@
 - 已实现四种网格路径启发函数和启发函数选择器。
 - 已实现 BFS 与 DFS 网格搜索，统一返回 `PathResult`。
 - 已实现 Dijkstra 加权路径搜索。
+- 已实现 A 星加权启发式搜索。
 
 ### 测试模块
 
@@ -54,6 +56,7 @@
 - 已创建 `test/heuristics_test.mbt`，覆盖常用距离公式结果。
 - 已创建 `test/bfs_test.mbt`，覆盖 BFS 绕行路径与 DFS 可达场景。
 - 已创建 `test/dijkstra_test.mbt`，覆盖高代价 terrain 绕行。
+- 已创建 `test/astar_test.mbt`，覆盖 A 星权重绕行与 BFS/Dijkstra 基础一致性。
 
 ### 文档模块
 
@@ -67,13 +70,14 @@
 
 ## 未完成内容
 
-- 需要实现 A 星和双向 A 星搜索算法。
+- 需要实现双向 A 星搜索算法。
 - 需要补充 Planner、JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
 
 ## 当前 commit 记录摘要
 
 ```bash
+4281ba7 实现 Dijkstra 加权路径搜索
 a7cb3ab 实现 BFS 与 DFS 网格搜索
 66dd751 实现路径搜索启发函数模块
 4db6880 实现通用加权图结构
@@ -115,6 +119,7 @@ git commit -m "添加四方向与八方向移动支持"
 git commit -m "实现通用加权图结构"
 git commit -m "实现路径搜索启发函数模块"
 git commit -m "实现 BFS 与 DFS 网格搜索"
+git commit -m "实现 Dijkstra 加权路径搜索"
 ```
 
 ## 测试结果记录
@@ -132,8 +137,8 @@ git commit -m "实现 BFS 与 DFS 网格搜索"
 
 ## 下一次执行必须从这里继续
 
-下一次执行应从 `src/algorithms/astar.mbt` 开始，接入启发函数和加权代价，再补充
-A 星测试。不要重复实现 Dijkstra。
+下一次执行应从 `src/algorithms/bidirectional_astar.mbt` 开始，实现双向 frontier、
+会合路径合并和基础测试。不要重复实现单向 A 星。
 
 ## 不要重复执行的事项
 
@@ -144,9 +149,9 @@ A 星测试。不要重复实现 Dijkstra。
 
 ## 本次执行结束状态
 
-- 本次完成：已完成核心模型、BFS、DFS 与 Dijkstra 加权搜索。
-- 本次新增 commit：已创建前八条有效 commit，Dijkstra 阶段提交待创建。
+- 本次完成：已完成 BFS、DFS、Dijkstra 与 A 星路径搜索。
+- 本次新增 commit：已创建前九条有效 commit，A 星阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交 Dijkstra 阶段后实现 A 星搜索。
+- 下一步：提交 A 星阶段后实现双向 A 星。
