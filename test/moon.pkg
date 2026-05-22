@@ -5,4 +5,5 @@ import {
   "NoEmotionYY/moon-pathplanning/src/algorithms" @algorithms,
   "NoEmotionYY/moon-pathplanning/src/planner" @planner,
   "NoEmotionYY/moon-pathplanning/src/io" @json_map,
+  "NoEmotionYY/moon-pathplanning/src/visualize" @svg,
 }
