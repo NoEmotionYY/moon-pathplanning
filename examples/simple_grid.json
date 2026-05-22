@@ -1,0 +1,11 @@
+{
+  "format": "moon-pathplanning.grid.v1",
+  "width": 6,
+  "height": 5,
+  "start": [0, 0],
+  "goal": [5, 4],
+  "movement": "four_way",
+  "obstacles": [[1, 1], [1, 2], [2, 2], [4, 3]],
+  "terrain": []
+}
+

@@ -1,0 +1,15 @@
+{
+  "format": "moon-pathplanning.grid.v1",
+  "width": 7,
+  "height": 5,
+  "start": [0, 2],
+  "goal": [6, 2],
+  "movement": "eight_way",
+  "obstacles": [[2, 1], [2, 2], [2, 3], [4, 1]],
+  "terrain": [
+    {"point": [3, 2], "cost": 6.0},
+    {"point": [4, 2], "cost": 4.0},
+    {"point": [5, 1], "cost": 2.0}
+  ]
+}
+

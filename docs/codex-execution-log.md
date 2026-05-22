@@ -27,6 +27,7 @@
 - 已实现 A 星启发式搜索并接入启发函数选择。
 - 已实现双向 A 星的双 frontier 推进、会合路径合并和路径代价计算。
 - 已实现 Planner 算法调度入口、默认选项和八方向选项。
+- 已添加 v1 JSON 地图示例和基础 JSON 序列化。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -71,16 +72,17 @@
 
 ### CI / CLI / 示例
 
-- 尚未创建 CI、CLI 和示例地图。
+- 已创建 `examples/simple_grid.json` 与 `examples/weighted_grid.json`。
 
 ## 未完成内容
 
-- 需要补充 JSON 示例与序列化、SVG 导出、CLI、benchmark 说明与 CI。
+- 需要补充 SVG 导出、CLI、benchmark 说明与 CI。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
 
 ## 当前 commit 记录摘要
 
 ```bash
+c22e95d 添加统一 Planner 调度入口
 704ba9f 实现双向 A 星路径搜索
 af18a6f 实现 A 星启发式路径搜索
 4281ba7 实现 Dijkstra 加权路径搜索
@@ -128,6 +130,7 @@ git commit -m "实现 BFS 与 DFS 网格搜索"
 git commit -m "实现 Dijkstra 加权路径搜索"
 git commit -m "实现 A 星启发式路径搜索"
 git commit -m "实现双向 A 星路径搜索"
+git commit -m "添加统一 Planner 调度入口"
 ```
 
 ## 测试结果记录
@@ -141,12 +144,13 @@ git commit -m "实现双向 A 星路径搜索"
 
 - 当前环境缺少可调用的 MoonBit 工具链，无法在本地验证 MoonBit 源码语法和测试。
 - 沙箱用户与仓库所有者不同，Git 命令需要带 `safe.directory` 参数避免所有权拦截。
+- JSON v1 当前只实现序列化和示例 schema，完整文件解析仍需在可用工具链下选定 JSON 依赖边界。
 - 当前远程仓库尚未配置，push 与双端同步尚未验证。
 
 ## 下一次执行必须从这里继续
 
-下一次执行应从 `src/io/json_map.mbt` 和 `examples/*.json` 开始，固定示例地图
-schema 与基础序列化，并记录 JSON 文件解析限制。
+下一次执行应从 `src/visualize/svg_exporter.mbt` 开始，导出网格、起点、终点、
+障碍物和路径 SVG 字符串，并补充示例说明。不要重复创建 JSON 示例地图。
 
 ## 不要重复执行的事项
 
@@ -157,9 +161,9 @@ schema 与基础序列化，并记录 JSON 文件解析限制。
 
 ## 本次执行结束状态
 
-- 本次完成：已完成五类搜索算法与统一 Planner 调度测试。
-- 本次新增 commit：已创建前十一条有效 commit，Planner 阶段提交待创建。
+- 本次完成：已完成 Planner、JSON 示例地图和 v1 JSON 序列化。
+- 本次新增 commit：已创建前十二条有效 commit，JSON 阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交 Planner 阶段后实现 JSON 示例与序列化。
+- 下一步：提交 JSON 阶段后实现 SVG 路径导出。
