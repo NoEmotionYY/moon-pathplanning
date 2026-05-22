@@ -1,0 +1,24 @@
+name: MoonBit CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  moon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+      - name: Export MoonBit path
+        run: echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Show toolchain
+        run: moon version
+      - name: Check
+        run: moon check
+      - name: Test
+        run: moon test
+

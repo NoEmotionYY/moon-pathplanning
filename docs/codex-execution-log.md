@@ -11,27 +11,14 @@
 
 ## 当前项目状态摘要
 
-- 本次启动时工作目录为空，未发现已有用户文件。
-- 本次启动时目录不是 Git 仓库，已初始化 `main` 分支仓库。
-- 已创建 MoonBit 模块配置、根包描述文件、忽略规则和 MIT 许可证。
-- 已创建 README 基础框架，后续阶段补充示例和运行说明。
-- 已创建中文执行日志，后续每个实质阶段随代码和文档一起更新。
-- 已补充设计、迁移、API 和路线图文档，明确参考项目归属与阶段路线。
-- 已实现 `src/core` 坐标、搜索状态、搜索结果和搜索错误类型。
-- 已实现 `src/grid` 网格尺寸、端点、障碍物与地形代价基础模型。
-- 已实现四方向与八方向移动邻居生成，并创建网格基础测试。
-- 已实现加权图节点、边、邻接查询和基础增删接口。
-- 已实现 Manhattan、Euclidean、Chebyshev 与 Octile 启发函数。
-- 已实现 BFS、DFS、路径回溯和算法包内部搜索辅助结构。
-- 已实现 Dijkstra 按移动和地形代价求解加权网格路径。
-- 已实现 A 星启发式搜索并接入启发函数选择。
-- 已实现双向 A 星的双 frontier 推进、会合路径合并和路径代价计算。
-- 已实现 Planner 算法调度入口、默认选项和八方向选项。
-- 已添加 v1 JSON 地图示例和基础 JSON 序列化。
-- 已实现 SVG 导出，覆盖网格、起点、终点、障碍物和路径图层。
-- 已添加 CLI demo、示例说明和 benchmark 记录入口。
-- 当前尚未配置 GitHub 与 GitLink 远程仓库。
-- 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
+- 仓库已从空目录初始化为 `main` 分支 MoonBit 工程，具备 MIT 许可证、README、CHANGELOG 和 CI。
+- 已完成中文执行日志、设计说明、迁移说明、API 文档、路线图和示例说明。
+- 已实现 `src/core`、`src/grid`、`src/graph` 与 `src/heuristics` 基础模型。
+- 已实现 BFS、DFS、Dijkstra、A 星、双向 A 星和统一 Planner。
+- 已创建 MoonBit 测试，覆盖普通路径、障碍绕行、权重地图、无路径、非法输入和算法调度。
+- 已实现 JSON v1 schema 示例与序列化、SVG 导出、CLI demo 和 benchmark 说明。
+- 已配置 GitHub `origin` 与 GitLink `gitlink` 远程仓库，push 尚待最终提交后执行。
+- 已实际执行 `moon version`、`moon check` 与 `moon test`，均因当前环境没有 `moon` 命令失败。
 
 ## 已完成内容
 
@@ -77,15 +64,18 @@
 - 已创建 `examples/simple_grid.json` 与 `examples/weighted_grid.json`。
 - 已实现 `src/visualize/svg_exporter.mbt` SVG 字符串导出。
 - 已创建 `cli/main.mbt`、`examples/README.md` 与 `bench/benchmark_notes.md`。
+- 已创建 `.github/workflows/ci.yml`。
 
 ## 未完成内容
 
-- 需要补充 CI、CHANGELOG 和 README 完整使用说明。
-- 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
+- 需要在安装 MoonBit 工具链后重新执行 `moon check` 与 `moon test`。
+- 需要在最终提交后 push 到 GitHub 和 GitLink，并核对两端最新 commit hash。
+- 完整 JSON 文件解析、文件型 CLI 参数和高级算法仍在后续路线图中。
 
 ## 当前 commit 记录摘要
 
 ```bash
+450f312 添加 CLI 示例与基准说明
 5c52c51 添加 SVG 路径可视化导出
 ccaab9f 添加 JSON 地图示例与序列化能力
 c22e95d 添加统一 Planner 调度入口
@@ -104,10 +94,10 @@ f18cf61 初始化 MoonBit 项目结构与许可证
 
 ## 当前远程仓库状态
 
-- origin：尚未配置
-- gitlink：尚未配置
-- GitHub push 状态：尚未执行
-- GitLink push 状态：尚未执行
+- origin：https://github.com/NoEmotionYY/moon-pathplanning.git
+- gitlink：https://gitlink.org.cn/NoEmotionYY/moon-pathplanning.git
+- GitHub push 状态：最终提交后执行
+- GitLink push 状态：最终提交后执行
 - 两端是否同步：尚未验证
 
 ## 已执行命令记录
@@ -139,14 +129,20 @@ git commit -m "实现双向 A 星路径搜索"
 git commit -m "添加统一 Planner 调度入口"
 git commit -m "添加 JSON 地图示例与序列化能力"
 git commit -m "添加 SVG 路径可视化导出"
+git commit -m "添加 CLI 示例与基准说明"
+moon check
+moon test
+git remote add origin https://github.com/NoEmotionYY/moon-pathplanning.git
+git remote add gitlink https://gitlink.org.cn/NoEmotionYY/moon-pathplanning.git
+git remote -v
 ```
 
 ## 测试结果记录
 
-- 最近一次测试命令：`moon version`
-- 测试是否通过：未进入项目测试；工具链检查失败。
-- 失败原因：PowerShell 无法识别 `moon` 命令。
-- 下一步修复建议：继续完成源码与测试文件，安装或暴露 MoonBit 工具链后执行 `moon check` 与 `moon test`。
+- 最近一次测试命令：`moon test`
+- 测试是否通过：否。
+- 失败原因：PowerShell 无法识别 `moon` 命令；同轮 `moon version` 与 `moon check` 也失败。
+- 下一步修复建议：安装或暴露 MoonBit 工具链后重新执行 `moon check` 与 `moon test`。
 
 ## 当前已知问题
 
@@ -154,12 +150,13 @@ git commit -m "添加 SVG 路径可视化导出"
 - 沙箱用户与仓库所有者不同，Git 命令需要带 `safe.directory` 参数避免所有权拦截。
 - JSON v1 当前只实现序列化和示例 schema，完整文件解析仍需在可用工具链下选定 JSON 依赖边界。
 - CLI v1 当前运行内置 demo 地图，尚未接入文件型 JSON 解析参数。
-- 当前远程仓库尚未配置，push 与双端同步尚未验证。
+- 已配置远程但尚未完成 GitHub 与 GitLink push，同步结果待执行后记录。
 
 ## 下一次执行必须从这里继续
 
-下一次执行应补充 `.github/workflows/ci.yml`、`CHANGELOG.md` 和 README 完整
-快速开始、API、测试、路线图说明，然后执行可用检查与远程同步步骤。
+下一次执行应先确认 MoonBit 工具链是否可用；若仍不可用，保持测试失败记录不变。
+随后执行 `git push -u origin main` 与 `git push -u gitlink main`，核对两端 `main`
+最新 commit hash。不要重复实现现有基础算法。
 
 ## 不要重复执行的事项
 
@@ -170,9 +167,9 @@ git commit -m "添加 SVG 路径可视化导出"
 
 ## 本次执行结束状态
 
-- 本次完成：已完成 JSON、SVG、CLI demo、示例说明和 benchmark 说明。
-- 本次新增 commit：已创建前十四条有效 commit，CLI 阶段提交待创建。
-- 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
+- 本次完成：已完成初步工程源码、测试文件、示例、CLI、SVG、文档与 CI。
+- 本次新增 commit：已创建前十五条有效 commit，CI 与 README 阶段提交待创建。
+- 本次测试结果：`moon version`、`moon check` 与 `moon test` 均失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交 CLI 阶段后补充 CI、CHANGELOG 与完整 README。
+- 下一步：提交 CI 与 README 后尝试 push 到 GitHub 和 GitLink。
