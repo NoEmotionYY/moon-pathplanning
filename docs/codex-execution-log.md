@@ -29,6 +29,7 @@
 - 已实现 Planner 算法调度入口、默认选项和八方向选项。
 - 已添加 v1 JSON 地图示例和基础 JSON 序列化。
 - 已实现 SVG 导出，覆盖网格、起点、终点、障碍物和路径图层。
+- 已添加 CLI demo、示例说明和 benchmark 记录入口。
 - 当前尚未配置 GitHub 与 GitLink 远程仓库。
 - 当前 MoonBit 工具链不可用，源码完成后仍需如实记录 `moon check` 与 `moon test` 结果。
 
@@ -75,15 +76,17 @@
 
 - 已创建 `examples/simple_grid.json` 与 `examples/weighted_grid.json`。
 - 已实现 `src/visualize/svg_exporter.mbt` SVG 字符串导出。
+- 已创建 `cli/main.mbt`、`examples/README.md` 与 `bench/benchmark_notes.md`。
 
 ## 未完成内容
 
-- 需要补充 CLI、benchmark 说明与 CI。
+- 需要补充 CI、CHANGELOG 和 README 完整使用说明。
 - 需要在本地执行可用检查、形成中文 commit 历史、配置远程并尝试同步。
 
 ## 当前 commit 记录摘要
 
 ```bash
+5c52c51 添加 SVG 路径可视化导出
 ccaab9f 添加 JSON 地图示例与序列化能力
 c22e95d 添加统一 Planner 调度入口
 704ba9f 实现双向 A 星路径搜索
@@ -135,6 +138,7 @@ git commit -m "实现 A 星启发式路径搜索"
 git commit -m "实现双向 A 星路径搜索"
 git commit -m "添加统一 Planner 调度入口"
 git commit -m "添加 JSON 地图示例与序列化能力"
+git commit -m "添加 SVG 路径可视化导出"
 ```
 
 ## 测试结果记录
@@ -149,12 +153,13 @@ git commit -m "添加 JSON 地图示例与序列化能力"
 - 当前环境缺少可调用的 MoonBit 工具链，无法在本地验证 MoonBit 源码语法和测试。
 - 沙箱用户与仓库所有者不同，Git 命令需要带 `safe.directory` 参数避免所有权拦截。
 - JSON v1 当前只实现序列化和示例 schema，完整文件解析仍需在可用工具链下选定 JSON 依赖边界。
+- CLI v1 当前运行内置 demo 地图，尚未接入文件型 JSON 解析参数。
 - 当前远程仓库尚未配置，push 与双端同步尚未验证。
 
 ## 下一次执行必须从这里继续
 
-下一次执行应从 `cli/main.mbt`、`examples/README.md` 和
-`bench/benchmark_notes.md` 开始，补充演示入口、示例说明和 benchmark 说明。
+下一次执行应补充 `.github/workflows/ci.yml`、`CHANGELOG.md` 和 README 完整
+快速开始、API、测试、路线图说明，然后执行可用检查与远程同步步骤。
 
 ## 不要重复执行的事项
 
@@ -165,9 +170,9 @@ git commit -m "添加 JSON 地图示例与序列化能力"
 
 ## 本次执行结束状态
 
-- 本次完成：已完成 Planner、JSON v1 序列化和 SVG 路径可视化导出。
-- 本次新增 commit：已创建前十三条有效 commit，SVG 阶段提交待创建。
+- 本次完成：已完成 JSON、SVG、CLI demo、示例说明和 benchmark 说明。
+- 本次新增 commit：已创建前十四条有效 commit，CLI 阶段提交待创建。
 - 本次测试结果：`moon version` 失败，原因是当前环境无法识别 `moon` 命令。
 - 本次是否已 push GitHub：否。
 - 本次是否已 push GitLink：否。
-- 下一步：提交 SVG 阶段后补充 CLI、示例和 benchmark 文档。
+- 下一步：提交 CLI 阶段后补充 CI、CHANGELOG 与完整 README。

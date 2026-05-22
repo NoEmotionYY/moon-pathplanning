@@ -1,0 +1,10 @@
+import {
+  "NoEmotionYY/moon-pathplanning/src/core" @core,
+  "NoEmotionYY/moon-pathplanning/src/grid" @grid,
+  "NoEmotionYY/moon-pathplanning/src/planner" @planner,
+}
+
+options(
+  "is-main": true,
+)
+

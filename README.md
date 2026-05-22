@@ -28,6 +28,11 @@ terrain cost。当前 `src/io/json_map.mbt` 已提供可测试 JSON 序列化；
 `src/visualize/svg_exporter.mbt` 可把网格、起点、终点、障碍物和最终路径导出为
 SVG 字符串。示例和 CLI 可以把该字符串写到展示层，仓库不提交批量生成图片。
 
+## CLI demo
+
+安装 MoonBit 工具链后可在仓库根目录运行 `moon run cli`。当前 CLI 使用内置地图
+展示 Planner 与 A 星结果；JSON 文件参数导入将在解析能力验证后补充。
+
 ## License
 
 This project is released under the MIT License. See `LICENSE`.
