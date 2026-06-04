@@ -220,6 +220,11 @@ fn dynamic_map() -> @grid.GridMap {
 }
 
 ///|
+fn dynamic_crossing_map() -> @grid.GridMap {
+  @grid.new_grid(10, 10, p(0, 0), p(9, 9))
+}
+
+///|
 fn status_name(result : @core.PathResult) -> String {
   if result.status is @core.Found {
     "found"
@@ -485,6 +490,143 @@ fn run_dynamic_scenarios() -> Unit {
   let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)
   print_result(
     "dynamic_5x1",
+    "dynamic_continuous",
+    adjusted_result(base, continuous_path),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    continuous_elapsed,
+  )
+  run_dynamic_crossing_scenario()
+}
+
+///|
+fn run_dynamic_crossing_scenario() -> Unit {
+  let repeats = default_repeats()
+  let map = dynamic_crossing_map()
+  let movement = @grid.EightWay
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let base = @algorithms.astar(map, movement, @heuristics.Octile)
+  let baseline_start = @clock.monotonic_clock_start()
+  let mut baseline = base
+  for _ in 1..<repeats {
+    baseline = @algorithms.astar(map, movement, @heuristics.Octile)
+  }
+  let baseline_elapsed = @clock.monotonic_clock_end(baseline_start)
+  print_result(
+    "dynamic_10x10_crossing", "astar_static", baseline, 0, 0, 0.0, 0, 0, 0, repeats,
+    baseline_elapsed,
+  )
+  let horizontal = @dynamic.moving_obstacle_with_velocity(p(0, 1), 1.0, 1, 0)
+  let vertical = @dynamic.moving_obstacle_with_velocity(p(2, 0), 1.0, 0, 1)
+  let over_time_start = @clock.monotonic_clock_start()
+  let mut over_time = @dynamic.jump_avoidance_over_time(
+    map,
+    base.path,
+    [horizontal, vertical],
+    options,
+  )
+  for _ in 1..<repeats {
+    over_time = @dynamic.jump_avoidance_over_time(
+      map,
+      base.path,
+      [horizontal, vertical],
+      options,
+    )
+  }
+  let over_time_elapsed = @clock.monotonic_clock_end(over_time_start)
+  print_result(
+    "dynamic_10x10_crossing",
+    "dynamic_time",
+    adjusted_result(base, over_time),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    over_time_elapsed,
+  )
+  let reflected_horizontal = @dynamic.moving_obstacle_with_velocity(
+    p(0, 1),
+    1.0,
+    1,
+    0,
+  )
+  let reflected_vertical = @dynamic.moving_obstacle_with_velocity(
+    p(2, 0),
+    1.0,
+    0,
+    1,
+  )
+  let reflected_start = @clock.monotonic_clock_start()
+  let mut reflected_path = @dynamic.jump_avoidance_over_reflected_time(
+    map,
+    base.path,
+    [reflected_horizontal, reflected_vertical],
+    options,
+    0,
+    9,
+    0,
+    9,
+  )
+  for _ in 1..<repeats {
+    reflected_path = @dynamic.jump_avoidance_over_reflected_time(
+      map,
+      base.path,
+      [reflected_horizontal, reflected_vertical],
+      options,
+      0,
+      9,
+      0,
+      9,
+    )
+  }
+  let reflected_elapsed = @clock.monotonic_clock_end(reflected_start)
+  print_result(
+    "dynamic_10x10_crossing",
+    "dynamic_reflected",
+    adjusted_result(base, reflected_path),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    reflected_elapsed,
+  )
+  let continuous_horizontal = @dynamic.continuous_moving_obstacle(
+    0.0, 1.0, 1.0, 1.0, 0.0,
+  )
+  let continuous_vertical = @dynamic.continuous_moving_obstacle(
+    2.0, 0.0, 1.0, 0.0, 1.0,
+  )
+  let continuous_start = @clock.monotonic_clock_start()
+  let mut continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+    map,
+    base.path,
+    [continuous_horizontal, continuous_vertical],
+    options,
+    1.0,
+  )
+  for _ in 1..<repeats {
+    continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+      map,
+      base.path,
+      [continuous_horizontal, continuous_vertical],
+      options,
+      1.0,
+    )
+  }
+  let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)
+  print_result(
+    "dynamic_10x10_crossing",
     "dynamic_continuous",
     adjusted_result(base, continuous_path),
     0,
