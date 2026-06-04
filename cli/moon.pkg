@@ -1,7 +1,11 @@
 import {
   "NoEmotionYY/moon-pathplanning/src/core",
   "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/heuristics",
+  "NoEmotionYY/moon-pathplanning/src/io" @json_map,
   "NoEmotionYY/moon-pathplanning/src/planner",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/env",
 }
 
 options(
