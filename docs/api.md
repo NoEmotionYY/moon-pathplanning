@@ -164,4 +164,9 @@ let parsed = @json_map.grid_from_json(text)
 
 `grid_from_json(text)` 使用 `moonbitlang/core/json` 解析字符串，成功时返回
 `GridJsonData?` 中的 `map` 与 `movement`，遇到不支持的 `format`、字段缺失或类型错误时
-返回 `None`。文件读取和 CLI 参数解析暂不在该入口内处理。
+返回 `None`。文件读取不放在库入口内，当前由 CLI 的 native 后端边界负责：
+
+```bash
+moon run cli --target native -- examples/simple_grid.json
+moon run cli --target native -- --map examples/weighted_grid.json
+```

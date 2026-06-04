@@ -32,7 +32,7 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 初步工程已包含源码、测试文件、示例地图、文档、CI 和 benchmark 说明，并已按论文方向
 开始补充区域搜索、swarm 基础模块和动态避障模块，其中 PSO/RS-APSO 已能在区域候选点中
 搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图、序列化和
-字符串解析入口；文件读取与 CLI 参数解析仍属后续工作。CLI v1 使用内置 demo 地图；
+字符串解析入口。CLI v1 支持内置 demo 地图，也支持 native 后端读取 JSON 地图文件；
 `bench` runner 已固定两个 20x20 RS-APSO 场景，并以 5 次重复输出 CSV 指标和耗时统计。
 
 ## 快速开始
@@ -43,10 +43,13 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 moon check
 moon test
 moon run cli
+moon run cli --target native -- examples/simple_grid.json
 moon run ./bench
 ```
 
 当前 CLI 会运行内置 A 星示例并打印路径节点数、总代价、访问节点数和展开节点数。
+文件型 JSON 输入需要 native 后端，命令形如
+`moon run cli --target native -- --map examples/weighted_grid.json`。
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO 和 RS-APSO
 的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量、最终适应度、swarm 参数、
 重复次数和总/平均耗时。

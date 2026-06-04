@@ -18,6 +18,7 @@
 - benchmark runner 新增默认 5 次重复运行、总耗时和平均耗时字段。
 - 新增 `grid_from_json(text)`，支持 JSON v1 地图字符串解析并返回地图和移动模式。
 - 动态避障新增边界往复反射预测和对应跳跃避障场景测试。
+- CLI 新增 native 后端 JSON 文件输入，支持 `moon run cli --target native -- <map.json>`。
 - 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 43 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 

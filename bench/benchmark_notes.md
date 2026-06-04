@@ -20,4 +20,5 @@
 43 项测试全部通过。后续 benchmark runner 应在输出中记录同类工具链版本和目标后端信息。
 当前 runner 可通过 `moon run ./bench` 执行，输出 20x20 simple/complex 场景下 A 星、
 Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录 seed、种群大小、最大迭代次数、默认 5 次
-重复运行次数、总耗时和平均耗时。下一步应补文件型 JSON 输入和更多可复现实验场景。
+重复运行次数、总耗时和平均耗时。CLI 已能在 native 后端读取 JSON v1 地图文件；下一步应补
+更多可复现实验场景和 benchmark 文件输入参数。
