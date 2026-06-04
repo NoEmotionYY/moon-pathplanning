@@ -1,4 +1,5 @@
 import {
   "NoEmotionYY/moon-pathplanning/src/core",
   "NoEmotionYY/moon-pathplanning/src/grid",
+  "moonbitlang/core/json",
 }
