@@ -99,9 +99,9 @@
 
 - MoonBit 本地验证已通过；后续若换终端或 CI 环境，应继续保证 `MOON_HOME`/PATH 可定位同版本工具链与标准库。
 - 需要在具备 GitLink 凭证或可交互认证后重新 push `gitlink/main`。
-- GitHub `main` 已验证指向 `0706e697059cf6d11928352954650f3713897134`，GitLink 当前未返回可见 `main` 引用。
-- 高级算法、跨后端文件输入策略、benchmark 文件输入参数和更大规模动态场景仍在后续路线图中。
-- RS-APSO 当前已完成开发准备文档、`src/region` 第一阶段代码、`src/swarm` 基础层、基础离散 PSO/RS-APSO 主循环、Planner 接入、20x20 benchmark 固定输入、benchmark 重复耗时统计、JSON 字符串解析入口、native JSON 文件型 CLI 输入、`src/dynamic` 基础层、边界往复动态障碍物场景、连续坐标时间预测和动态避障 benchmark 场景，尚未实现 benchmark 文件输入参数、更大规模动态场景与更高级的连续空间规划模型。
+- GitHub `main` 当前通过 `git ls-remote origin refs/heads/main` 验证指向 `66a8e8b47ee4d57ab3074d54e8a65f48d38bf918`；本地 `main` 仍有多条未 push 提交，且显示 `behind 1`，本轮未执行 pull/rebase/merge。
+- 高级算法、跨后端文件输入策略和更大规模动态场景仍在后续路线图中。
+- RS-APSO 当前已完成开发准备文档、`src/region` 第一阶段代码、`src/swarm` 基础层、基础离散 PSO/RS-APSO 主循环、Planner 接入、20x20 benchmark 固定输入、benchmark 重复耗时统计、JSON 字符串解析入口、native JSON 文件型 CLI 输入、benchmark JSON 文件输入参数、`src/dynamic` 基础层、边界往复动态障碍物场景、连续坐标时间预测和动态避障 benchmark 场景，尚未实现更大规模动态场景与更高级的连续空间规划模型。
 
 ## 本轮分批提交与验证记录
 
@@ -120,10 +120,14 @@
 - `docs: 记录连续动态障碍物能力`：更新 README、API、路线图、benchmark notes、执行日志和 CHANGELOG；验证 `git diff --check`。
 - `feat: 添加动态避障 benchmark 场景`：新增 `dynamic_5x1` benchmark，输出静态 A 星、整数速度、边界往复和连续坐标时间步修正的 CSV 行；验证 `moon check`、`moon test`、`moon run ./bench`、`git diff --check`。
 - `docs: 记录动态避障 benchmark 场景`：更新 README、API、benchmark notes、路线图、RS-APSO 开发准备、示例说明、执行日志和 CHANGELOG；验证 `git diff --check`。
+- `feat: 添加 benchmark JSON 文件输入参数`：benchmark runner 新增 native 后端 JSON v1 文件输入，支持位置参数和 `--map/-m`，按文件 movement 输出 A 星、Dijkstra、PSO、RS-APSO 指标；验证 `moon check`、`moon test`、`moon run ./bench`、`moon run ./bench --target native -- examples/simple_grid.json`、`moon run ./bench --target native -- --map examples/weighted_grid.json`、JSON 结构校验、`git diff --check`。
+- `docs: 记录 benchmark JSON 文件输入参数`：更新 README、API、benchmark notes、路线图、RS-APSO 开发准备、示例说明、执行日志和 CHANGELOG；验证 `git diff --check`。
 
 ## 当前 commit 记录摘要
 
 ```bash
+4e3c398 feat: 添加 benchmark JSON 文件输入参数
+c838e67 docs: 记录动态避障 benchmark 场景
 1d54fc7 feat: 添加动态避障 benchmark 场景
 f39beb5 docs: 记录连续动态障碍物能力
 ff91c7a feat: 添加连续空间动态障碍物模型
@@ -152,7 +156,7 @@ c22e95d 添加统一 Planner 调度入口
 - gitlink：https://gitlink.org.cn/NoEmotionYY/moon-pathplanning.git
 - GitHub push 状态：早期已执行 `git push -u origin main` 并成功推送 `main`；本轮新增 commit 仅按用户要求提交到本地仓库，尚未 push。
 - GitLink push 状态：已执行 `git push -u gitlink main`，普通尝试因凭证提示不可用失败，放开网络后的尝试超时。
-- 两端是否同步：否；早期 `git ls-remote origin refs/heads/main` 返回过已推送提交，`git ls-remote gitlink refs/heads/main` 未返回 `main` 引用；本轮本地新增 commit 尚未 push。
+- 两端是否同步：否；`git ls-remote origin refs/heads/main` 当前返回 `66a8e8b47ee4d57ab3074d54e8a65f48d38bf918`，本地分支仍有多条未 push 提交且 `behind 1`；`git ls-remote gitlink refs/heads/main` 早前未返回 `main` 引用；本轮本地新增 commit 尚未 push。
 
 ## 已执行命令记录
 
@@ -226,12 +230,16 @@ git commit -m "feat: 添加连续空间动态障碍物模型"
 git commit -m "docs: 记录连续动态障碍物能力"
 git commit -m "feat: 添加动态避障 benchmark 场景"
 git commit -m "docs: 记录动态避障 benchmark 场景"
+git commit -m "feat: 添加 benchmark JSON 文件输入参数"
+git commit -m "docs: 记录 benchmark JSON 文件输入参数"
 moon check
 moon test
 moon run cli
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 moon run ./bench
+moon run ./bench --target native -- examples/simple_grid.json
+moon run ./bench --target native -- --map examples/weighted_grid.json
 git diff --check
 ```
 
@@ -240,7 +248,7 @@ git diff --check
 - 最近一次测试命令：`moon test`
 - 测试是否通过：是。
 - 工具链版本：`moon 0.1.20260529 (3e1c753 2026-05-29)`。
-- 验证结果：`moon check` 通过；`moon test` 共 47 项，全部通过；`moon run cli` 内置 demo 通过；`moon run cli --target native -- examples/simple_grid.json` 与 `moon run cli --target native -- --map examples/weighted_grid.json` 均能读取 JSON 文件并输出 A 星结果；`moon run ./bench` 可输出 simple/complex 两个场景和 A 星、Dijkstra、PSO、RS-APSO 四类算法的 CSV 指标，并输出 `dynamic_5x1` 下 `astar_static`、`dynamic_time`、`dynamic_reflected`、`dynamic_continuous` 四行动态避障指标。
+- 验证结果：`moon check` 通过；`moon test` 共 47 项，全部通过；`moon run cli` 内置 demo 通过；`moon run cli --target native -- examples/simple_grid.json` 与 `moon run cli --target native -- --map examples/weighted_grid.json` 均能读取 JSON 文件并输出 A 星结果；`moon run ./bench` 可输出 simple/complex 两个场景和 A 星、Dijkstra、PSO、RS-APSO 四类算法的 CSV 指标，并输出 `dynamic_5x1` 下 `astar_static`、`dynamic_time`、`dynamic_reflected`、`dynamic_continuous` 四行动态避障指标；`moon run ./bench --target native -- examples/simple_grid.json` 与 `moon run ./bench --target native -- --map examples/weighted_grid.json` 均能按 JSON 文件输出四算法 CSV 指标。
 - 备注：系统 PATH 仍未全局暴露 `moon`，本次通过临时 `MOON_HOME` 指向 Codex work 目录中的便携工具链完成验证。
 
 ## 当前已知问题
@@ -253,7 +261,7 @@ git diff --check
 
 ## 下一次执行必须从这里继续
 
-下一次执行可直接从已通过的便携 MoonBit 验证状态继续，优先补 benchmark 文件输入参数、更大规模动态场景、跨后端文件输入策略和更高级的连续空间规划模型。若需要同步远程，再提供 GitLink 可用凭证或可交互认证环境，重新执行
+下一次执行可直接从已通过的便携 MoonBit 验证状态继续，优先补更大规模动态场景、跨后端文件输入策略和更高级的连续空间规划模型。若需要同步远程，再提供 GitLink 可用凭证或可交互认证环境，重新执行
 `git push -u gitlink main`，再用 `git ls-remote` 核对 GitHub 与 GitLink 的 `main` 最新
 commit hash。不要重复实现现有基础算法、区域搜索模块、基础 PSO/RS-APSO 主循环、dynamic
 基础层、边界往复动态障碍物场景、连续坐标动态障碍物模型、native JSON 文件型 CLI 输入、Planner 接入和已完成的 swarm 基础层。
@@ -267,9 +275,9 @@ commit hash。不要重复实现现有基础算法、区域搜索模块、基础
 
 ## 本次执行结束状态
 
-- 本次完成：已完成初步工程源码、测试文件、示例、CLI、SVG、文档与 CI，并补充障碍物膨胀安全边距、区域搜索 SVG 叠加导出、20x20 RS-APSO benchmark 固定输入、benchmark 重复耗时统计、动态避障 benchmark 场景、JSON 字符串解析、native JSON 文件型 CLI 输入、RS-APSO 后续开发准备、区域搜索模块、swarm 基础层、基础 PSO/RS-APSO 主循环、Planner 接入和 dynamic 基础层；dynamic 当前支持速度方向预测、多方向移动、边界往复和连续坐标动态障碍物测试。
+- 本次完成：已完成初步工程源码、测试文件、示例、CLI、SVG、文档与 CI，并补充障碍物膨胀安全边距、区域搜索 SVG 叠加导出、20x20 RS-APSO benchmark 固定输入、benchmark 重复耗时统计、benchmark JSON 文件输入参数、动态避障 benchmark 场景、JSON 字符串解析、native JSON 文件型 CLI 输入、RS-APSO 后续开发准备、区域搜索模块、swarm 基础层、基础 PSO/RS-APSO 主循环、Planner 接入和 dynamic 基础层；dynamic 当前支持速度方向预测、多方向移动、边界往复和连续坐标动态障碍物测试。
 - 本次新增 commit：已按功能批次创建多条中文有效 commit，未把全部改动合并为一次提交。
-- 本次测试结果：使用便携 MoonBit 工具链完成 `moon version`、`moon check`、`moon test`、`moon run cli`、native JSON 文件型 CLI 输入验证与 `moon run ./bench`；`moon test` 共 47 项，全部通过，benchmark CSV 已包含 `dynamic_5x1` 四类动态避障行。
+- 本次测试结果：使用便携 MoonBit 工具链完成 `moon version`、`moon check`、`moon test`、`moon run cli`、native JSON 文件型 CLI 输入验证、`moon run ./bench` 与 benchmark native JSON 文件输入验证；`moon test` 共 47 项，全部通过，benchmark CSV 已包含 `dynamic_5x1` 四类动态避障行，也能读取 `examples/simple_grid.json` 和 `examples/weighted_grid.json` 输出四算法指标。
 - 本次是否已 push GitHub：否；按本轮假设仅提交到本地 Git 仓库，未 push。
 - 本次是否已 push GitLink：否，普通推送因凭证提示不可用失败，放开网络后的推送尝试超时。
-- 下一步：按 RS-APSO 开发准备继续实现 benchmark 文件输入参数、更大规模动态场景、跨后端文件输入策略和更高级的连续空间规划模型，并在具备 GitLink 认证条件后重新推送和核对两端 hash。
+- 下一步：按 RS-APSO 开发准备继续实现更大规模动态场景、跨后端文件输入策略和更高级的连续空间规划模型，并在具备 GitLink 认证条件后重新推送和核对两端 hash。

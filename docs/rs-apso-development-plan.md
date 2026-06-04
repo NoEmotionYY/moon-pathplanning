@@ -140,8 +140,8 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 固化代表性 20x20 输入，并新增 `bench` main 包作为初始 runner。当前 runner 通过
 `moon run ./bench` 输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次
 重复运行、总耗时和平均耗时，并新增 `dynamic_5x1` 场景对比静态 A 星基线、整数速度动态
-修正、边界往复修正和连续坐标时间步修正。CLI 已支持 native 后端读取 JSON v1 地图文件；
-后续可继续补 benchmark 文件输入参数、更大规模动态场景和跨后端文件输入策略。
+修正、边界往复修正和连续坐标时间步修正。CLI 与 benchmark runner 已支持 native 后端读取
+JSON v1 地图文件；后续可继续补更大规模动态场景、跨后端文件输入策略和更高级连续空间模型。
 
 ## 当前开放问题
 

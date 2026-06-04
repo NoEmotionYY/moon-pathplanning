@@ -134,6 +134,8 @@ let svg = @svg.grid_region_to_svg(map, region, result.path, 20)
 
 ```bash
 moon run ./bench
+moon run ./bench --target native -- examples/simple_grid.json
+moon run ./bench --target native -- --map examples/weighted_grid.json
 ```
 
 输出为 CSV，当前包含 `scenario`、`algorithm`、`status`、`path_nodes`、`total_cost`、
@@ -146,6 +148,8 @@ moon run ./bench
 动态场景使用 `dynamic_5x1`，算法列分别输出 `astar_static`、`dynamic_time`、
 `dynamic_reflected` 和 `dynamic_continuous`，用于比较静态路径、整数速度动态障碍物、
 边界往复预测和连续坐标时间步预测后的路径修正结果。
+native 后端传入 JSON v1 地图文件时，runner 会只输出这些文件场景的 A 星、Dijkstra、
+PSO 和 RS-APSO 指标；无参数时仍输出内置 20x20 与动态避障场景。
 
 ## PathResult 字段
 
