@@ -22,6 +22,7 @@
 - 动态避障新增连续坐标动态障碍物、按时间步预测、连续碰撞检测和跳跃避障测试。
 - benchmark runner 新增 `dynamic_5x1` 场景，覆盖静态 A 星、整数速度、边界往复和连续坐标时间步动态避障修正。
 - benchmark runner 新增 native 后端 JSON 文件输入参数，支持位置参数和 `--map/-m` 读取 JSON v1 地图并输出 CSV 指标。
+- benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
 - 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 47 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 

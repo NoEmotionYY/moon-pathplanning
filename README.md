@@ -54,8 +54,8 @@ moon run ./bench --target native -- examples/simple_grid.json
 `moon run cli --target native -- --map examples/weighted_grid.json`。
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO 和 RS-APSO
 的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量、最终适应度、swarm 参数、
-重复次数和总/平均耗时；同时输出 `dynamic_5x1` 下静态 A 星基线、整数速度动态修正、
-边界往复修正和连续坐标时间步修正的同格式 CSV 行。文件型 benchmark 输入需要 native
+重复次数和总/平均耗时；同时输出 `dynamic_5x1` 和 `dynamic_10x10_crossing` 下静态 A 星基线、
+整数速度动态修正、边界往复修正和连续坐标时间步修正的同格式 CSV 行。文件型 benchmark 输入需要 native
 后端，命令形如 `moon run ./bench --target native -- --map examples/weighted_grid.json`。
 
 ## 示例地图格式
