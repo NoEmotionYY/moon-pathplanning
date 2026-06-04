@@ -1,5 +1,5 @@
 import {
-  "NoEmotionYY/moon-pathplanning/src/core" @core,
-  "NoEmotionYY/moon-pathplanning/src/grid" @grid,
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/region",
 }
-
