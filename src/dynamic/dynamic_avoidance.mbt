@@ -7,6 +7,15 @@ pub(all) struct MovingObstacle {
 } derive(Debug)
 
 ///|
+pub(all) struct ContinuousMovingObstacle {
+  x : Double
+  y : Double
+  speed : Double
+  velocity_x : Double
+  velocity_y : Double
+} derive(Debug)
+
+///|
 pub(all) struct CollisionOptions {
   robot_speed : Double
   unit_grid_length : Double
@@ -32,6 +41,17 @@ pub fn moving_obstacle_with_velocity(
 }
 
 ///|
+pub fn continuous_moving_obstacle(
+  x : Double,
+  y : Double,
+  speed : Double,
+  velocity_x : Double,
+  velocity_y : Double,
+) -> ContinuousMovingObstacle {
+  { x, y, speed, velocity_x, velocity_y }
+}
+
+///|
 pub fn MovingObstacle::at_step(
   self : MovingObstacle,
   step : Int,
@@ -45,6 +65,29 @@ pub fn MovingObstacle::at_step(
     velocity_x: self.velocity_x,
     velocity_y: self.velocity_y,
   }
+}
+
+///|
+pub fn ContinuousMovingObstacle::at_time(
+  self : ContinuousMovingObstacle,
+  time : Double,
+) -> ContinuousMovingObstacle {
+  {
+    x: self.x + self.velocity_x * time,
+    y: self.y + self.velocity_y * time,
+    speed: self.speed,
+    velocity_x: self.velocity_x,
+    velocity_y: self.velocity_y,
+  }
+}
+
+///|
+pub fn ContinuousMovingObstacle::at_step_time(
+  self : ContinuousMovingObstacle,
+  step : Int,
+  step_time : Double,
+) -> ContinuousMovingObstacle {
+  self.at_time(step.to_double() * step_time)
 }
 
 ///|
@@ -118,11 +161,27 @@ pub fn collision_radius(
   options : CollisionOptions,
   obstacle : MovingObstacle,
 ) -> Double {
-  if options.robot_speed <= 0.0 || obstacle.speed <= 0.0 {
+  collision_radius_by_speed(options, obstacle.speed)
+}
+
+///|
+pub fn continuous_collision_radius(
+  options : CollisionOptions,
+  obstacle : ContinuousMovingObstacle,
+) -> Double {
+  collision_radius_by_speed(options, obstacle.speed)
+}
+
+///|
+fn collision_radius_by_speed(
+  options : CollisionOptions,
+  obstacle_speed : Double,
+) -> Double {
+  if options.robot_speed <= 0.0 || obstacle_speed <= 0.0 {
     options.unit_grid_length
   } else {
-    let danger = options.proportion * options.robot_speed / obstacle.speed
-    let safety = obstacle.speed / options.robot_speed
+    let danger = options.proportion * options.robot_speed / obstacle_speed
+    let safety = obstacle_speed / options.robot_speed
     (danger + safety) * options.unit_grid_length
   }
 }
@@ -135,6 +194,18 @@ pub fn would_collide(
 ) -> Bool {
   @heuristics.euclidean(robot_point, obstacle.position) <=
   collision_radius(options, obstacle)
+}
+
+///|
+pub fn would_collide_continuous(
+  robot_point : @core.Point,
+  obstacle : ContinuousMovingObstacle,
+  options : CollisionOptions,
+) -> Bool {
+  let dx = robot_point.x.to_double() - obstacle.x
+  let dy = robot_point.y.to_double() - obstacle.y
+  let radius = continuous_collision_radius(options, obstacle)
+  dx * dx + dy * dy <= radius * radius
 }
 
 ///|
@@ -152,6 +223,20 @@ fn any_collision(
 }
 
 ///|
+fn any_continuous_collision(
+  point : @core.Point,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+) -> Bool {
+  for obstacle in obstacles {
+    if would_collide_continuous(point, obstacle, options) {
+      return true
+    }
+  }
+  false
+}
+
+///|
 fn projected_obstacles(
   obstacles : Array[MovingObstacle],
   step : Int,
@@ -159,6 +244,19 @@ fn projected_obstacles(
   let projected = []
   for obstacle in obstacles {
     projected.push(obstacle.at_step(step))
+  }
+  projected
+}
+
+///|
+fn projected_continuous_obstacles(
+  obstacles : Array[ContinuousMovingObstacle],
+  step : Int,
+  step_time : Double,
+) -> Array[ContinuousMovingObstacle] {
+  let projected = []
+  for obstacle in obstacles {
+    projected.push(obstacle.at_step_time(step, step_time))
   }
   projected
 }
@@ -251,6 +349,41 @@ fn choose_jump_point(
 }
 
 ///|
+fn choose_continuous_jump_point(
+  map : @grid.GridMap,
+  current : @core.Point,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+) -> @core.Point {
+  let goal = map.goal
+  let dx = sign(goal.x - current.x)
+  let dy = sign(goal.y - current.y)
+  let candidates = []
+  if dx != 0 {
+    candidates.push(@core.point(current.x + dx * 2, current.y))
+    candidates.push(@core.point(current.x + dx, current.y))
+  }
+  if dy != 0 {
+    candidates.push(@core.point(current.x, current.y + dy * 2))
+    candidates.push(@core.point(current.x, current.y + dy))
+  }
+  let mut chosen = current
+  let mut found = false
+  for candidate in candidates {
+    if map.is_walkable(candidate) &&
+      !any_continuous_collision(candidate, obstacles, options) {
+      if found {
+        chosen = better_jump_candidate(chosen, candidate, goal)
+      } else {
+        chosen = candidate
+        found = true
+      }
+    }
+  }
+  chosen
+}
+
+///|
 pub fn jump_avoidance(
   map : @grid.GridMap,
   path : Array[@core.Point],
@@ -267,6 +400,38 @@ pub fn jump_avoidance(
     let next = path[index]
     if any_collision(next, obstacles, options) {
       push_unique(adjusted, choose_jump_point(map, current, obstacles, options))
+    } else {
+      push_unique(adjusted, next)
+    }
+  }
+  adjusted
+}
+
+///|
+pub fn jump_avoidance_over_continuous_time(
+  map : @grid.GridMap,
+  path : Array[@core.Point],
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  step_time : Double,
+) -> Array[@core.Point] {
+  if path.length() < 2 || obstacles.is_empty() {
+    return path
+  }
+  let adjusted = []
+  adjusted.push(path[0])
+  let safe_step_time = if step_time <= 0.0 { 1.0 } else { step_time }
+  for index in 1..<path.length() {
+    let current = adjusted[adjusted.length() - 1]
+    let next = path[index]
+    let projected = projected_continuous_obstacles(
+      obstacles, index, safe_step_time,
+    )
+    if any_continuous_collision(next, projected, options) {
+      push_unique(
+        adjusted,
+        choose_continuous_jump_point(map, current, projected, options),
+      )
     } else {
       push_unique(adjusted, next)
     }

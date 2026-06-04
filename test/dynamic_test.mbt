@@ -57,6 +57,30 @@ test "dynamic moving obstacle projects by velocity" {
 }
 
 ///|
+test "dynamic continuous obstacle projects by time" {
+  let obstacle = @dynamic.continuous_moving_obstacle(0.5, 1.0, 1.2, 0.5, -0.25)
+  let moved = obstacle.at_time(2.0)
+  assert_eq(moved.x > 1.49, true)
+  assert_eq(moved.x < 1.51, true)
+  assert_eq(moved.y > 0.49, true)
+  assert_eq(moved.y < 0.51, true)
+}
+
+///|
+test "dynamic continuous collision detects fractional position" {
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let obstacle = @dynamic.continuous_moving_obstacle(1.25, 0.0, 1.0, 0.0, 0.0)
+  assert_eq(
+    @dynamic.would_collide_continuous(@core.point(1, 0), obstacle, options),
+    true,
+  )
+  assert_eq(
+    @dynamic.would_collide_continuous(@core.point(2, 0), obstacle, options),
+    false,
+  )
+}
+
+///|
 test "dynamic reflected obstacle moves horizontally within boundaries" {
   let obstacle = @dynamic.moving_obstacle_with_velocity(
     @core.point(0, 0),
@@ -134,6 +158,52 @@ test "dynamic over time avoids horizontal moving obstacle" {
     path,
     [obstacle],
     options,
+  )
+  assert_eq(adjusted[1].same(@core.point(2, 0)), true)
+}
+
+///|
+test "dynamic continuous avoidance leaves safe path unchanged" {
+  let map = @grid.new_grid(5, 1, @core.point(0, 0), @core.point(4, 0))
+  let path = [
+    @core.point(0, 0),
+    @core.point(1, 0),
+    @core.point(2, 0),
+    @core.point(3, 0),
+    @core.point(4, 0),
+  ]
+  let obstacle = @dynamic.continuous_moving_obstacle(0.0, 4.0, 1.0, 0.5, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let adjusted = @dynamic.jump_avoidance_over_continuous_time(
+    map,
+    path,
+    [obstacle],
+    options,
+    1.0,
+  )
+  assert_eq(adjusted.length(), path.length())
+  assert_eq(adjusted[1].same(path[1]), true)
+  assert_eq(adjusted[4].same(path[4]), true)
+}
+
+///|
+test "dynamic continuous avoidance jumps after obstacle enters radius" {
+  let map = @grid.new_grid(5, 1, @core.point(0, 0), @core.point(4, 0))
+  let path = [
+    @core.point(0, 0),
+    @core.point(1, 0),
+    @core.point(2, 0),
+    @core.point(3, 0),
+    @core.point(4, 0),
+  ]
+  let obstacle = @dynamic.continuous_moving_obstacle(0.0, 0.0, 1.0, 1.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let adjusted = @dynamic.jump_avoidance_over_continuous_time(
+    map,
+    path,
+    [obstacle],
+    options,
+    1.0,
   )
   assert_eq(adjusted[1].same(@core.point(2, 0)), true)
 }
