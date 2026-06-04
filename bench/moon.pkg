@@ -5,6 +5,7 @@ import {
   "NoEmotionYY/moon-pathplanning/src/heuristics",
   "NoEmotionYY/moon-pathplanning/src/region",
   "NoEmotionYY/moon-pathplanning/src/swarm",
+  "moonbitlang/core/bench" @clock,
 }
 
 options(

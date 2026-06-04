@@ -149,6 +149,11 @@ fn status_name(result : @core.PathResult) -> String {
 }
 
 ///|
+fn default_repeats() -> Int {
+  5
+}
+
+///|
 fn print_result(
   scenario : String,
   algorithm : String,
@@ -159,18 +164,23 @@ fn print_result(
   seed : Int,
   population_size : Int,
   max_iterations : Int,
+  repeats : Int,
+  elapsed_us_total : Double,
 ) -> Unit {
+  let elapsed_us_avg = elapsed_us_total / repeats.to_double()
   println(
     "\{scenario},\{algorithm},\{status_name(result)},\{result.path.length()}," +
     "\{result.total_cost},\{@swarm.path_length(result.path)}," +
     "\{@swarm.path_smoothness(result.path)},\{result.visited_nodes}," +
     "\{result.expanded_nodes},\{iterations},\{candidates},\{best_fitness}," +
-    "\{seed},\{population_size},\{max_iterations}",
+    "\{seed},\{population_size},\{max_iterations},\{repeats}," +
+    "\{elapsed_us_total},\{elapsed_us_avg}",
   )
 }
 
 ///|
 fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
+  let repeats = default_repeats()
   let movement = @grid.EightWay
   let swarm_options = @swarm.options(
     60,
@@ -181,12 +191,56 @@ fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
     @swarm.default_fitness_weights(),
   )
   let region = @region.build_search_region(map, @region.default_options())
-  let astar = @algorithms.astar(map, movement, @heuristics.Octile)
-  let dijkstra = @algorithms.dijkstra(map, movement)
-  let pso = @swarm.pso_plan(map, region, swarm_options)
-  let rs_apso = @swarm.rs_apso_plan(map, region, swarm_options)
-  print_result(name, "astar", astar, 0, region.cell_count(), 0.0, 0, 0, 0)
-  print_result(name, "dijkstra", dijkstra, 0, region.cell_count(), 0.0, 0, 0, 0)
+  let astar_start = @clock.monotonic_clock_start()
+  let mut astar = @algorithms.astar(map, movement, @heuristics.Octile)
+  for _ in 1..<repeats {
+    astar = @algorithms.astar(map, movement, @heuristics.Octile)
+  }
+  let astar_elapsed = @clock.monotonic_clock_end(astar_start)
+  let dijkstra_start = @clock.monotonic_clock_start()
+  let mut dijkstra = @algorithms.dijkstra(map, movement)
+  for _ in 1..<repeats {
+    dijkstra = @algorithms.dijkstra(map, movement)
+  }
+  let dijkstra_elapsed = @clock.monotonic_clock_end(dijkstra_start)
+  let pso_start = @clock.monotonic_clock_start()
+  let mut pso = @swarm.pso_plan(map, region, swarm_options)
+  for _ in 1..<repeats {
+    pso = @swarm.pso_plan(map, region, swarm_options)
+  }
+  let pso_elapsed = @clock.monotonic_clock_end(pso_start)
+  let rs_apso_start = @clock.monotonic_clock_start()
+  let mut rs_apso = @swarm.rs_apso_plan(map, region, swarm_options)
+  for _ in 1..<repeats {
+    rs_apso = @swarm.rs_apso_plan(map, region, swarm_options)
+  }
+  let rs_apso_elapsed = @clock.monotonic_clock_end(rs_apso_start)
+  print_result(
+    name,
+    "astar",
+    astar,
+    0,
+    region.cell_count(),
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    astar_elapsed,
+  )
+  print_result(
+    name,
+    "dijkstra",
+    dijkstra,
+    0,
+    region.cell_count(),
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    dijkstra_elapsed,
+  )
   print_result(
     name,
     "pso",
@@ -197,6 +251,8 @@ fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
     swarm_options.seed,
     swarm_options.population_size,
     swarm_options.max_iterations,
+    repeats,
+    pso_elapsed,
   )
   print_result(
     name,
@@ -208,6 +264,8 @@ fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
     swarm_options.seed,
     swarm_options.population_size,
     swarm_options.max_iterations,
+    repeats,
+    rs_apso_elapsed,
   )
 }
 
@@ -216,7 +274,7 @@ fn main {
   println(
     "scenario,algorithm,status,path_nodes,total_cost,path_length,smoothness," +
     "visited_nodes,expanded_nodes,iterations,candidates,best_fitness,seed," +
-    "population_size,max_iterations",
+    "population_size,max_iterations,repeats,elapsed_us_total,elapsed_us_avg",
   )
   run_scenario("rs_apso_20x20_simple", simple_map())
   run_scenario("rs_apso_20x20_complex", complex_map())
