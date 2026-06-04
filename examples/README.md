@@ -11,9 +11,12 @@
 `obstacles` 与 terrain 中的 `point` 都写成 `[x, y]`。
 20x20 RS-APSO 文件用于固定项目内 benchmark 输入，是根据论文实验尺寸和障碍复杂度整理的
 代表性场景，不声称逐像素复刻论文图 8 与图 9。
+库内可用 `@json_map.grid_from_json(text)` 解析同一 schema 的 JSON 字符串；文件读取和
+CLI 参数解析仍由后续入口负责。
 
 可以通过仓库根目录的 `moon run ./bench` 运行当前 benchmark runner。runner 会复用这两类
-20x20 场景，输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标。
+20x20 场景，输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次重复运行、
+总耗时和平均耗时。
 
 ## CLI demo
 
@@ -24,7 +27,7 @@ moon run cli
 ```
 
 当前 CLI 使用内置 demo 地图，展示 Planner 对 A 星算法的调度结果。文件型 JSON CLI
-导入需要等待完整 JSON 解析边界验证后补充。
+导入仍需在字符串解析入口之上继续补充。
 
 ## SVG
 

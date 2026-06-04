@@ -24,16 +24,16 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 - BFS、DFS、Dijkstra、A 星和双向 A 星搜索。
 - 区域搜索预处理：障碍物边界角识别、候选搜索区域生成和空地图自由区域回退。
 - RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、PSO/RS-APSO 主循环。
-- 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测和跳跃避障路径修正。
-- Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例和序列化、SVG 导出、CLI demo 与 benchmark runner。
+- 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测和跳跃避障路径修正。
+- Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例、序列化和字符串解析、SVG 导出、CLI demo 与 benchmark runner。
 
 ## 当前完成情况
 
 初步工程已包含源码、测试文件、示例地图、文档、CI 和 benchmark 说明，并已按论文方向
 开始补充区域搜索、swarm 基础模块和动态避障模块，其中 PSO/RS-APSO 已能在区域候选点中
-搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图和序列化；完整 JSON
-文件解析仍需在确定 MoonBit JSON 依赖后补齐。CLI v1 使用内置 demo 地图；`bench`
-runner 已固定两个 20x20 RS-APSO 场景并输出 CSV 指标，文件参数解析属于后续工作。
+搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图、序列化和
+字符串解析入口；文件读取与 CLI 参数解析仍属后续工作。CLI v1 使用内置 demo 地图；
+`bench` runner 已固定两个 20x20 RS-APSO 场景，并以 5 次重复输出 CSV 指标和耗时统计。
 
 ## 快速开始
 
@@ -48,7 +48,8 @@ moon run ./bench
 
 当前 CLI 会运行内置 A 星示例并打印路径节点数、总代价、访问节点数和展开节点数。
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO 和 RS-APSO
-的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量、最终适应度和 swarm 参数。
+的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量、最终适应度、swarm 参数、
+重复次数和总/平均耗时。
 
 ## 示例地图格式
 
@@ -83,7 +84,8 @@ let result = @planner.plan(map, @planner.AStar, @planner.default_options())
 ## 测试方式
 
 MoonBit 测试位于 `test/`，覆盖最短路径、无路径、障碍绕行、权重地图、三类算法
-一致性、移动模式、起点等于终点、非法地图输入、区域搜索、RS-APSO 基础能力和动态避障。
+一致性、移动模式、起点等于终点、非法地图输入、JSON 字符串解析、区域搜索、
+RS-APSO 基础能力和动态避障。
 标准检查命令是 `moon check` 与 `moon test`。
 
 ## 可视化说明

@@ -91,6 +91,18 @@ let adjusted = @dynamic.jump_avoidance_over_time(map, result.path, [obstacle], o
 用于按路径步数预测左右、上下或组合方向移动；`jump_avoidance_over_time()` 在下一路径点
 发生碰撞风险时，沿靠近终点方向的同行或同列候选点进行跳跃修正。
 
+边界往复障碍物可用反射步进 API 表达：
+
+```moonbit
+let bounced = obstacle.at_reflected_step(3, 0, 10, 0, 0)
+let adjusted = @dynamic.jump_avoidance_over_reflected_time(
+  map, result.path, [obstacle], options, 0, 10, 0, 0,
+)
+```
+
+`reflected_coordinate()` 与 `MovingObstacle::at_reflected_step()` 会让坐标在 `[min, max]`
+边界内往复反弹；当某一轴的 `min >= max` 时，该轴固定在 `min`，适合水平或垂直单轴往复。
+
 ## 可视化 API
 
 基础 SVG 导出用于展示地图和最终路径；区域搜索 SVG 导出用于调试 RS-APSO 预处理：
@@ -111,9 +123,11 @@ moon run ./bench
 
 输出为 CSV，当前包含 `scenario`、`algorithm`、`status`、`path_nodes`、`total_cost`、
 `path_length`、`smoothness`、`visited_nodes`、`expanded_nodes`、`iterations`、
-`candidates`、`best_fitness`、`seed`、`population_size` 和 `max_iterations`。
+`candidates`、`best_fitness`、`seed`、`population_size`、`max_iterations`、`repeats`、
+`elapsed_us_total` 和 `elapsed_us_avg`。
 经典算法的 swarm 参数字段为 `0`；PSO 与 RS-APSO 会额外记录区域候选数量、实际迭代次数、
-最终适应度和固定 seed 配置。
+最终适应度和固定 seed 配置。当前默认重复次数为 5，耗时使用 `moonbitlang/core/bench`
+提供的 monotonic clock 记录。
 
 ## PathResult 字段
 
@@ -130,6 +144,7 @@ moon run ./bench
 
 ```json
 {
+  "format": "moon-pathplanning.grid.v1",
   "width": 6,
   "height": 5,
   "start": [0, 0],
@@ -140,5 +155,13 @@ moon run ./bench
 }
 ```
 
-初版 MoonBit 模块提供 schema 对应序列化能力和示例文件。完整 JSON 文件解析需要在
-可用 MoonBit 工具链与 JSON 依赖边界下继续验证。
+MoonBit 模块提供 schema 对应序列化和字符串解析入口：
+
+```moonbit
+let text = @json_map.grid_to_json(map, @grid.FourWay)
+let parsed = @json_map.grid_from_json(text)
+```
+
+`grid_from_json(text)` 使用 `moonbitlang/core/json` 解析字符串，成功时返回
+`GridJsonData?` 中的 `map` 与 `movement`，遇到不支持的 `format`、字段缺失或类型错误时
+返回 `None`。文件读取和 CLI 参数解析暂不在该入口内处理。

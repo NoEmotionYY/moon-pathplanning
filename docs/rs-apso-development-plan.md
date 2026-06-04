@@ -92,13 +92,17 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - `CollisionOptions`：机器人速度、单位栅格长度、比例系数和安全策略参数。
 - `moving_obstacle_with_velocity(position, speed, velocity_x, velocity_y)`：记录移动方向。
 - `MovingObstacle::at_step(step)`：按路径步数预测障碍物位置。
+- `reflected_coordinate(origin, velocity, step, min, max)`：计算边界往复反射坐标。
+- `MovingObstacle::at_reflected_step(step, min_x, max_x, min_y, max_y)`：按路径步数预测边界往复障碍物位置。
 - `collision_radius(options, obstacle)`：计算碰撞检测半径。
 - `would_collide(robot_point, obstacle, options)`：判断是否进入碰撞检测区域。
 - `jump_avoidance(map, path, obstacles, options)`：对静态路径进行局部修正。
 - `jump_avoidance_over_time(map, path, obstacles, options)`：按路径步数预测移动障碍物后进行局部修正。
+- `jump_avoidance_over_reflected_time(map, path, obstacles, options, min_x, max_x, min_y, max_y)`：按边界往复预测移动障碍物后进行局部修正。
 
 当前已覆盖碰撞半径、近距离碰撞判断、跳跃避障修正、安全路径不变、左右移动、上下移动和
-双向移动障碍物。后续可继续补带边界往复运动的连续时间模拟。
+双向移动障碍物，并新增水平/垂直边界往复与进入碰撞半径后的跳跃修正测试。后续可继续补
+更贴近连续空间速度的动态仿真模型。
 
 ## 测试清单
 
@@ -112,6 +116,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - 连续三次适应度变差时触发较差区域逃逸逻辑。
 - 动态障碍物未进入碰撞半径时路径不变，进入后产生有效跳跃点。
 - 左右、上下和双向移动障碍物可按路径步数预测并触发跳跃修正。
+- 边界往复移动障碍物可在水平/垂直边界内反弹，且进入碰撞半径后触发跳跃修正。
 
 ## Benchmark 准备
 
@@ -126,13 +131,13 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 最终适应度、实际迭代次数和运行时间。
 当前已在 `examples/rs_apso_20x20_simple.json` 和 `examples/rs_apso_20x20_complex.json`
 固化代表性 20x20 输入，并新增 `bench` main 包作为初始 runner。当前 runner 通过
-`moon run ./bench` 输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标；后续可继续补
-重复次数、运行时间统计和文件型 JSON 输入。
+`moon run ./bench` 输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次
+重复运行、总耗时和平均耗时；后续可继续补文件型 JSON 输入和更丰富的场景。
 
 ## 当前开放问题
 
 - 已通过官方 MoonBit Windows x86_64 便携工具链完成 `moon check` 与 `moon test`；后续需要把工具链安装或临时 `MOON_HOME` 设置沉淀为稳定开发步骤。
-- 完整 JSON 文件解析还未确定依赖边界，20x20 论文基准地图目前已作为项目 benchmark 输入固化。
+- JSON v1 已具备字符串解析入口，20x20 论文基准地图目前已作为项目 benchmark 输入固化；文件读取和 CLI 参数解析仍待补充。
 - 障碍物膨胀半径需要结合机器人尺寸决定，库层提供参数，不内置具体机器人尺寸。
-- 当前 PSO 随机源已采用固定 seed 的可复现实现；后续 benchmark runner 需要把 seed、种群大小和最大迭代次数显式记录到输出。
+- 当前 PSO 随机源已采用固定 seed 的可复现实现；benchmark runner 已把 seed、种群大小、最大迭代次数、重复次数和耗时统计显式记录到输出。
 - 论文仿真时间基于 MATLAB 环境，MoonBit benchmark 只能比较项目内相对性能，不直接声称复现论文耗时。

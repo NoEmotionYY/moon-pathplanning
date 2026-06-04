@@ -23,7 +23,10 @@
 - 新增 20x20 简单/复杂 RS-APSO benchmark 示例地图。
 - 将基础 PSO 与 RS-APSO 接入 Planner 统一调度。
 - 新增初始 RS-APSO benchmark runner，输出经典算法、PSO 与 RS-APSO 的 CSV 指标。
-- 继续完善 benchmark 重复耗时统计、JSON 文件输入和边界往复动态障碍物的可复现场景。
+- 新增 benchmark 默认 5 次重复运行与总/平均耗时统计。
+- 新增 JSON 地图字符串解析入口，支持 v1 schema 的 `format`、尺寸、起终点、移动模式、障碍物和 terrain。
+- 新增边界往复动态障碍物的可复现场景和跳跃避障测试。
+- 继续完善文件型 JSON CLI 输入、连续空间速度模型和更完整的 benchmark 场景。
 
 ## 第四阶段：增量规划与采样规划
 
