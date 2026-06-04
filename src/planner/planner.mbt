@@ -5,6 +5,8 @@ pub(all) enum AlgorithmType {
   Dijkstra
   AStar
   BidirectionalAStar
+  Pso
+  RsApso
 } derive(Debug)
 
 ///|
@@ -32,6 +34,33 @@ pub fn options(
 }
 
 ///|
+fn swarm_options(options : PlannerOptions) -> @swarm.PsoOptions {
+  @swarm.options(
+    60,
+    100,
+    42,
+    3,
+    options.movement,
+    @swarm.default_fitness_weights(),
+  )
+}
+
+///|
+fn plan_pso(map : @grid.GridMap, options : PlannerOptions) -> @core.PathResult {
+  let region = @region.build_search_region(map, @region.default_options())
+  @swarm.pso_plan(map, region, swarm_options(options)).result
+}
+
+///|
+fn plan_rs_apso(
+  map : @grid.GridMap,
+  options : PlannerOptions,
+) -> @core.PathResult {
+  let region = @region.build_search_region(map, @region.default_options())
+  @swarm.rs_apso_plan(map, region, swarm_options(options)).result
+}
+
+///|
 pub fn plan(
   map : @grid.GridMap,
   algorithm : AlgorithmType,
@@ -44,6 +73,7 @@ pub fn plan(
     AStar => @algorithms.astar(map, options.movement, options.heuristic)
     BidirectionalAStar =>
       @algorithms.bidirectional_astar(map, options.movement, options.heuristic)
+    Pso => plan_pso(map, options)
+    RsApso => plan_rs_apso(map, options)
   }
 }
-

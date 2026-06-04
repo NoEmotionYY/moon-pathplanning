@@ -4,5 +4,4 @@ import {
   "NoEmotionYY/moon-pathplanning/src/heuristics",
   "NoEmotionYY/moon-pathplanning/src/algorithms",
   "NoEmotionYY/moon-pathplanning/src/region",
-  "NoEmotionYY/moon-pathplanning/src/swarm",
 }

@@ -8,6 +8,8 @@ test "planner dispatches every algorithm" {
     @planner.Dijkstra,
     @planner.AStar,
     @planner.BidirectionalAStar,
+    @planner.Pso,
+    @planner.RsApso,
   ]
   for algorithm in algorithms {
     let result = @planner.plan(map, algorithm, options)
@@ -23,3 +25,15 @@ test "planner supports eight way options" {
   assert_eq(result.path.length(), 3)
 }
 
+///|
+test "planner dispatches swarm algorithms through region search" {
+  let map = @grid.new_grid(5, 3, @core.point(0, 1), @core.point(4, 1)).with_obstacle(
+    @core.point(2, 1),
+  )
+  let pso = @planner.plan(map, @planner.Pso, @planner.default_options())
+  let rs_apso = @planner.plan(map, @planner.RsApso, @planner.default_options())
+  assert_eq(pso.status is @core.Found, true)
+  assert_eq(rs_apso.status is @core.Found, true)
+  assert_eq(pso.path[0].same(map.start), true)
+  assert_eq(rs_apso.path[rs_apso.path.length() - 1].same(map.goal), true)
+}
