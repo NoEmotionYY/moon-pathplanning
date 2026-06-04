@@ -4,9 +4,12 @@ import {
   "NoEmotionYY/moon-pathplanning/src/dynamic",
   "NoEmotionYY/moon-pathplanning/src/grid",
   "NoEmotionYY/moon-pathplanning/src/heuristics",
+  "NoEmotionYY/moon-pathplanning/src/io" @json_map,
   "NoEmotionYY/moon-pathplanning/src/region",
   "NoEmotionYY/moon-pathplanning/src/swarm",
   "moonbitlang/core/bench" @clock,
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/env",
 }
 
 options(

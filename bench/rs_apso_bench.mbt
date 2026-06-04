@@ -4,6 +4,83 @@ fn p(x : Int, y : Int) -> @core.Point {
 }
 
 ///|
+#cfg(target="native")
+#external
+type FileHandle
+
+///|
+#cfg(target="native")
+#borrow(path, mode)
+extern "C" fn file_open(path : Bytes, mode : Bytes) -> FileHandle = "moonbit_fopen_ffi"
+
+///|
+#cfg(target="native")
+extern "C" fn is_null_file(file : FileHandle) -> Bool = "moonbit_is_null"
+
+///|
+#cfg(target="native")
+extern "C" fn file_seek(file : FileHandle, offset : Int, whence : Int) -> Int = "moonbit_fseek_ffi"
+
+///|
+#cfg(target="native")
+extern "C" fn file_tell(file : FileHandle) -> Int = "moonbit_ftell_ffi"
+
+///|
+#cfg(target="native")
+#borrow(buffer, file)
+extern "C" fn file_read(
+  buffer : Bytes,
+  size : Int,
+  nitems : Int,
+  file : FileHandle,
+) -> Int = "moonbit_fread_ffi"
+
+///|
+#cfg(target="native")
+extern "C" fn file_close(file : FileHandle) -> Int = "moonbit_fclose_ffi"
+
+///|
+#cfg(target="native")
+fn c_string(text : String) -> Bytes {
+  let bytes = @utf8.encode(text).to_array()
+  bytes.push(b'\x00')
+  Bytes::from_array(bytes)
+}
+
+///|
+#cfg(target="native")
+fn read_text_file(path : String) -> String? {
+  let file = file_open(c_string(path), c_string("rb"))
+  if is_null_file(file) {
+    return None
+  }
+  if file_seek(file, 0, 2) != 0 {
+    ignore(file_close(file))
+    return None
+  }
+  let size = file_tell(file)
+  if size < 0 || file_seek(file, 0, 0) != 0 {
+    ignore(file_close(file))
+    return None
+  }
+  let buffer = Bytes::new(size)
+  let read = file_read(buffer, 1, size, file)
+  ignore(file_close(file))
+  if read == size {
+    Some(@utf8.decode_lossy(buffer, ignore_bom=true))
+  } else {
+    None
+  }
+}
+
+///|
+#cfg(not(target="native"))
+fn read_text_file(path : String) -> String? {
+  let _ = path
+  None
+}
+
+///|
 fn simple_map() -> @grid.GridMap {
   @grid.new_grid(20, 20, p(0, 0), p(19, 19)).with_obstacles([
     p(4, 2),
@@ -159,6 +236,14 @@ fn default_repeats() -> Int {
 }
 
 ///|
+fn heuristic_for(movement : @grid.MovementMode) -> @heuristics.HeuristicKind {
+  match movement {
+    @grid.FourWay => @heuristics.Manhattan
+    @grid.EightWay => @heuristics.Octile
+  }
+}
+
+///|
 fn print_result(
   scenario : String,
   algorithm : String,
@@ -201,9 +286,12 @@ fn adjusted_result(
 }
 
 ///|
-fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
+fn run_scenario(
+  name : String,
+  map : @grid.GridMap,
+  movement : @grid.MovementMode,
+) -> Unit {
   let repeats = default_repeats()
-  let movement = @grid.EightWay
   let swarm_options = @swarm.options(
     60,
     100,
@@ -213,10 +301,11 @@ fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
     @swarm.default_fitness_weights(),
   )
   let region = @region.build_search_region(map, @region.default_options())
+  let heuristic = heuristic_for(movement)
   let astar_start = @clock.monotonic_clock_start()
-  let mut astar = @algorithms.astar(map, movement, @heuristics.Octile)
+  let mut astar = @algorithms.astar(map, movement, heuristic)
   for _ in 1..<repeats {
-    astar = @algorithms.astar(map, movement, @heuristics.Octile)
+    astar = @algorithms.astar(map, movement, heuristic)
   }
   let astar_elapsed = @clock.monotonic_clock_end(astar_start)
   let dijkstra_start = @clock.monotonic_clock_start()
@@ -410,13 +499,95 @@ fn run_dynamic_scenarios() -> Unit {
 }
 
 ///|
+fn run_default_scenarios() -> Unit {
+  run_scenario("rs_apso_20x20_simple", simple_map(), @grid.EightWay)
+  run_scenario("rs_apso_20x20_complex", complex_map(), @grid.EightWay)
+  run_dynamic_scenarios()
+}
+
+///|
+fn run_json_text(source : String, text : String) -> Bool {
+  match @json_map.grid_from_json(text) {
+    Some(data) => {
+      run_scenario(source, data.map, data.movement)
+      true
+    }
+    None => {
+      println("Invalid benchmark grid JSON: \{source}")
+      false
+    }
+  }
+}
+
+///|
+fn run_json_file(path : String) -> Bool {
+  match read_text_file(path) {
+    Some(text) => run_json_text(path, text)
+    None => {
+      println("Could not read benchmark JSON file: \{path}")
+      false
+    }
+  }
+}
+
+///|
+fn usage() -> Unit {
+  println("Usage:")
+  println("  moon run ./bench")
+  println("  moon run ./bench --target native -- <map.json> [more.json]")
+  println("  moon run ./bench --target native -- --map <map.json>")
+}
+
+///|
+fn map_args(args : Array[String]) -> Array[String]? {
+  let paths = []
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some([])
+      "--map" | "-m" =>
+        if index + 1 < args.length() {
+          paths.push(args[index + 1])
+          index = index + 1
+        } else {
+          return Some([])
+        }
+      value => paths.push(value)
+    }
+    index = index + 1
+  }
+  if paths.length() == 0 {
+    None
+  } else {
+    Some(paths)
+  }
+}
+
+///|
+fn run_json_files(paths : Array[String]) -> Bool {
+  let mut ok = true
+  for path in paths {
+    if !run_json_file(path) {
+      ok = false
+    }
+  }
+  ok
+}
+
+///|
 fn main {
   println(
     "scenario,algorithm,status,path_nodes,total_cost,path_length,smoothness," +
     "visited_nodes,expanded_nodes,iterations,candidates,best_fitness,seed," +
     "population_size,max_iterations,repeats,elapsed_us_total,elapsed_us_avg",
   )
-  run_scenario("rs_apso_20x20_simple", simple_map())
-  run_scenario("rs_apso_20x20_complex", complex_map())
-  run_dynamic_scenarios()
+  match map_args(@env.args()) {
+    Some(paths) =>
+      if paths.length() == 0 {
+        usage()
+      } else {
+        ignore(run_json_files(paths))
+      }
+    None => run_default_scenarios()
+  }
 }
