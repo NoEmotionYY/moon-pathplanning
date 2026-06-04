@@ -19,6 +19,11 @@ let result = @planner.plan(map, @planner.AStar, options)
 
 `PlannerOptions` 选择四方向或八方向移动，也能为 A 星算法选择启发函数。
 
+Planner 当前支持 `Bfs`、`Dfs`、`Dijkstra`、`AStar`、`BidirectionalAStar`、`Pso` 和
+`RsApso`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
+如果需要迭代次数、候选数量和适应度等附加信息，应直接调用 `@swarm.pso_plan()` 或
+`@swarm.rs_apso_plan()`。
+
 ## 算法调用示例
 
 调用方也可以直接使用算法包：
@@ -28,6 +33,87 @@ let result = @algorithms.bfs(map, @grid.FourWay)
 ```
 
 直接调用适合算法教学；业务入口推荐使用 Planner，以便保持返回字段一致。
+
+## 网格安全 API
+
+障碍物膨胀用于在栅格地图上预留机器人安全边距：
+
+```moonbit
+let safe_map = map.inflate_obstacles(1)
+let result = @planner.plan(safe_map, @planner.RsApso, @planner.default_options())
+```
+
+`inflate_obstacles(radius)` 会把每个障碍物周围 Chebyshev 半径内的合法栅格也标为障碍物。
+如果膨胀后覆盖起点或终点，现有 `validate()` 会返回端点被阻塞的非法输入结果。
+
+## 区域搜索 API
+
+区域搜索模块用于 RS-APSO 前置预处理，也可以独立观察障碍物边界角和候选搜索区域：
+
+```moonbit
+let options = @region.default_options()
+let corners = @region.detect_boundary_corners(map)
+let region = @region.build_search_region(map, options)
+```
+
+`detect_boundary_corners()` 按论文中的 `(count, count1, count2)` 条件识别障碍物边界角。
+`build_search_region()` 从边界角沿四方向探索自由栅格；当地图没有可用边界角时，默认回退
+到所有可行走栅格，便于后续 PSO 仍有候选区域。
+
+## RS-APSO 预留 API
+
+根据论文资料，swarm 包已提供适应度、固定 seed 随机源、PSO 参数结构、自适应参数和
+基础离散 RS-APSO 主循环。Planner 已接入 `Pso` 与 `RsApso`，直接调用 swarm 可获得附加指标：
+
+```moonbit
+let swarm_options = @swarm.default_options()
+let result = @swarm.rs_apso_plan(map, region, swarm_options)
+```
+
+当前可用的基础能力包括 `path_length()`、`path_smoothness()`、`path_fitness()`、
+`default_fitness_weights()`、`random_state(seed)`、`default_options()`、`candidate_path()`
+、`adaptive_parameters()`、`pso_plan()` 和 `rs_apso_plan()`。当前 `rs_apso_plan()` 将粒子
+表示为区域候选中间路点，并用自适应参数影响个体学习、群体学习和逃逸选择。正式 API 需要
+在 MoonBit 工具链可用后结合实现细节收敛。
+
+## 动态避障 API
+
+动态避障模块提供静态路径之后的局部修正能力：
+
+```moonbit
+let obstacle = @dynamic.moving_obstacle_with_velocity(@core.point(3, 2), 1.2, 1, 0)
+let options = @dynamic.default_collision_options()
+let adjusted = @dynamic.jump_avoidance_over_time(map, result.path, [obstacle], options)
+```
+
+`collision_radius()` 使用论文中的危险系数与安全系数公式；`would_collide()` 判断机器人点位
+是否进入移动障碍物碰撞区域；`moving_obstacle_with_velocity()` 与 `MovingObstacle::at_step()`
+用于按路径步数预测左右、上下或组合方向移动；`jump_avoidance_over_time()` 在下一路径点
+发生碰撞风险时，沿靠近终点方向的同行或同列候选点进行跳跃修正。
+
+## 可视化 API
+
+基础 SVG 导出用于展示地图和最终路径；区域搜索 SVG 导出用于调试 RS-APSO 预处理：
+
+```moonbit
+let svg = @svg.grid_region_to_svg(map, region, result.path, 20)
+```
+
+`grid_region_to_svg()` 会叠加候选搜索区域、障碍物边界角、障碍物、路径、起点和终点。
+
+## Benchmark Runner
+
+`bench` main 包固定复用两个 20x20 RS-APSO benchmark 场景，可直接运行：
+
+```bash
+moon run ./bench
+```
+
+输出为 CSV，当前包含 `scenario`、`algorithm`、`status`、`path_nodes`、`total_cost`、
+`path_length`、`smoothness`、`visited_nodes`、`expanded_nodes`、`iterations`、
+`candidates`、`best_fitness`、`seed`、`population_size` 和 `max_iterations`。
+经典算法的 swarm 参数字段为 `0`；PSO 与 RS-APSO 会额外记录区域候选数量、实际迭代次数、
+最终适应度和固定 seed 配置。
 
 ## PathResult 字段
 
@@ -56,4 +142,3 @@ let result = @algorithms.bfs(map, @grid.FourWay)
 
 初版 MoonBit 模块提供 schema 对应序列化能力和示例文件。完整 JSON 文件解析需要在
 可用 MoonBit 工具链与 JSON 依赖边界下继续验证。
-

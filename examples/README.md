@@ -4,9 +4,16 @@
 
 - `simple_grid.json` 演示四方向障碍绕行。
 - `weighted_grid.json` 演示八方向地图、障碍物和 terrain cost。
+- `rs_apso_20x20_simple.json` 演示论文风格 20x20 简单静态栅格。
+- `rs_apso_20x20_complex.json` 演示论文风格 20x20 复杂静态栅格、狭窄通道和 terrain cost。
 
-两个文件都使用 `moon-pathplanning.grid.v1` schema。`start`、`goal`、
+这些文件都使用 `moon-pathplanning.grid.v1` schema。`start`、`goal`、
 `obstacles` 与 terrain 中的 `point` 都写成 `[x, y]`。
+20x20 RS-APSO 文件用于固定项目内 benchmark 输入，是根据论文实验尺寸和障碍复杂度整理的
+代表性场景，不声称逐像素复刻论文图 8 与图 9。
+
+可以通过仓库根目录的 `moon run ./bench` 运行当前 benchmark runner。runner 会复用这两类
+20x20 场景，输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标。
 
 ## CLI demo
 
@@ -22,5 +29,6 @@ moon run cli
 ## SVG
 
 调用 `@svg.grid_to_svg(map, result.path, cell_size)` 可得到 SVG 字符串。该导出适合
-在示例程序或展示层写入文件，仓库只保留导出代码，不保留大批生成图片。
-
+在示例程序或展示层写入文件。调试 RS-APSO 区域搜索时，可调用
+`@svg.grid_region_to_svg(map, region, result.path, cell_size)` 叠加候选搜索区域和障碍物
+边界角。仓库只保留导出代码，不保留大批生成图片。

@@ -1,9 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- 根据《基于区域搜索粒子群算法的机器人路径规划》新增 RS-APSO 后续开发准备文档。
+- 调整路线图，将区域搜索、RS-APSO 与动态避障列为下一阶段重点。
+- 补充 RS-APSO 预留 API 和 benchmark 指标准备。
+- 新增 `GridMap::inflate_obstacles(radius)` 与测试，支持障碍物膨胀安全边距建模。
+- 新增 `src/region` 区域搜索模块与测试，支持障碍物边界角识别和候选搜索区域生成。
+- 新增 `src/swarm` 基础模块与测试，支持路径适应度、固定 seed 随机源和 PSO 参数默认值。
+- 新增基础离散 `pso_plan()`，支持从区域候选中间路点生成可行路径并保持固定 seed 可复现。
+- 新增 `src/dynamic` 动态避障基础模块与测试，支持碰撞半径、碰撞判断、速度方向预测和跳跃避障路径修正。
+- 新增 `adaptive_parameters()` 与基础离散 `rs_apso_plan()`，支持论文自适应参数调度和固定 seed 复现。
+- Planner 新增 `Pso` 与 `RsApso` 算法类型，通过区域搜索候选集统一返回 `PathResult`。
+- 新增 `grid_region_to_svg()` 与测试，支持候选搜索区域和障碍物边界角 SVG 叠加导出。
+- 新增 `rs_apso_20x20_simple.json` 与 `rs_apso_20x20_complex.json`，固定 RS-APSO benchmark 代表性输入。
+- 新增 `bench` main 包，可通过 `moon run ./bench` 输出 20x20 simple/complex 场景下 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标。
+- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 37 项测试全部通过。
+- 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
+
 ## 0.1.0 - 2026-05-23
 
 - 初始化 MoonBit 模块、MIT License、中文执行日志和工程文档。
 - 实现网格地图、移动模式、terrain cost、加权图与启发函数。
 - 实现 BFS、DFS、Dijkstra、A 星、双向 A 星和统一 Planner。
 - 添加 MoonBit 测试、JSON 示例与序列化、SVG 导出、CLI demo 和 CI。
-
