@@ -1,0 +1,5 @@
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/heuristics",
+}
