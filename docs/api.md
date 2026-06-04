@@ -103,6 +103,20 @@ let adjusted = @dynamic.jump_avoidance_over_reflected_time(
 `reflected_coordinate()` 与 `MovingObstacle::at_reflected_step()` 会让坐标在 `[min, max]`
 边界内往复反弹；当某一轴的 `min >= max` 时，该轴固定在 `min`，适合水平或垂直单轴往复。
 
+连续坐标动态障碍物可用 Double 坐标和时间步预测：
+
+```moonbit
+let moving = @dynamic.continuous_moving_obstacle(0.0, 0.0, 1.0, 0.5, 0.0)
+let projected = moving.at_time(2.0)
+let adjusted = @dynamic.jump_avoidance_over_continuous_time(
+  map, result.path, [moving], options, 0.5,
+)
+```
+
+`ContinuousMovingObstacle` 保留小数坐标、速度大小和 x/y 方向速度；`would_collide_continuous()`
+会直接用栅格点中心到连续障碍物坐标的距离判断碰撞半径；`jump_avoidance_over_continuous_time()`
+按 `path` 索引乘以 `step_time` 预测障碍物位置后进行局部跳跃修正。
+
 ## 可视化 API
 
 基础 SVG 导出用于展示地图和最终路径；区域搜索 SVG 导出用于调试 RS-APSO 预处理：

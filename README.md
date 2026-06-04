@@ -24,7 +24,7 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 - BFS、DFS、Dijkstra、A 星和双向 A 星搜索。
 - 区域搜索预处理：障碍物边界角识别、候选搜索区域生成和空地图自由区域回退。
 - RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、PSO/RS-APSO 主循环。
-- 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测和跳跃避障路径修正。
+- 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测和跳跃避障路径修正。
 - Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例、序列化和字符串解析、SVG 导出、CLI demo 与 benchmark runner。
 
 ## 当前完成情况
@@ -88,7 +88,7 @@ let result = @planner.plan(map, @planner.AStar, @planner.default_options())
 
 MoonBit 测试位于 `test/`，覆盖最短路径、无路径、障碍绕行、权重地图、三类算法
 一致性、移动模式、起点等于终点、非法地图输入、JSON 字符串解析、区域搜索、
-RS-APSO 基础能力和动态避障。
+RS-APSO 基础能力和动态避障，包含整数栅格、边界往复和连续坐标动态障碍物。
 标准检查命令是 `moon check` 与 `moon test`。
 
 ## 可视化说明

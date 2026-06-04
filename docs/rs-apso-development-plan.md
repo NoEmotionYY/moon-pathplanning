@@ -89,20 +89,26 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 已开始新增 `src/dynamic` 包：
 
 - `MovingObstacle`：动态障碍物状态。
+- `ContinuousMovingObstacle`：连续坐标动态障碍物状态。
 - `CollisionOptions`：机器人速度、单位栅格长度、比例系数和安全策略参数。
 - `moving_obstacle_with_velocity(position, speed, velocity_x, velocity_y)`：记录移动方向。
+- `continuous_moving_obstacle(x, y, speed, velocity_x, velocity_y)`：记录 Double 坐标和连续速度。
 - `MovingObstacle::at_step(step)`：按路径步数预测障碍物位置。
+- `ContinuousMovingObstacle::at_time(time)` / `at_step_time(step, step_time)`：按连续时间预测障碍物位置。
 - `reflected_coordinate(origin, velocity, step, min, max)`：计算边界往复反射坐标。
 - `MovingObstacle::at_reflected_step(step, min_x, max_x, min_y, max_y)`：按路径步数预测边界往复障碍物位置。
 - `collision_radius(options, obstacle)`：计算碰撞检测半径。
+- `continuous_collision_radius(options, obstacle)`：计算连续障碍物碰撞检测半径。
 - `would_collide(robot_point, obstacle, options)`：判断是否进入碰撞检测区域。
+- `would_collide_continuous(robot_point, obstacle, options)`：按连续坐标判断是否进入碰撞检测区域。
 - `jump_avoidance(map, path, obstacles, options)`：对静态路径进行局部修正。
 - `jump_avoidance_over_time(map, path, obstacles, options)`：按路径步数预测移动障碍物后进行局部修正。
 - `jump_avoidance_over_reflected_time(map, path, obstacles, options, min_x, max_x, min_y, max_y)`：按边界往复预测移动障碍物后进行局部修正。
+- `jump_avoidance_over_continuous_time(map, path, obstacles, options, step_time)`：按连续时间步预测移动障碍物后进行局部修正。
 
 当前已覆盖碰撞半径、近距离碰撞判断、跳跃避障修正、安全路径不变、左右移动、上下移动和
-双向移动障碍物，并新增水平/垂直边界往复与进入碰撞半径后的跳跃修正测试。后续可继续补
-更贴近连续空间速度的动态仿真模型。
+双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞和进入碰撞半径后
+的跳跃修正测试。后续可继续补更完整的连续空间规划模型和 benchmark 对比。
 
 ## 测试清单
 
@@ -117,6 +123,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - 动态障碍物未进入碰撞半径时路径不变，进入后产生有效跳跃点。
 - 左右、上下和双向移动障碍物可按路径步数预测并触发跳跃修正。
 - 边界往复移动障碍物可在水平/垂直边界内反弹，且进入碰撞半径后触发跳跃修正。
+- 连续坐标动态障碍物可按时间步预测位置，且进入碰撞半径后触发跳跃修正。
 
 ## Benchmark 准备
 
