@@ -129,7 +129,8 @@ let svg = @svg.grid_region_to_svg(map, region, result.path, 20)
 
 ## Benchmark Runner
 
-`bench` main 包固定复用两个 20x20 RS-APSO benchmark 场景，可直接运行：
+`bench` main 包固定复用两个 20x20 RS-APSO benchmark 场景，并附带一个 5x1 动态避障
+对比场景，可直接运行：
 
 ```bash
 moon run ./bench
@@ -142,6 +143,9 @@ moon run ./bench
 经典算法的 swarm 参数字段为 `0`；PSO 与 RS-APSO 会额外记录区域候选数量、实际迭代次数、
 最终适应度和固定 seed 配置。当前默认重复次数为 5，耗时使用 `moonbitlang/core/bench`
 提供的 monotonic clock 记录。
+动态场景使用 `dynamic_5x1`，算法列分别输出 `astar_static`、`dynamic_time`、
+`dynamic_reflected` 和 `dynamic_continuous`，用于比较静态路径、整数速度动态障碍物、
+边界往复预测和连续坐标时间步预测后的路径修正结果。
 
 ## PathResult 字段
 

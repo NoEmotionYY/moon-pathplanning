@@ -16,7 +16,8 @@ native 后端读取这些 JSON 文件。
 
 可以通过仓库根目录的 `moon run ./bench` 运行当前 benchmark runner。runner 会复用这两类
 20x20 场景，输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次重复运行、
-总耗时和平均耗时。
+总耗时和平均耗时；同时输出 `dynamic_5x1` 动态避障场景，用于对比静态 A 星基线、整数速度、
+边界往复和连续坐标时间步修正。
 
 ## CLI demo
 
