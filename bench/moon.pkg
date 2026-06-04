@@ -1,6 +1,7 @@
 import {
   "NoEmotionYY/moon-pathplanning/src/algorithms",
   "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/dynamic",
   "NoEmotionYY/moon-pathplanning/src/grid",
   "NoEmotionYY/moon-pathplanning/src/heuristics",
   "NoEmotionYY/moon-pathplanning/src/region",

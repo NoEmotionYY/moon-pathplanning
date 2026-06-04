@@ -138,6 +138,11 @@ fn complex_map() -> @grid.GridMap {
 }
 
 ///|
+fn dynamic_map() -> @grid.GridMap {
+  @grid.new_grid(5, 1, p(0, 0), p(4, 0))
+}
+
+///|
 fn status_name(result : @core.PathResult) -> String {
   if result.status is @core.Found {
     "found"
@@ -176,6 +181,23 @@ fn print_result(
     "\{seed},\{population_size},\{max_iterations},\{repeats}," +
     "\{elapsed_us_total},\{elapsed_us_avg}",
   )
+}
+
+///|
+fn adjusted_result(
+  base : @core.PathResult,
+  adjusted : Array[@core.Point],
+) -> @core.PathResult {
+  if base.status is @core.Found {
+    @core.found_result(
+      adjusted,
+      @swarm.path_length(adjusted),
+      base.visited_nodes,
+      base.expanded_nodes,
+    )
+  } else {
+    base
+  }
 }
 
 ///|
@@ -270,6 +292,124 @@ fn run_scenario(name : String, map : @grid.GridMap) -> Unit {
 }
 
 ///|
+fn run_dynamic_scenarios() -> Unit {
+  let repeats = default_repeats()
+  let map = dynamic_map()
+  let movement = @grid.FourWay
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let base = @algorithms.astar(map, movement, @heuristics.Manhattan)
+  let baseline_start = @clock.monotonic_clock_start()
+  let mut baseline = base
+  for _ in 1..<repeats {
+    baseline = @algorithms.astar(map, movement, @heuristics.Manhattan)
+  }
+  let baseline_elapsed = @clock.monotonic_clock_end(baseline_start)
+  print_result(
+    "dynamic_5x1", "astar_static", baseline, 0, 0, 0.0, 0, 0, 0, repeats, baseline_elapsed,
+  )
+  let horizontal = @dynamic.moving_obstacle_with_velocity(p(0, 0), 1.0, 1, 0)
+  let over_time_start = @clock.monotonic_clock_start()
+  let mut over_time = @dynamic.jump_avoidance_over_time(
+    map,
+    base.path,
+    [horizontal],
+    options,
+  )
+  for _ in 1..<repeats {
+    over_time = @dynamic.jump_avoidance_over_time(
+      map,
+      base.path,
+      [horizontal],
+      options,
+    )
+  }
+  let over_time_elapsed = @clock.monotonic_clock_end(over_time_start)
+  print_result(
+    "dynamic_5x1",
+    "dynamic_time",
+    adjusted_result(base, over_time),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    over_time_elapsed,
+  )
+  let reflected = @dynamic.moving_obstacle_with_velocity(p(0, 0), 1.0, 1, 0)
+  let reflected_start = @clock.monotonic_clock_start()
+  let mut reflected_path = @dynamic.jump_avoidance_over_reflected_time(
+    map,
+    base.path,
+    [reflected],
+    options,
+    0,
+    2,
+    0,
+    0,
+  )
+  for _ in 1..<repeats {
+    reflected_path = @dynamic.jump_avoidance_over_reflected_time(
+      map,
+      base.path,
+      [reflected],
+      options,
+      0,
+      2,
+      0,
+      0,
+    )
+  }
+  let reflected_elapsed = @clock.monotonic_clock_end(reflected_start)
+  print_result(
+    "dynamic_5x1",
+    "dynamic_reflected",
+    adjusted_result(base, reflected_path),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    reflected_elapsed,
+  )
+  let continuous = @dynamic.continuous_moving_obstacle(0.0, 0.0, 1.0, 1.0, 0.0)
+  let continuous_start = @clock.monotonic_clock_start()
+  let mut continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+    map,
+    base.path,
+    [continuous],
+    options,
+    1.0,
+  )
+  for _ in 1..<repeats {
+    continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+      map,
+      base.path,
+      [continuous],
+      options,
+      1.0,
+    )
+  }
+  let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)
+  print_result(
+    "dynamic_5x1",
+    "dynamic_continuous",
+    adjusted_result(base, continuous_path),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    continuous_elapsed,
+  )
+}
+
+///|
 fn main {
   println(
     "scenario,algorithm,status,path_nodes,total_cost,path_length,smoothness," +
@@ -278,4 +418,5 @@ fn main {
   )
   run_scenario("rs_apso_20x20_simple", simple_map())
   run_scenario("rs_apso_20x20_complex", complex_map())
+  run_dynamic_scenarios()
 }
