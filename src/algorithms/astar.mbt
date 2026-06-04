@@ -12,11 +12,7 @@ pub fn astar(
     return @core.found_result([map.start], 0.0, 1, 0)
   }
   let initial_priority = @heuristics.estimate(heuristic, map.start, map.goal)
-  let frontier = [{
-    point: map.start,
-    score: 0.0,
-    priority: initial_priority,
-  }]
+  let frontier = [{ point: map.start, score: 0.0, priority: initial_priority }]
   let scores = []
   let closed = []
   let parents = []
@@ -42,7 +38,7 @@ pub fn astar(
             let priority = candidate +
               @heuristics.estimate(heuristic, neighbor.point, map.goal)
             match score_for(scores, neighbor.point) {
-              Some(old_score) => {
+              Some(old_score) =>
                 if candidate < old_score {
                   set_score(scores, neighbor.point, candidate, priority)
                   set_parent(parents, neighbor.point, current, neighbor.cost)
@@ -52,7 +48,6 @@ pub fn astar(
                     priority,
                   })
                 }
-              }
               None => {
                 set_score(scores, neighbor.point, candidate, priority)
                 set_parent(parents, neighbor.point, current, neighbor.cost)
@@ -71,4 +66,3 @@ pub fn astar(
   }
   @core.no_path_result(scores.length(), expanded)
 }
-

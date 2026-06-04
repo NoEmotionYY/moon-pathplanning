@@ -150,4 +150,3 @@ pub fn WeightedGraph::edge_weight(
   }
   None
 }
-

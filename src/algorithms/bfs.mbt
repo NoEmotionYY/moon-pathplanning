@@ -1,5 +1,8 @@
 ///|
-pub fn bfs(map : @grid.GridMap, movement : @grid.MovementMode) -> @core.PathResult {
+pub fn bfs(
+  map : @grid.GridMap,
+  movement : @grid.MovementMode,
+) -> @core.PathResult {
   match map.validate() {
     Some(error) => return @core.invalid_result(error)
     None => ()
@@ -34,4 +37,3 @@ pub fn bfs(map : @grid.GridMap, movement : @grid.MovementMode) -> @core.PathResu
   }
   @core.no_path_result(visited.length(), expanded)
 }
-

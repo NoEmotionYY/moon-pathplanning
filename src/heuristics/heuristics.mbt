@@ -92,4 +92,3 @@ pub fn estimate(
     Octile => octile(left, right)
   }
 }
-

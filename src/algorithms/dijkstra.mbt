@@ -34,7 +34,7 @@ pub fn dijkstra(
           for neighbor in map.neighbors(current, movement) {
             let candidate = entry.score + neighbor.cost
             match score_for(scores, neighbor.point) {
-              Some(old_score) => {
+              Some(old_score) =>
                 if candidate < old_score {
                   set_score(scores, neighbor.point, candidate, candidate)
                   set_parent(parents, neighbor.point, current, neighbor.cost)
@@ -44,7 +44,6 @@ pub fn dijkstra(
                     priority: candidate,
                   })
                 }
-              }
               None => {
                 set_score(scores, neighbor.point, candidate, candidate)
                 set_parent(parents, neighbor.point, current, neighbor.cost)
@@ -63,4 +62,3 @@ pub fn dijkstra(
   }
   @core.no_path_result(scores.length(), expanded)
 }
-

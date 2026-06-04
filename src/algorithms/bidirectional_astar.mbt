@@ -41,15 +41,15 @@ fn push_astar_neighbor(
   heuristic : @heuristics.HeuristicKind,
 ) -> Unit {
   let candidate = current.score + neighbor.cost
-  let priority = candidate + @heuristics.estimate(heuristic, neighbor.point, target)
+  let priority = candidate +
+    @heuristics.estimate(heuristic, neighbor.point, target)
   match score_for(scores, neighbor.point) {
-    Some(old_score) => {
+    Some(old_score) =>
       if candidate < old_score {
         set_score(scores, neighbor.point, candidate, priority)
         set_parent(parents, neighbor.point, current.point, neighbor.cost)
         frontier.push({ point: neighbor.point, score: candidate, priority })
       }
-    }
     None => {
       set_score(scores, neighbor.point, candidate, priority)
       set_parent(parents, neighbor.point, current.point, neighbor.cost)
@@ -73,16 +73,10 @@ pub fn bidirectional_astar(
   }
   let start_priority = @heuristics.estimate(heuristic, map.start, map.goal)
   let goal_priority = @heuristics.estimate(heuristic, map.goal, map.start)
-  let start_frontier = [{
-    point: map.start,
-    score: 0.0,
-    priority: start_priority,
-  }]
-  let goal_frontier = [{
-    point: map.goal,
-    score: 0.0,
-    priority: goal_priority,
-  }]
+  let start_frontier = [
+    { point: map.start, score: 0.0, priority: start_priority },
+  ]
+  let goal_frontier = [{ point: map.goal, score: 0.0, priority: goal_priority }]
   let start_scores = []
   let goal_scores = []
   let start_closed = []
@@ -94,7 +88,7 @@ pub fn bidirectional_astar(
   set_score(goal_scores, map.goal, 0.0, goal_priority)
   while !start_frontier.is_empty() && !goal_frontier.is_empty() {
     match pop_best(start_frontier) {
-      Some(current) => {
+      Some(current) =>
         if !contains_point(start_closed, current.point) {
           start_closed.push(current.point)
           expanded = expanded + 1
@@ -125,11 +119,10 @@ pub fn bidirectional_astar(
             )
           }
         }
-      }
       None => ()
     }
     match pop_best(goal_frontier) {
-      Some(current) => {
+      Some(current) =>
         if !contains_point(goal_closed, current.point) {
           goal_closed.push(current.point)
           expanded = expanded + 1
@@ -160,10 +153,8 @@ pub fn bidirectional_astar(
             )
           }
         }
-      }
       None => ()
     }
   }
   @core.no_path_result(start_scores.length() + goal_scores.length(), expanded)
 }
-

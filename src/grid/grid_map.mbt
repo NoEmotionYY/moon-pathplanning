@@ -38,10 +38,7 @@ fn copy_terrain(cells : Array[TerrainCell]) -> Array[TerrainCell] {
 
 ///|
 pub fn GridMap::contains(self : GridMap, point : @core.Point) -> Bool {
-  point.x >= 0 &&
-  point.y >= 0 &&
-  point.x < self.width &&
-  point.y < self.height
+  point.x >= 0 && point.y >= 0 && point.x < self.width && point.y < self.height
 }
 
 ///|
@@ -146,4 +143,3 @@ pub fn GridMap::validate(self : GridMap) -> @core.SearchError? {
   }
   None
 }
-

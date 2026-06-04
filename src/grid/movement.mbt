@@ -65,4 +65,3 @@ pub fn GridMap::neighbors(
   }
   neighbors
 }
-

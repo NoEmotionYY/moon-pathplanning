@@ -8,4 +8,3 @@ pub(all) struct TerrainCell {
 pub fn terrain_cell(point : @core.Point, cost : Double) -> TerrainCell {
   { point, cost }
 }
-

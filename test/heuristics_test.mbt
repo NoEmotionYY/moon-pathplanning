@@ -7,4 +7,3 @@ test "heuristics estimate grid distances" {
   assert_eq(@heuristics.euclidean(start, goal), 5.0)
   assert_eq(@heuristics.octile(start, goal) > 5.0, true)
 }
-

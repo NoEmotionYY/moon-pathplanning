@@ -55,4 +55,3 @@ pub fn invalid_result(error : SearchError) -> PathResult {
     error: Some(error),
   }
 }
-

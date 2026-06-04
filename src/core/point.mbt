@@ -26,4 +26,3 @@ pub fn Point::key(self : Point, width : Int) -> Int {
 pub fn point_from_key(key : Int, width : Int) -> Point {
   { x: key % width, y: key / width }
 }
-

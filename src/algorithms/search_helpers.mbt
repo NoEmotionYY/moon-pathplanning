@@ -1,12 +1,12 @@
 ///|
-struct ParentEntry {
+priv struct ParentEntry {
   point : @core.Point
   parent : @core.Point
   cost : Double
 }
 
 ///|
-struct ScoreEntry {
+priv struct ScoreEntry {
   point : @core.Point
   score : Double
   priority : Double
@@ -16,16 +16,6 @@ struct ScoreEntry {
 fn contains_point(points : Array[@core.Point], point : @core.Point) -> Bool {
   for item in points {
     if item.same(point) {
-      return true
-    }
-  }
-  false
-}
-
-///|
-fn has_parent(parents : Array[ParentEntry], point : @core.Point) -> Bool {
-  for entry in parents {
-    if entry.point.same(point) {
       return true
     }
   }
@@ -147,13 +137,11 @@ fn pop_best(frontier : Array[ScoreEntry]) -> ScoreEntry? {
   let chosen = frontier[best_index]
   let last = frontier.pop()
   match last {
-    Some(last_entry) => {
+    Some(last_entry) =>
       if best_index < frontier.length() {
         frontier[best_index] = last_entry
       }
-    }
     None => ()
   }
   Some(chosen)
 }
-

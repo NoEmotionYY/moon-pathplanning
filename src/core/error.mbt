@@ -21,4 +21,3 @@ pub fn SearchError::message(self : SearchError) -> String {
     UnsupportedJsonInput => "JSON parsing is not available in the v1 importer"
   }
 }
-

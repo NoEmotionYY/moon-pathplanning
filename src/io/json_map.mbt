@@ -35,14 +35,16 @@ fn terrain_json(cells : Array[@grid.TerrainCell]) -> String {
     if index > 0 {
       text = text + ","
     }
-    text = text +
-      "{\"point\":\{point_json(cell.point)},\"cost\":\{cell.cost}}"
+    text = text + "{\"point\":\{point_json(cell.point)},\"cost\":\{cell.cost}}"
   }
   text + "]"
 }
 
 ///|
-pub fn grid_to_json(map : @grid.GridMap, movement : @grid.MovementMode) -> String {
+pub fn grid_to_json(
+  map : @grid.GridMap,
+  movement : @grid.MovementMode,
+) -> String {
   "{\"format\":\"\{grid_format_version()}\",\"width\":\{map.width},\"height\":\{map.height},\"start\":\{point_json(map.start)},\"goal\":\{point_json(map.goal)},\"movement\":\{movement_json(movement)},\"obstacles\":\{points_json(map.obstacles)},\"terrain\":\{terrain_json(map.terrain)}}"
 }
 
@@ -50,4 +52,3 @@ pub fn grid_to_json(map : @grid.GridMap, movement : @grid.MovementMode) -> Strin
 pub fn parsing_limit() -> @core.SearchError {
   @core.UnsupportedJsonInput
 }
-
