@@ -48,6 +48,58 @@ pub fn MovingObstacle::at_step(
 }
 
 ///|
+fn positive_mod(value : Int, divisor : Int) -> Int {
+  let remainder = value % divisor
+  if remainder < 0 {
+    remainder + divisor
+  } else {
+    remainder
+  }
+}
+
+///|
+pub fn reflected_coordinate(
+  origin : Int,
+  velocity : Int,
+  step : Int,
+  min : Int,
+  max : Int,
+) -> Int {
+  if min >= max {
+    min
+  } else {
+    let span = max - min
+    let period = span * 2
+    let offset = positive_mod(origin + velocity * step - min, period)
+    if offset <= span {
+      min + offset
+    } else {
+      max - (offset - span)
+    }
+  }
+}
+
+///|
+pub fn MovingObstacle::at_reflected_step(
+  self : MovingObstacle,
+  step : Int,
+  min_x : Int,
+  max_x : Int,
+  min_y : Int,
+  max_y : Int,
+) -> MovingObstacle {
+  {
+    position: @core.point(
+      reflected_coordinate(self.position.x, self.velocity_x, step, min_x, max_x),
+      reflected_coordinate(self.position.y, self.velocity_y, step, min_y, max_y),
+    ),
+    speed: self.speed,
+    velocity_x: self.velocity_x,
+    velocity_y: self.velocity_y,
+  }
+}
+
+///|
 pub fn collision_options(
   robot_speed : Double,
   unit_grid_length : Double,
@@ -107,6 +159,22 @@ fn projected_obstacles(
   let projected = []
   for obstacle in obstacles {
     projected.push(obstacle.at_step(step))
+  }
+  projected
+}
+
+///|
+fn reflected_obstacles(
+  obstacles : Array[MovingObstacle],
+  step : Int,
+  min_x : Int,
+  max_x : Int,
+  min_y : Int,
+  max_y : Int,
+) -> Array[MovingObstacle] {
+  let projected = []
+  for obstacle in obstacles {
+    projected.push(obstacle.at_reflected_step(step, min_x, max_x, min_y, max_y))
   }
   projected
 }
@@ -222,6 +290,37 @@ pub fn jump_avoidance_over_time(
     let current = adjusted[adjusted.length() - 1]
     let next = path[index]
     let projected = projected_obstacles(obstacles, index)
+    if any_collision(next, projected, options) {
+      push_unique(adjusted, choose_jump_point(map, current, projected, options))
+    } else {
+      push_unique(adjusted, next)
+    }
+  }
+  adjusted
+}
+
+///|
+pub fn jump_avoidance_over_reflected_time(
+  map : @grid.GridMap,
+  path : Array[@core.Point],
+  obstacles : Array[MovingObstacle],
+  options : CollisionOptions,
+  min_x : Int,
+  max_x : Int,
+  min_y : Int,
+  max_y : Int,
+) -> Array[@core.Point] {
+  if path.length() < 2 || obstacles.is_empty() {
+    return path
+  }
+  let adjusted = []
+  adjusted.push(path[0])
+  for index in 1..<path.length() {
+    let current = adjusted[adjusted.length() - 1]
+    let next = path[index]
+    let projected = reflected_obstacles(
+      obstacles, index, min_x, max_x, min_y, max_y,
+    )
     if any_collision(next, projected, options) {
       push_unique(adjusted, choose_jump_point(map, current, projected, options))
     } else {
