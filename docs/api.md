@@ -117,6 +117,18 @@ let adjusted = @dynamic.jump_avoidance_over_continuous_time(
 会直接用栅格点中心到连续障碍物坐标的距离判断碰撞半径；`jump_avoidance_over_continuous_time()`
 按 `path` 索引乘以 `step_time` 预测障碍物位置后进行局部跳跃修正。
 
+连续轨迹安全评估可把离散路径转换成带时间的连续线段，并用采样判断是否进入连续动态障碍物
+碰撞半径：
+
+```moonbit
+let segments = @dynamic.continuous_segments_from_grid_path(result.path, 1.0)
+let safe = @dynamic.continuous_path_is_safe(segments, [moving], options, 4)
+```
+
+`ContinuousPoint` / `ContinuousSegment` 用 Double 坐标表示轨迹；`ContinuousSegment::point_at_time()`
+按线段起止时间插值，`continuous_segment_collides()` 会在同一时间采样机器人位置和动态障碍物
+预测位置。该能力用于后续更完整的连续空间规划模型，也可先作为路径安全验收器。
+
 ## 可视化 API
 
 基础 SVG 导出用于展示地图和最终路径；区域搜索 SVG 导出用于调试 RS-APSO 预处理：
@@ -129,8 +141,8 @@ let svg = @svg.grid_region_to_svg(map, region, result.path, 20)
 
 ## Benchmark Runner
 
-`bench` main 包固定复用两个 20x20 RS-APSO benchmark 场景，并附带一个 5x1 动态避障
-对比场景，可直接运行：
+`bench` main 包固定复用两个 20x20 RS-APSO benchmark 场景，并附带动态避障对比场景，
+可直接运行：
 
 ```bash
 moon run ./bench

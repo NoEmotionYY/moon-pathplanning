@@ -25,8 +25,8 @@
 - 已新增 `test/swarm_test.mbt`，覆盖适应度计算、随机源确定性和论文默认参数。
 - 已补充 `candidate_path()` 与基础离散 `pso_plan()`，支持在区域候选中间路点中搜索并用 A 星拼接可行路径。
 - 已扩展 `test/swarm_test.mbt`，覆盖候选路点拼接路径和固定 seed PSO 结果复现。
-- 已实现 `src/dynamic` 动态避障基础模块，支持碰撞半径、碰撞判断、速度方向预测、边界往复预测、连续坐标时间预测和跳跃避障路径修正。
-- 已新增并扩展 `test/dynamic_test.mbt`，覆盖论文碰撞半径、近距离碰撞、跳跃避障、安全路径不变、左右移动、上下移动、双向移动障碍物、边界往复动态障碍物和连续坐标动态障碍物。
+- 已实现 `src/dynamic` 动态避障基础模块，支持碰撞半径、碰撞判断、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估和跳跃避障路径修正。
+- 已新增并扩展 `test/dynamic_test.mbt`，覆盖论文碰撞半径、近距离碰撞、跳跃避障、安全路径不变、左右移动、上下移动、双向移动障碍物、边界往复动态障碍物、连续坐标动态障碍物和连续轨迹安全评估。
 - 已实现 `adaptive_parameters()` 与基础离散 `rs_apso_plan()`，支持论文自适应参数调度、个体/群体学习选择和固定 seed 复现。
 - 已扩展 `test/swarm_test.mbt`，覆盖自适应参数前后期趋势和 `rs_apso_plan()` 确定性。
 - 已将 `Pso` 与 `RsApso` 接入 Planner，统一返回 `PathResult`。
@@ -40,7 +40,7 @@
 - 已新增 `bench` main 包，可通过 `moon run ./bench` 输出两个 20x20 场景下 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次重复运行、总耗时和平均耗时。
 - 已配置 GitHub `origin` 与 GitLink `gitlink` 远程仓库；早期 GitHub `main` 已推送成功，本轮新增 commit 仅提交到本地仓库。
 - GitLink push 已尝试但未完成，普通尝试缺少可用凭证提示，放开网络后的尝试超时。
-- 已使用便携 MoonBit 工具链执行 `moon version`、`moon check` 与 `moon test`；`moon check` 通过，`moon test` 47 项全部通过。
+- 已使用便携 MoonBit 工具链执行 `moon version`、`moon check` 与 `moon test`；`moon check` 通过，`moon test` 50 项全部通过。
 
 ## 已完成内容
 
@@ -100,8 +100,8 @@
 - MoonBit 本地验证已通过；后续若换终端或 CI 环境，应继续保证 `MOON_HOME`/PATH 可定位同版本工具链与标准库。
 - 需要在具备 GitLink 凭证或可交互认证后重新 push `gitlink/main`。
 - GitHub `main` 当前通过 `git ls-remote origin refs/heads/main` 验证指向 `66a8e8b47ee4d57ab3074d54e8a65f48d38bf918`；本地 `main` 仍有多条未 push 提交，且显示 `behind 1`，本轮未执行 pull/rebase/merge。
-- 高级算法、跨后端文件输入策略、更多复杂动态组合和更高级连续空间规划模型仍在后续路线图中。
-- RS-APSO 当前已完成开发准备文档、`src/region` 第一阶段代码、`src/swarm` 基础层、基础离散 PSO/RS-APSO 主循环、Planner 接入、20x20 benchmark 固定输入、benchmark 重复耗时统计、JSON 字符串解析入口、native JSON 文件型 CLI 输入、benchmark JSON 文件输入参数、`src/dynamic` 基础层、边界往复动态障碍物场景、连续坐标时间预测、`dynamic_5x1` 和 `dynamic_10x10_crossing` 动态避障 benchmark 场景，尚未实现更高级的连续空间规划模型。
+- 高级算法、跨后端文件输入策略、更多复杂动态组合和更完整的连续空间规划模型仍在后续路线图中。
+- RS-APSO 当前已完成开发准备文档、`src/region` 第一阶段代码、`src/swarm` 基础层、基础离散 PSO/RS-APSO 主循环、Planner 接入、20x20 benchmark 固定输入、benchmark 重复耗时统计、JSON 字符串解析入口、native JSON 文件型 CLI 输入、benchmark JSON 文件输入参数、`src/dynamic` 基础层、边界往复动态障碍物场景、连续坐标时间预测、连续轨迹安全评估、`dynamic_5x1` 和 `dynamic_10x10_crossing` 动态避障 benchmark 场景，尚未实现更完整的连续空间规划模型。
 
 ## 本轮分批提交与验证记录
 
@@ -124,10 +124,14 @@
 - `docs: 记录 benchmark JSON 文件输入参数`：更新 README、API、benchmark notes、路线图、RS-APSO 开发准备、示例说明、执行日志和 CHANGELOG；验证 `git diff --check`。
 - `feat: 添加 10x10 动态避障 benchmark 场景`：新增 `dynamic_10x10_crossing`，覆盖 10x10 对角路径下多个动态障碍物的整数速度、边界往复和连续时间步修正；验证 `moon check`、`moon test`、`moon run ./bench`、`moon run ./bench --target native -- examples/simple_grid.json`、`git diff --check`。
 - `docs: 记录 10x10 动态避障 benchmark 场景`：更新 README、API、benchmark notes、路线图、RS-APSO 开发准备、示例说明、执行日志和 CHANGELOG；验证 `git diff --check`。
+- `feat: 添加连续轨迹安全评估`：新增 `ContinuousPoint`、`ContinuousSegment`、离散路径到连续线段转换、连续线段采样碰撞检测和连续路径安全评估；验证 `moon check`、`moon test` 50/50、`git diff --check`。
+- `docs: 记录连续轨迹安全评估`：更新 README、API、设计、路线图、RS-APSO 开发准备、benchmark notes、执行日志和 CHANGELOG；验证 `git diff --check`。
 
 ## 当前 commit 记录摘要
 
 ```bash
+e20e6ed feat: 添加连续轨迹安全评估
+7769c1f docs: 记录 10x10 动态避障 benchmark 场景
 f59c619 feat: 添加 10x10 动态避障 benchmark 场景
 02d59c0 docs: 记录 benchmark JSON 文件输入参数
 4e3c398 feat: 添加 benchmark JSON 文件输入参数
@@ -238,6 +242,8 @@ git commit -m "feat: 添加 benchmark JSON 文件输入参数"
 git commit -m "docs: 记录 benchmark JSON 文件输入参数"
 git commit -m "feat: 添加 10x10 动态避障 benchmark 场景"
 git commit -m "docs: 记录 10x10 动态避障 benchmark 场景"
+git commit -m "feat: 添加连续轨迹安全评估"
+git commit -m "docs: 记录连续轨迹安全评估"
 moon check
 moon test
 moon run cli
@@ -254,7 +260,7 @@ git diff --check
 - 最近一次测试命令：`moon test`
 - 测试是否通过：是。
 - 工具链版本：`moon 0.1.20260529 (3e1c753 2026-05-29)`。
-- 验证结果：`moon check` 通过；`moon test` 共 47 项，全部通过；`moon run cli` 内置 demo 通过；`moon run cli --target native -- examples/simple_grid.json` 与 `moon run cli --target native -- --map examples/weighted_grid.json` 均能读取 JSON 文件并输出 A 星结果；`moon run ./bench` 可输出 simple/complex 两个场景和 A 星、Dijkstra、PSO、RS-APSO 四类算法的 CSV 指标，并输出 `dynamic_5x1` 与 `dynamic_10x10_crossing` 下 `astar_static`、`dynamic_time`、`dynamic_reflected`、`dynamic_continuous` 四类动态避障指标；`moon run ./bench --target native -- examples/simple_grid.json` 与 `moon run ./bench --target native -- --map examples/weighted_grid.json` 均能按 JSON 文件输出四算法 CSV 指标。
+- 验证结果：`moon check` 通过；`moon test` 共 50 项，全部通过；`moon run cli` 内置 demo 通过；`moon run cli --target native -- examples/simple_grid.json` 与 `moon run cli --target native -- --map examples/weighted_grid.json` 均能读取 JSON 文件并输出 A 星结果；`moon run ./bench` 可输出 simple/complex 两个场景和 A 星、Dijkstra、PSO、RS-APSO 四类算法的 CSV 指标，并输出 `dynamic_5x1` 与 `dynamic_10x10_crossing` 下 `astar_static`、`dynamic_time`、`dynamic_reflected`、`dynamic_continuous` 四类动态避障指标；`moon run ./bench --target native -- examples/simple_grid.json` 与 `moon run ./bench --target native -- --map examples/weighted_grid.json` 均能按 JSON 文件输出四算法 CSV 指标。
 - 备注：系统 PATH 仍未全局暴露 `moon`，本次通过临时 `MOON_HOME` 指向 Codex work 目录中的便携工具链完成验证。
 
 ## 当前已知问题
@@ -267,7 +273,7 @@ git diff --check
 
 ## 下一次执行必须从这里继续
 
-下一次执行可直接从已通过的便携 MoonBit 验证状态继续，优先补跨后端文件输入策略、更多复杂动态组合和更高级的连续空间规划模型。若需要同步远程，再提供 GitLink 可用凭证或可交互认证环境，重新执行
+下一次执行可直接从已通过的便携 MoonBit 验证状态继续，优先补跨后端文件输入策略、更多复杂动态组合和更完整的连续空间规划模型。若需要同步远程，再提供 GitLink 可用凭证或可交互认证环境，重新执行
 `git push -u gitlink main`，再用 `git ls-remote` 核对 GitHub 与 GitLink 的 `main` 最新
 commit hash。不要重复实现现有基础算法、区域搜索模块、基础 PSO/RS-APSO 主循环、dynamic
 基础层、边界往复动态障碍物场景、连续坐标动态障碍物模型、native JSON 文件型 CLI 输入、Planner 接入和已完成的 swarm 基础层。
@@ -281,9 +287,9 @@ commit hash。不要重复实现现有基础算法、区域搜索模块、基础
 
 ## 本次执行结束状态
 
-- 本次完成：已完成初步工程源码、测试文件、示例、CLI、SVG、文档与 CI，并补充障碍物膨胀安全边距、区域搜索 SVG 叠加导出、20x20 RS-APSO benchmark 固定输入、benchmark 重复耗时统计、benchmark JSON 文件输入参数、动态避障 benchmark 场景、10x10 多方向穿越动态 benchmark、JSON 字符串解析、native JSON 文件型 CLI 输入、RS-APSO 后续开发准备、区域搜索模块、swarm 基础层、基础 PSO/RS-APSO 主循环、Planner 接入和 dynamic 基础层；dynamic 当前支持速度方向预测、多方向移动、边界往复和连续坐标动态障碍物测试。
+- 本次完成：已完成初步工程源码、测试文件、示例、CLI、SVG、文档与 CI，并补充障碍物膨胀安全边距、区域搜索 SVG 叠加导出、20x20 RS-APSO benchmark 固定输入、benchmark 重复耗时统计、benchmark JSON 文件输入参数、动态避障 benchmark 场景、10x10 多方向穿越动态 benchmark、连续轨迹安全评估、JSON 字符串解析、native JSON 文件型 CLI 输入、RS-APSO 后续开发准备、区域搜索模块、swarm 基础层、基础 PSO/RS-APSO 主循环、Planner 接入和 dynamic 基础层；dynamic 当前支持速度方向预测、多方向移动、边界往复、连续坐标动态障碍物和连续轨迹安全评估测试。
 - 本次新增 commit：已按功能批次创建多条中文有效 commit，未把全部改动合并为一次提交。
-- 本次测试结果：使用便携 MoonBit 工具链完成 `moon version`、`moon check`、`moon test`、`moon run cli`、native JSON 文件型 CLI 输入验证、`moon run ./bench` 与 benchmark native JSON 文件输入验证；`moon test` 共 47 项，全部通过，benchmark CSV 已包含 `dynamic_5x1` 与 `dynamic_10x10_crossing` 四类动态避障行，也能读取 `examples/simple_grid.json` 和 `examples/weighted_grid.json` 输出四算法指标。
+- 本次测试结果：使用便携 MoonBit 工具链完成 `moon version`、`moon check`、`moon test`、`moon run cli`、native JSON 文件型 CLI 输入验证、`moon run ./bench` 与 benchmark native JSON 文件输入验证；`moon test` 共 50 项，全部通过，benchmark CSV 已包含 `dynamic_5x1` 与 `dynamic_10x10_crossing` 四类动态避障行，也能读取 `examples/simple_grid.json` 和 `examples/weighted_grid.json` 输出四算法指标。
 - 本次是否已 push GitHub：否；按本轮假设仅提交到本地 Git 仓库，未 push。
 - 本次是否已 push GitLink：否，普通推送因凭证提示不可用失败，放开网络后的推送尝试超时。
-- 下一步：按 RS-APSO 开发准备继续实现跨后端文件输入策略、更多复杂动态组合和更高级的连续空间规划模型，并在具备 GitLink 认证条件后重新推送和核对两端 hash。
+- 下一步：按 RS-APSO 开发准备继续实现跨后端文件输入策略、更多复杂动态组合和更完整的连续空间规划模型，并在具备 GitLink 认证条件后重新推送和核对两端 hash。
