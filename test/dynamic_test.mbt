@@ -109,6 +109,47 @@ test "dynamic continuous trajectory detects obstacle along segment" {
 }
 
 ///|
+test "dynamic continuous trajectory reports first collision details" {
+  let path = [@core.point(0, 0), @core.point(4, 0)]
+  let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)
+  let far = @dynamic.continuous_moving_obstacle(0.0, 4.0, 1.0, 0.0, 0.0)
+  let blocking = @dynamic.continuous_moving_obstacle(2.0, 0.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  match
+    @dynamic.continuous_path_first_collision(
+      segments,
+      [far, blocking],
+      options,
+      4,
+    ) {
+    Some(collision) => {
+      assert_eq(collision.segment_index, 0)
+      assert_eq(collision.sample_index, 2)
+      assert_eq(collision.obstacle_index, 1)
+      assert_eq(collision.time, 2.0)
+      assert_eq(collision.robot.x, 2.0)
+      assert_eq(collision.obstacle.x, 2.0)
+    }
+    None => fail("expected continuous collision report")
+  }
+}
+
+///|
+test "dynamic continuous trajectory reports no collision when safe" {
+  let path = [@core.point(0, 0), @core.point(4, 0)]
+  let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)
+  let obstacle = @dynamic.continuous_moving_obstacle(2.0, 3.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let collision = @dynamic.continuous_path_first_collision(
+    segments,
+    [obstacle],
+    options,
+    4,
+  )
+  assert_eq(collision is None, true)
+}
+
+///|
 test "dynamic continuous trajectory leaves distant obstacle safe" {
   let path = [@core.point(0, 0), @core.point(4, 0)]
   let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)

@@ -30,6 +30,16 @@ pub(all) struct ContinuousSegment {
 } derive(Debug)
 
 ///|
+pub(all) struct ContinuousCollision {
+  segment_index : Int
+  sample_index : Int
+  obstacle_index : Int
+  time : Double
+  robot : ContinuousPoint
+  obstacle : ContinuousPoint
+} derive(Debug)
+
+///|
 pub(all) struct CollisionOptions {
   robot_speed : Double
   unit_grid_length : Double
@@ -291,44 +301,60 @@ pub fn would_collide_continuous_point(
 }
 
 ///|
-fn any_continuous_point_collision(
-  point : ContinuousPoint,
-  obstacles : Array[ContinuousMovingObstacle],
-  options : CollisionOptions,
-) -> Bool {
-  for obstacle in obstacles {
-    if would_collide_continuous_point(point, obstacle, options) {
-      return true
-    }
-  }
-  false
-}
-
-///|
 pub fn continuous_segment_collides(
   segment : ContinuousSegment,
   obstacles : Array[ContinuousMovingObstacle],
   options : CollisionOptions,
   samples : Int,
 ) -> Bool {
+  continuous_segment_first_collision(segment, obstacles, options, samples)
+  is Some(_)
+}
+
+///|
+fn continuous_segment_first_collision_with_index(
+  segment : ContinuousSegment,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples : Int,
+  segment_index : Int,
+) -> ContinuousCollision? {
   if obstacles.is_empty() {
-    return false
+    return None
   }
   let safe_samples = if samples < 1 { 1 } else { samples }
   let duration = segment.end_time - segment.start_time
-  for index in 0..<(safe_samples + 1) {
-    let ratio = index.to_double() / safe_samples.to_double()
+  for sample_index in 0..<(safe_samples + 1) {
+    let ratio = sample_index.to_double() / safe_samples.to_double()
     let time = segment.start_time + duration * ratio
-    let point = segment.point_at_time(time)
-    let projected = []
-    for obstacle in obstacles {
-      projected.push(obstacle.at_time(time))
-    }
-    if any_continuous_point_collision(point, projected, options) {
-      return true
+    let robot = segment.point_at_time(time)
+    for obstacle_index, obstacle in obstacles {
+      let projected = obstacle.at_time(time)
+      if would_collide_continuous_point(robot, projected, options) {
+        return Some({
+          segment_index,
+          sample_index,
+          obstacle_index,
+          time,
+          robot,
+          obstacle: continuous_point(projected.x, projected.y),
+        })
+      }
     }
   }
-  false
+  None
+}
+
+///|
+pub fn continuous_segment_first_collision(
+  segment : ContinuousSegment,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples : Int,
+) -> ContinuousCollision? {
+  continuous_segment_first_collision_with_index(
+    segment, obstacles, options, samples, 0,
+  )
 }
 
 ///|
@@ -361,14 +387,29 @@ pub fn continuous_path_is_safe(
   options : CollisionOptions,
   samples_per_segment : Int,
 ) -> Bool {
-  for segment in segments {
-    if continuous_segment_collides(
-        segment, obstacles, options, samples_per_segment,
+  continuous_path_first_collision(
+    segments, obstacles, options, samples_per_segment,
+  )
+  is None
+}
+
+///|
+pub fn continuous_path_first_collision(
+  segments : Array[ContinuousSegment],
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples_per_segment : Int,
+) -> ContinuousCollision? {
+  for segment_index, segment in segments {
+    match
+      continuous_segment_first_collision_with_index(
+        segment, obstacles, options, samples_per_segment, segment_index,
       ) {
-      return false
+      Some(collision) => return Some(collision)
+      None => ()
     }
   }
-  true
+  None
 }
 
 ///|
