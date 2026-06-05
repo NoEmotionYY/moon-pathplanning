@@ -11,6 +11,7 @@ test "planner dispatches every algorithm" {
     @planner.Pso,
     @planner.RsApso,
     @planner.Rrt,
+    @planner.RrtConnect,
   ]
   for algorithm in algorithms {
     let result = @planner.plan(map, algorithm, options)

@@ -116,10 +116,11 @@ fn sample_point(
   map : @grid.GridMap,
   state : RrtRandomState,
   options : RrtOptions,
+  target : @core.Point,
 ) -> (RrtRandomState, @core.Point?) {
   let (rate_state, choice) = state.next_double()
   if choice < clamp01(options.goal_sample_rate) {
-    return (rate_state, Some(map.goal))
+    return (rate_state, Some(target))
   }
   let (index_state, index) = rate_state.next_int(map.width * map.height)
   (index_state, walkable_from_index(map, index))
@@ -160,6 +161,41 @@ fn contains_node(nodes : Array[RrtNode], point : @core.Point) -> Bool {
 }
 
 ///|
+fn node_index_for(nodes : Array[RrtNode], point : @core.Point) -> Int? {
+  for index, node in nodes {
+    if node.point.same(point) {
+      return Some(index)
+    }
+  }
+  None
+}
+
+///|
+fn extend_tree(
+  map : @grid.GridMap,
+  nodes : Array[RrtNode],
+  point : @core.Point,
+) -> Int? {
+  match node_index_for(nodes, point) {
+    Some(index) => return Some(index)
+    None => ()
+  }
+  match nearest_node_index(nodes, point) {
+    Some(nearest_index) => {
+      let nearest = nodes[nearest_index].point
+      if segment_is_walkable(map, nearest, point) {
+        let added_index = nodes.length()
+        nodes.push({ point, parent: nearest_index })
+        Some(added_index)
+      } else {
+        None
+      }
+    }
+    None => None
+  }
+}
+
+///|
 fn node_path(nodes : Array[RrtNode], goal_index : Int) -> Array[@core.Point] {
   let reversed = []
   let mut index = goal_index
@@ -174,6 +210,13 @@ fn node_path(nodes : Array[RrtNode], goal_index : Int) -> Array[@core.Point] {
     path.push(reversed[cursor])
   }
   path
+}
+
+///|
+fn push_unique_point(path : Array[@core.Point], point : @core.Point) -> Unit {
+  if path.is_empty() || !path[path.length() - 1].same(point) {
+    path.push(point)
+  }
 }
 
 ///|
@@ -200,6 +243,34 @@ fn build_found_result(
     @core.found_result(path, path_cost(path), nodes.length(), iterations),
     iterations,
     nodes.length(),
+  )
+}
+
+///|
+fn build_connect_result(
+  map : @grid.GridMap,
+  start_tree : Array[RrtNode],
+  start_index : Int,
+  goal_tree : Array[RrtNode],
+  goal_index : Int,
+  iterations : Int,
+) -> RrtPathResult {
+  let path = []
+  for point in node_path(start_tree, start_index) {
+    push_unique_point(path, point)
+  }
+  let goal_path = node_path(goal_tree, goal_index)
+  let mut index = goal_path.length()
+  while index > 0 {
+    index = index - 1
+    push_unique_point(path, goal_path[index])
+  }
+  let shortened = shortcut_path(map, path)
+  let nodes = start_tree.length() + goal_tree.length()
+  rrt_path_result(
+    @core.found_result(shortened, path_cost(shortened), nodes, iterations),
+    iterations,
+    nodes,
   )
 }
 
@@ -234,7 +305,7 @@ pub fn rrt_plan(map : @grid.GridMap, options : RrtOptions) -> RrtPathResult {
   let mut state = random_state(options.seed)
   let max_iterations = positive(options.max_iterations, 1)
   for iteration in 0..<max_iterations {
-    let (next_state, sample) = sample_point(map, state, options)
+    let (next_state, sample) = sample_point(map, state, options, map.goal)
     state = next_state
     match sample {
       Some(point) =>
@@ -269,5 +340,82 @@ pub fn rrt_plan(map : @grid.GridMap, options : RrtOptions) -> RrtPathResult {
     @core.no_path_result(nodes.length(), max_iterations),
     max_iterations,
     nodes.length(),
+  )
+}
+
+///|
+pub fn rrt_connect_plan(
+  map : @grid.GridMap,
+  options : RrtOptions,
+) -> RrtPathResult {
+  match map.validate() {
+    Some(error) => return rrt_path_result(@core.invalid_result(error), 0, 0)
+    None => ()
+  }
+  if map.start.same(map.goal) {
+    return rrt_path_result(@core.found_result([map.start], 0.0, 1, 0), 0, 1)
+  }
+  let start_tree = [{ point: map.start, parent: -1 }]
+  let goal_tree = [{ point: map.goal, parent: -1 }]
+  if segment_is_walkable(map, map.start, map.goal) {
+    start_tree.push({ point: map.goal, parent: 0 })
+    return build_connect_result(map, start_tree, 1, goal_tree, 0, 0)
+  }
+  let mut state = random_state(options.seed)
+  let max_iterations = positive(options.max_iterations, 1)
+  for iteration in 0..<max_iterations {
+    let grow_from_start = iteration % 2 == 0
+    let target = if grow_from_start { map.goal } else { map.start }
+    let (next_state, sample) = sample_point(map, state, options, target)
+    state = next_state
+    match sample {
+      Some(point) =>
+        if grow_from_start {
+          match extend_tree(map, start_tree, point) {
+            Some(start_index) => {
+              let connection = start_tree[start_index].point
+              match extend_tree(map, goal_tree, connection) {
+                Some(goal_index) =>
+                  return build_connect_result(
+                    map,
+                    start_tree,
+                    start_index,
+                    goal_tree,
+                    goal_index,
+                    iteration + 1,
+                  )
+                None => ()
+              }
+            }
+            None => ()
+          }
+        } else {
+          match extend_tree(map, goal_tree, point) {
+            Some(goal_index) => {
+              let connection = goal_tree[goal_index].point
+              match extend_tree(map, start_tree, connection) {
+                Some(start_index) =>
+                  return build_connect_result(
+                    map,
+                    start_tree,
+                    start_index,
+                    goal_tree,
+                    goal_index,
+                    iteration + 1,
+                  )
+                None => ()
+              }
+            }
+            None => ()
+          }
+        }
+      None => ()
+    }
+  }
+  let nodes = start_tree.length() + goal_tree.length()
+  rrt_path_result(
+    @core.no_path_result(nodes, max_iterations),
+    max_iterations,
+    nodes,
   )
 }
