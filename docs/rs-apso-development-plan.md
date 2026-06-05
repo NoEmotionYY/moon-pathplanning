@@ -120,11 +120,11 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 
 当前已覆盖碰撞半径、近距离碰撞判断、跳跃避障修正、安全路径不变、左右移动、上下移动和
 双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待动态避障、混合穿越障碍物
-和进入碰撞半径后的跳跃修正测试。基础 RRT 和 RRT-Connect 已开始提供连续空间采样规划入口，后续可继续补 RRT* 和 benchmark 对比。
+和进入碰撞半径后的跳跃修正测试。基础 RRT、RRT-Connect 和 RRT* 已开始提供连续空间采样规划入口，后续可继续补 benchmark 与可视化对比。
 
 ### 第四阶段：连续空间几何与基础采样规划
 
-已开始新增 `src/continuous` 包，为采样规划和路径平滑后处理提供静态几何能力，并补充基础 RRT/RRT-Connect：
+已开始新增 `src/continuous` 包，为采样规划和路径平滑后处理提供静态几何能力，并补充基础 RRT/RRT-Connect/RRT*：
 
 - `rasterized_segment_cells(start, goal)`：把两个栅格中心之间的线段栅格化，并保留起终点。
 - `segment_is_walkable(map, start, goal)`：检查线段经过的栅格是否全部可行走。
@@ -132,11 +132,13 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - `RrtOptions`：记录最大迭代次数、固定 seed 和目标采样率。
 - `RrtPathResult`：保留统一 `PathResult`，并附加实际迭代次数和采样树节点数。
 - `default_rrt_options()` / `rrt_options(max_iterations, seed, goal_sample_rate)`：提供默认和自定义 RRT 参数。
+- `RrtStarOptions`：在 RRT 参数基础上增加邻域重连半径。
+- `default_rrt_star_options()` / `rrt_star_options(max_iterations, seed, goal_sample_rate, rewire_radius)`：提供默认和自定义 RRT* 参数。
 - `rrt_plan(map, options)`：在可行走栅格中心采样，连接最近可见树节点，找到终点后做路径快捷平滑。
 - `rrt_connect_plan(map, options)`：分别从起点和终点维护两棵采样树，轮流扩展并尝试连接同一个采样点。
+- `rrt_star_plan(map, options)`：在采样树中按邻域择优父节点，并在可见时重连邻域节点。
 
-Planner 已新增 `Rrt` 与 `RrtConnect` 算法类型，使用默认 RRT 参数返回统一 `PathResult`。后续
-RRT* 可复用该可见性入口判断采样点之间是否能直连。
+Planner 已新增 `Rrt`、`RrtConnect` 与 `RrtStar` 算法类型，使用默认参数返回统一 `PathResult`。
 
 ## 测试清单
 
@@ -161,6 +163,7 @@ RRT* 可复用该可见性入口判断采样点之间是否能直连。
 - 连续线段可见性能检出经过障碍物的栅格化线段，路径快捷平滑能删除冗余路点并保留必要绕障拐点。
 - 基础 RRT 能在直连可见场景中直接返回路径，在带缺口障碍场景中通过固定 seed 采样树绕行，并在起点封闭时返回无路径。
 - 基础 RRT-Connect 能在直连可见场景中直接返回路径，在带缺口障碍场景中连接双向采样树，并在起点封闭时返回无路径。
+- 基础 RRT* 能在直连可见场景中直接返回路径，在带缺口障碍场景中执行邻域择优和重连，并在同 seed 下返回不高于基础 RRT 的路径代价。
 
 ## Benchmark 准备
 
@@ -183,7 +186,7 @@ A 星基线、整数速度动态修正、边界往复修正和连续坐标时间
 `safety_evaluated`、`continuous_safe` 和 `min_clearance`，用于暴露连续线段采样层面的剩余风险。
 `dynamic_continuous_wait` 额外输出允许等待后的连续修正结果，便于比较空间绕行和时间等待两类策略。
 `dynamic_12x12_mixed` 固定带静态障碍的 12x12 对角场景，用三条动态障碍物轨迹压测混合组合下的修正指标。
-基础 RRT 与 RRT-Connect 当前已接入 Planner，但尚未加入 benchmark CSV；后续可继续补 RRT、RRT-Connect、RRT* 的路径长度、平滑度、节点数和耗时对比。
+基础 RRT、RRT-Connect 与 RRT* 当前已接入 Planner，但尚未加入 benchmark CSV；后续可继续补三类采样算法的路径长度、平滑度、节点数和耗时对比。
 
 ## 当前开放问题
 
