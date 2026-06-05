@@ -9,6 +9,7 @@ import {
   "NoEmotionYY/moon-pathplanning/src/region",
   "NoEmotionYY/moon-pathplanning/src/swarm",
   "NoEmotionYY/moon-pathplanning/src/dynamic",
+  "NoEmotionYY/moon-pathplanning/src/continuous",
 }
 
 warnings = "-29"
