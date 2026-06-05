@@ -95,6 +95,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - `continuous_moving_obstacle(x, y, speed, velocity_x, velocity_y)`：记录 Double 坐标和连续速度。
 - `ContinuousPoint` / `ContinuousSegment`：连续轨迹点与带时间的连续线段。
 - `ContinuousCollision`：记录首个连续碰撞的线段索引、采样索引、障碍物索引、碰撞时间和双方连续坐标。
+- `ContinuousClearance`：记录连续轨迹最接近采样点的距离、碰撞半径和净安全间距。
 - `continuous_segments_from_grid_path(path, step_time)`：把离散路径转换为连续时间线段。
 - `MovingObstacle::at_step(step)`：按路径步数预测障碍物位置。
 - `ContinuousMovingObstacle::at_time(time)` / `at_step_time(step, step_time)`：按连续时间预测障碍物位置。
@@ -106,15 +107,17 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - `would_collide_continuous(robot_point, obstacle, options)`：按连续坐标判断是否进入碰撞检测区域。
 - `continuous_segment_collides(segment, obstacles, options, samples)`：采样一段连续轨迹并检测同时间动态障碍物碰撞。
 - `continuous_segment_first_collision(segment, obstacles, options, samples)`：返回单条连续线段上的首个碰撞报告。
+- `continuous_segment_min_clearance(segment, obstacles, options, samples)`：返回单条连续线段上的最小安全间距报告。
 - `continuous_path_is_safe(segments, obstacles, options, samples_per_segment)`：评估连续路径是否整体安全。
 - `continuous_path_first_collision(segments, obstacles, options, samples_per_segment)`：按路径线段顺序返回首个连续碰撞报告。
+- `continuous_path_min_clearance(segments, obstacles, options, samples_per_segment)`：返回整条连续路径上的最小安全间距报告。
 - `jump_avoidance(map, path, obstacles, options)`：对静态路径进行局部修正。
 - `jump_avoidance_over_time(map, path, obstacles, options)`：按路径步数预测移动障碍物后进行局部修正。
 - `jump_avoidance_over_reflected_time(map, path, obstacles, options, min_x, max_x, min_y, max_y)`：按边界往复预测移动障碍物后进行局部修正。
 - `jump_avoidance_over_continuous_time(map, path, obstacles, options, step_time)`：按连续时间步预测移动障碍物后进行局部修正。
 
 当前已覆盖碰撞半径、近距离碰撞判断、跳跃避障修正、安全路径不变、左右移动、上下移动和
-双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞、连续轨迹安全评估、连续碰撞诊断报告
+双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估
 和进入碰撞半径后的跳跃修正测试。后续可继续补更完整的连续空间规划模型和 benchmark 对比。
 
 ## 测试清单
@@ -133,6 +136,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - 连续坐标动态障碍物可按时间步预测位置，且进入碰撞半径后触发跳跃修正。
 - 连续路径线段可按时间采样，并能检出动态障碍物进入碰撞半径的风险。
 - 连续路径首个碰撞报告能定位线段、采样点、障碍物索引、碰撞时间和双方连续坐标，安全路径返回 `None`。
+- 连续路径最小安全间距报告能给出负安全间距的碰撞风险和正安全间距的安全裕量。
 
 ## Benchmark 准备
 

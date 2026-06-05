@@ -126,6 +126,9 @@ let safe = @dynamic.continuous_path_is_safe(segments, [moving], options, 4)
 let collision = @dynamic.continuous_path_first_collision(
   segments, [moving], options, 4,
 )
+let clearance = @dynamic.continuous_path_min_clearance(
+  segments, [moving], options, 4,
+)
 ```
 
 `ContinuousPoint` / `ContinuousSegment` 用 Double 坐标表示轨迹；`ContinuousSegment::point_at_time()`
@@ -133,7 +136,10 @@ let collision = @dynamic.continuous_path_first_collision(
 预测位置。`ContinuousCollision` 会记录首个碰撞的 `segment_index`、`sample_index`、
 `obstacle_index`、`time`、机器人连续坐标和障碍物连续坐标；`continuous_segment_first_collision()`
 用于诊断单条线段，`continuous_path_first_collision()` 会按路径线段顺序返回首个碰撞报告。
-该能力用于后续更完整的连续空间规划模型，也可先作为路径安全验收器和失败诊断入口。
+`ContinuousClearance` 会记录最接近采样点的 `distance`、碰撞 `radius` 和 `clearance`
+净安全间距，`continuous_segment_min_clearance()` 与 `continuous_path_min_clearance()` 可用于
+比较不同候选轨迹的安全裕量。该能力用于后续更完整的连续空间规划模型，也可先作为路径
+安全验收器和失败诊断入口。
 
 ## 可视化 API
 
