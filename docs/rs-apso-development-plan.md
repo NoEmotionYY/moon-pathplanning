@@ -115,9 +115,10 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - `jump_avoidance_over_time(map, path, obstacles, options)`：按路径步数预测移动障碍物后进行局部修正。
 - `jump_avoidance_over_reflected_time(map, path, obstacles, options, min_x, max_x, min_y, max_y)`：按边界往复预测移动障碍物后进行局部修正。
 - `jump_avoidance_over_continuous_time(map, path, obstacles, options, step_time)`：按连续时间步预测移动障碍物后进行局部修正。
+- `jump_avoidance_over_continuous_clearance(map, path, obstacles, options, step_time, samples_per_segment)`：按连续线段最小安全间距选择候选跳点。
 
 当前已覆盖碰撞半径、近距离碰撞判断、跳跃避障修正、安全路径不变、左右移动、上下移动和
-双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估
+双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障
 和进入碰撞半径后的跳跃修正测试。后续可继续补更完整的连续空间规划模型和 benchmark 对比。
 
 ## 测试清单
@@ -137,6 +138,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 - 连续路径线段可按时间采样，并能检出动态障碍物进入碰撞半径的风险。
 - 连续路径首个碰撞报告能定位线段、采样点、障碍物索引、碰撞时间和双方连续坐标，安全路径返回 `None`。
 - 连续路径最小安全间距报告能给出负安全间距的碰撞风险和正安全间距的安全裕量。
+- 连续安全感知避障在候选跳点之间比较线段级安全裕量，并能在有空间时选择横向安全跳点。
 
 ## Benchmark 准备
 
@@ -154,7 +156,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 `moon run ./bench` 输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次
 重复运行、总耗时和平均耗时，并新增 `dynamic_5x1` 与 `dynamic_10x10_crossing` 场景对比静态
 A 星基线、整数速度动态修正、边界往复修正和连续坐标时间步修正。CLI 与 benchmark runner
-已支持 `--json/-j` 字符串输入，native 后端也可读取 JSON v1 地图文件；动态连续行还会输出
+已支持 `--json/-j` 字符串输入，native 后端也可读取 JSON v1 地图文件；动态连续行使用连续安全感知修正并输出
 `safety_evaluated`、`continuous_safe` 和 `min_clearance`，用于暴露连续线段采样层面的剩余风险。
 后续可继续补更多复杂动态组合、跨后端文件打包策略和更高级连续空间模型。
 

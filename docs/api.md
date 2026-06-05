@@ -111,11 +111,16 @@ let projected = moving.at_time(2.0)
 let adjusted = @dynamic.jump_avoidance_over_continuous_time(
   map, result.path, [moving], options, 0.5,
 )
+let safer = @dynamic.jump_avoidance_over_continuous_clearance(
+  map, result.path, [moving], options, 0.5, 4,
+)
 ```
 
 `ContinuousMovingObstacle` 保留小数坐标、速度大小和 x/y 方向速度；`would_collide_continuous()`
 会直接用栅格点中心到连续障碍物坐标的距离判断碰撞半径；`jump_avoidance_over_continuous_time()`
-按 `path` 索引乘以 `step_time` 预测障碍物位置后进行局部跳跃修正。
+按 `path` 索引乘以 `step_time` 预测障碍物位置后进行局部跳跃修正。`jump_avoidance_over_continuous_clearance()`
+会把当前点到候选跳点的线段放入同一时间窗口采样，并按最小安全间距选择候选；当地图有横向空间时，
+它可以选择更保守的横向跳点，为后续连续空间规划器提供更安全的局部修正入口。
 
 连续轨迹安全评估可把离散路径转换成带时间的连续线段，并用采样判断是否进入连续动态障碍物
 碰撞半径：
@@ -174,7 +179,7 @@ moon run ./bench --target native -- --map examples/weighted_grid.json
 动态场景使用 `dynamic_5x1` 和 `dynamic_10x10_crossing`，算法列分别输出
 `astar_static`、`dynamic_time`、`dynamic_reflected` 和 `dynamic_continuous`，用于比较静态
 路径、整数速度动态障碍物、边界往复预测和连续坐标时间步预测后的路径修正结果。
-其中连续动态行会把修正路径转换为连续线段，并记录连续采样是否安全和最小安全间距；
+其中连续动态行使用连续安全感知修正，会把修正路径转换为连续线段，并记录连续采样是否安全和最小安全间距；
 普通静态或离散动态行的 `safety_evaluated` 为 `0`。
 native 后端传入 JSON v1 地图文件时，runner 会只输出这些文件场景的 A 星、Dijkstra、
 PSO 和 RS-APSO 指标；无参数时仍输出内置 20x20 与动态避障场景。
