@@ -170,8 +170,28 @@ fn run_json_file(path : String) -> Bool {
 fn usage() -> Unit {
   println("Usage:")
   println("  moon run cli")
+  println("  moon run cli -- --json <grid-json>")
   println("  moon run cli --target native -- <map.json>")
   println("  moon run cli --target native -- --map <map.json>")
+}
+
+///|
+fn json_arg(args : Array[String]) -> String? {
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some("")
+      "--json" | "-j" =>
+        if index + 1 < args.length() {
+          return Some(args[index + 1])
+        } else {
+          return Some("")
+        }
+      _ => ()
+    }
+    index = index + 1
+  }
+  None
 }
 
 ///|
@@ -198,9 +218,14 @@ fn map_arg(args : Array[String]) -> String? {
 ///|
 fn main {
   let args = @env.args()
-  match map_arg(args) {
+  match json_arg(args) {
     Some("") => usage()
-    Some(path) => if !run_json_file(path) { usage() }
-    None => run_demo()
+    Some(text) => if !run_json_text("inline-json", text) { usage() }
+    None =>
+      match map_arg(args) {
+        Some("") => usage()
+        Some(path) => if !run_json_file(path) { usage() }
+        None => run_demo()
+      }
   }
 }

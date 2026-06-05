@@ -676,8 +676,34 @@ fn run_json_file(path : String) -> Bool {
 fn usage() -> Unit {
   println("Usage:")
   println("  moon run ./bench")
+  println("  moon run ./bench -- --json <grid-json>")
   println("  moon run ./bench --target native -- <map.json> [more.json]")
   println("  moon run ./bench --target native -- --map <map.json>")
+}
+
+///|
+fn json_args(args : Array[String]) -> Array[String]? {
+  let texts = []
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some([])
+      "--json" | "-j" =>
+        if index + 1 < args.length() {
+          texts.push(args[index + 1])
+          index = index + 1
+        } else {
+          return Some([])
+        }
+      _ => ()
+    }
+    index = index + 1
+  }
+  if texts.length() == 0 {
+    None
+  } else {
+    Some(texts)
+  }
 }
 
 ///|
@@ -717,19 +743,40 @@ fn run_json_files(paths : Array[String]) -> Bool {
 }
 
 ///|
+fn run_json_texts(texts : Array[String]) -> Bool {
+  let mut ok = true
+  for index, text in texts {
+    if !run_json_text("inline-json-\{index + 1}", text) {
+      ok = false
+    }
+  }
+  ok
+}
+
+///|
 fn main {
   println(
     "scenario,algorithm,status,path_nodes,total_cost,path_length,smoothness," +
     "visited_nodes,expanded_nodes,iterations,candidates,best_fitness,seed," +
     "population_size,max_iterations,repeats,elapsed_us_total,elapsed_us_avg",
   )
-  match map_args(@env.args()) {
-    Some(paths) =>
-      if paths.length() == 0 {
+  let args = @env.args()
+  match json_args(args) {
+    Some(texts) =>
+      if texts.length() == 0 {
         usage()
       } else {
-        ignore(run_json_files(paths))
+        ignore(run_json_texts(texts))
       }
-    None => run_default_scenarios()
+    None =>
+      match map_args(args) {
+        Some(paths) =>
+          if paths.length() == 0 {
+            usage()
+          } else {
+            ignore(run_json_files(paths))
+          }
+        None => run_default_scenarios()
+      }
   }
 }
