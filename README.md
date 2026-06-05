@@ -24,7 +24,7 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 - BFS、DFS、Dijkstra、A 星和双向 A 星搜索。
 - 区域搜索预处理：障碍物边界角识别、候选搜索区域生成和空地图自由区域回退。
 - RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、PSO/RS-APSO 主循环。
-- 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障和跳跃避障路径修正。
+- 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待避障和跳跃避障路径修正。
 - Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例、序列化和字符串解析、SVG 导出、CLI demo，以及支持 JSON 文件和 JSON 字符串输入的 benchmark runner。
 
 ## 当前完成情况
@@ -58,7 +58,7 @@ moon run ./bench --target native -- examples/simple_grid.json
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO 和 RS-APSO
 的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量、最终适应度、swarm 参数、
 重复次数和总/平均耗时；同时输出 `dynamic_5x1` 和 `dynamic_10x10_crossing` 下静态 A 星基线、
-整数速度动态修正、边界往复修正和连续坐标时间步修正的同格式 CSV 行，并为连续动态行记录
+整数速度动态修正、边界往复修正、连续安全感知修正和连续等待修正的同格式 CSV 行，并为连续动态行记录
 `safety_evaluated`、`continuous_safe` 和 `min_clearance`。文件型 benchmark 输入需要 native
 后端，命令形如 `moon run ./bench --target native -- --map examples/weighted_grid.json`。
 
@@ -96,7 +96,7 @@ let result = @planner.plan(map, @planner.AStar, @planner.default_options())
 
 MoonBit 测试位于 `test/`，覆盖最短路径、无路径、障碍绕行、权重地图、三类算法
 一致性、移动模式、起点等于终点、非法地图输入、JSON 字符串解析、区域搜索、
-RS-APSO 基础能力和动态避障，包含整数栅格、边界往复、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断、最小安全间距评估和连续安全感知修正。
+RS-APSO 基础能力和动态避障，包含整数栅格、边界往复、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断、最小安全间距评估、连续安全感知修正和连续等待修正。
 标准检查命令是 `moon check` 与 `moon test`。
 
 ## 可视化说明
