@@ -123,11 +123,17 @@ let adjusted = @dynamic.jump_avoidance_over_continuous_time(
 ```moonbit
 let segments = @dynamic.continuous_segments_from_grid_path(result.path, 1.0)
 let safe = @dynamic.continuous_path_is_safe(segments, [moving], options, 4)
+let collision = @dynamic.continuous_path_first_collision(
+  segments, [moving], options, 4,
+)
 ```
 
 `ContinuousPoint` / `ContinuousSegment` 用 Double 坐标表示轨迹；`ContinuousSegment::point_at_time()`
 按线段起止时间插值，`continuous_segment_collides()` 会在同一时间采样机器人位置和动态障碍物
-预测位置。该能力用于后续更完整的连续空间规划模型，也可先作为路径安全验收器。
+预测位置。`ContinuousCollision` 会记录首个碰撞的 `segment_index`、`sample_index`、
+`obstacle_index`、`time`、机器人连续坐标和障碍物连续坐标；`continuous_segment_first_collision()`
+用于诊断单条线段，`continuous_path_first_collision()` 会按路径线段顺序返回首个碰撞报告。
+该能力用于后续更完整的连续空间规划模型，也可先作为路径安全验收器和失败诊断入口。
 
 ## 可视化 API
 
