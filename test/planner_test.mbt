@@ -10,6 +10,7 @@ test "planner dispatches every algorithm" {
     @planner.BidirectionalAStar,
     @planner.Pso,
     @planner.RsApso,
+    @planner.Rrt,
   ]
   for algorithm in algorithms {
     let result = @planner.plan(map, algorithm, options)

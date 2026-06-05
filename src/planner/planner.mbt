@@ -7,6 +7,7 @@ pub(all) enum AlgorithmType {
   BidirectionalAStar
   Pso
   RsApso
+  Rrt
 } derive(Debug)
 
 ///|
@@ -61,6 +62,11 @@ fn plan_rs_apso(
 }
 
 ///|
+fn plan_rrt(map : @grid.GridMap) -> @core.PathResult {
+  @continuous.rrt_plan(map, @continuous.default_rrt_options()).result
+}
+
+///|
 pub fn plan(
   map : @grid.GridMap,
   algorithm : AlgorithmType,
@@ -75,5 +81,6 @@ pub fn plan(
       @algorithms.bidirectional_astar(map, options.movement, options.heuristic)
     Pso => plan_pso(map, options)
     RsApso => plan_rs_apso(map, options)
+    Rrt => plan_rrt(map)
   }
 }
