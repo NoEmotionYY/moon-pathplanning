@@ -589,6 +589,51 @@ fn run_dynamic_scenarios() -> Unit {
     continuous_elapsed,
     continuous_safety,
   )
+  let continuous_wait_start = @clock.monotonic_clock_start()
+  let mut continuous_wait_path = @dynamic.jump_avoidance_over_continuous_wait(
+    map,
+    base.path,
+    [continuous],
+    options,
+    1.0,
+    4,
+    1,
+  )
+  for _ in 1..<repeats {
+    continuous_wait_path = @dynamic.jump_avoidance_over_continuous_wait(
+      map,
+      base.path,
+      [continuous],
+      options,
+      1.0,
+      4,
+      1,
+    )
+  }
+  let continuous_wait_elapsed = @clock.monotonic_clock_end(
+    continuous_wait_start,
+  )
+  let continuous_wait_safety = continuous_safety_metrics(
+    continuous_wait_path,
+    [continuous],
+    options,
+    1.0,
+    4,
+  )
+  print_result_with_safety(
+    "dynamic_5x1",
+    "dynamic_continuous_wait",
+    adjusted_result(base, continuous_wait_path),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    continuous_wait_elapsed,
+    continuous_wait_safety,
+  )
   run_dynamic_crossing_scenario()
 }
 
@@ -735,6 +780,51 @@ fn run_dynamic_crossing_scenario() -> Unit {
     repeats,
     continuous_elapsed,
     continuous_safety,
+  )
+  let continuous_wait_start = @clock.monotonic_clock_start()
+  let mut continuous_wait_path = @dynamic.jump_avoidance_over_continuous_wait(
+    map,
+    base.path,
+    [continuous_horizontal, continuous_vertical],
+    options,
+    1.0,
+    4,
+    1,
+  )
+  for _ in 1..<repeats {
+    continuous_wait_path = @dynamic.jump_avoidance_over_continuous_wait(
+      map,
+      base.path,
+      [continuous_horizontal, continuous_vertical],
+      options,
+      1.0,
+      4,
+      1,
+    )
+  }
+  let continuous_wait_elapsed = @clock.monotonic_clock_end(
+    continuous_wait_start,
+  )
+  let continuous_wait_safety = continuous_safety_metrics(
+    continuous_wait_path,
+    [continuous_horizontal, continuous_vertical],
+    options,
+    1.0,
+    4,
+  )
+  print_result_with_safety(
+    "dynamic_10x10_crossing",
+    "dynamic_continuous_wait",
+    adjusted_result(base, continuous_wait_path),
+    0,
+    0,
+    0.0,
+    0,
+    0,
+    0,
+    repeats,
+    continuous_wait_elapsed,
+    continuous_wait_safety,
   )
 }
 

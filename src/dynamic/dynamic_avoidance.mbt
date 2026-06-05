@@ -804,6 +804,93 @@ fn choose_continuous_clearance_jump_point(
 }
 
 ///|
+fn continuous_grid_segment(
+  current : @core.Point,
+  target : @core.Point,
+  start_time : Double,
+  end_time : Double,
+) -> ContinuousSegment {
+  continuous_segment(
+    continuous_point_from_grid(current),
+    continuous_point_from_grid(target),
+    start_time,
+    end_time,
+  )
+}
+
+///|
+fn continuous_grid_segment_collides(
+  current : @core.Point,
+  target : @core.Point,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  start_time : Double,
+  end_time : Double,
+  samples : Int,
+) -> Bool {
+  continuous_segment_collides(
+    continuous_grid_segment(current, target, start_time, end_time),
+    obstacles,
+    options,
+    samples,
+  )
+}
+
+///|
+fn continuous_wait_then_move_is_safe(
+  current : @core.Point,
+  target : @core.Point,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  start_time : Double,
+  step_time : Double,
+  samples : Int,
+  wait_steps : Int,
+) -> Bool {
+  for wait_index in 0..<wait_steps {
+    let wait_start = start_time + wait_index.to_double() * step_time
+    let wait_end = wait_start + step_time
+    if continuous_grid_segment_collides(
+        current, current, obstacles, options, wait_start, wait_end, samples,
+      ) {
+      return false
+    }
+  }
+  let move_start = start_time + wait_steps.to_double() * step_time
+  !continuous_grid_segment_collides(
+    current,
+    target,
+    obstacles,
+    options,
+    move_start,
+    move_start + step_time,
+    samples,
+  )
+}
+
+///|
+fn safe_wait_steps(
+  current : @core.Point,
+  target : @core.Point,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  start_time : Double,
+  step_time : Double,
+  samples : Int,
+  max_wait_steps : Int,
+) -> Int? {
+  let safe_max_wait_steps = if max_wait_steps < 1 { 0 } else { max_wait_steps }
+  for wait_steps in 1..<(safe_max_wait_steps + 1) {
+    if continuous_wait_then_move_is_safe(
+        current, target, obstacles, options, start_time, step_time, samples, wait_steps,
+      ) {
+      return Some(wait_steps)
+    }
+  }
+  None
+}
+
+///|
 fn choose_continuous_jump_point(
   map : @grid.GridMap,
   current : @core.Point,
@@ -863,6 +950,56 @@ pub fn jump_avoidance(
 }
 
 ///|
+pub fn jump_avoidance_over_continuous_wait(
+  map : @grid.GridMap,
+  path : Array[@core.Point],
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  step_time : Double,
+  samples_per_segment : Int,
+  max_wait_steps : Int,
+) -> Array[@core.Point] {
+  if path.length() < 2 || obstacles.is_empty() {
+    return path
+  }
+  let adjusted = []
+  adjusted.push(path[0])
+  let safe_step_time = if step_time <= 0.0 { 1.0 } else { step_time }
+  for index in 1..<path.length() {
+    let current = adjusted[adjusted.length() - 1]
+    let next = path[index]
+    let start_time = (adjusted.length() - 1).to_double() * safe_step_time
+    let end_time = start_time + safe_step_time
+    if continuous_grid_segment_collides(
+        current, next, obstacles, options, start_time, end_time, samples_per_segment,
+      ) {
+      match
+        safe_wait_steps(
+          current, next, obstacles, options, start_time, safe_step_time, samples_per_segment,
+          max_wait_steps,
+        ) {
+        Some(wait_steps) => {
+          for _ in 0..<wait_steps {
+            adjusted.push(current)
+          }
+          push_unique(adjusted, next)
+        }
+        None =>
+          push_unique(
+            adjusted,
+            choose_continuous_clearance_jump_point(
+              map, current, next, obstacles, options, start_time, end_time, samples_per_segment,
+            ),
+          )
+      }
+    } else {
+      push_unique(adjusted, next)
+    }
+  }
+  adjusted
+}
+
+///|
 pub fn jump_avoidance_over_continuous_clearance(
   map : @grid.GridMap,
   path : Array[@core.Point],
@@ -882,14 +1019,8 @@ pub fn jump_avoidance_over_continuous_clearance(
     let next = path[index]
     let start_time = (index - 1).to_double() * safe_step_time
     let end_time = index.to_double() * safe_step_time
-    let segment = continuous_segment(
-      continuous_point_from_grid(current),
-      continuous_point_from_grid(next),
-      start_time,
-      end_time,
-    )
-    if continuous_segment_collides(
-        segment, obstacles, options, samples_per_segment,
+    if continuous_grid_segment_collides(
+        current, next, obstacles, options, start_time, end_time, samples_per_segment,
       ) {
       push_unique(
         adjusted,

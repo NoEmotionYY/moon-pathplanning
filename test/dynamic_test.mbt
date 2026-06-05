@@ -375,6 +375,36 @@ test "dynamic continuous clearance avoidance chooses lateral safe jump" {
 }
 
 ///|
+test "dynamic continuous wait avoidance delays in narrow corridor" {
+  let map = @grid.new_grid(5, 1, @core.point(0, 0), @core.point(4, 0))
+  let path = [
+    @core.point(0, 0),
+    @core.point(1, 0),
+    @core.point(2, 0),
+    @core.point(3, 0),
+    @core.point(4, 0),
+  ]
+  let obstacle = @dynamic.continuous_moving_obstacle(0.5, 0.0, 1.0, 0.5, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let adjusted = @dynamic.jump_avoidance_over_continuous_wait(
+    map,
+    path,
+    [obstacle],
+    options,
+    1.0,
+    4,
+    1,
+  )
+  assert_eq(adjusted.length() > path.length(), true)
+  assert_eq(adjusted[1].same(@core.point(0, 0)), true)
+  let segments = @dynamic.continuous_segments_from_grid_path(adjusted, 1.0)
+  assert_eq(
+    @dynamic.continuous_path_is_safe(segments, [obstacle], options, 4),
+    true,
+  )
+}
+
+///|
 test "dynamic continuous avoidance jumps after obstacle enters radius" {
   let map = @grid.new_grid(5, 1, @core.point(0, 0), @core.point(4, 0))
   let path = [
