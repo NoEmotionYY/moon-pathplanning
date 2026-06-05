@@ -76,6 +76,21 @@ let result = @swarm.rs_apso_plan(map, region, swarm_options)
 表示为区域候选中间路点，并用自适应参数影响个体学习、群体学习和逃逸选择。正式 API 需要
 在 MoonBit 工具链可用后结合实现细节收敛。
 
+## 连续几何 API
+
+连续几何模块提供静态路径后处理和后续采样规划可复用的线段可见性基础：
+
+```moonbit
+let visible = @continuous.segment_is_walkable(
+  map, @core.point(0, 0), @core.point(4, 4),
+)
+let shortened = @continuous.shortcut_path(map, result.path)
+```
+
+`rasterized_segment_cells(start, goal)` 会用整数栅格中心线段生成经过的栅格序列，并保留起终点。
+`segment_is_walkable(map, start, goal)` 会检查该序列中的每个栅格是否可行走；若线段穿过障碍物或地图外区域则返回 `false`。
+`shortcut_path(map, path)` 会在静态可见性允许时跳过中间路点，保留首尾点，并为后续 RRT、RRT-Connect、RRT* 或路径平滑后处理提供基础几何入口。
+
 ## 动态避障 API
 
 动态避障模块提供静态路径之后的局部修正能力：

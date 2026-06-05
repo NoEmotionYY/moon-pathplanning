@@ -8,6 +8,7 @@
 - 新增 `GridMap::inflate_obstacles(radius)` 与测试，支持障碍物膨胀安全边距建模。
 - 新增 `src/region` 区域搜索模块与测试，支持障碍物边界角识别和候选搜索区域生成。
 - 新增 `src/swarm` 基础模块与测试，支持路径适应度、固定 seed 随机源和 PSO 参数默认值。
+- 新增 `src/continuous` 连续几何基础模块与测试，支持栅格中心线段栅格化、静态线段可见性检查和路径快捷平滑。
 - 新增基础离散 `pso_plan()`，支持从区域候选中间路点生成可行路径并保持固定 seed 可复现。
 - 新增 `src/dynamic` 动态避障基础模块与测试，支持碰撞半径、碰撞判断、速度方向预测和跳跃避障路径修正。
 - 新增 `adaptive_parameters()` 与基础离散 `rs_apso_plan()`，支持论文自适应参数调度和固定 seed 复现。
@@ -32,7 +33,7 @@
 - benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
 - benchmark runner 新增连续动态安全指标列：`safety_evaluated`、`continuous_safe` 和 `min_clearance`。
 - benchmark runner 新增 `dynamic_12x12_mixed` 场景，覆盖静态障碍、三类移动障碍物、边界往复、连续安全感知和连续等待修正的混合动态组合。
-- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 59 项测试全部通过。
+- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 63 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 
 ## 0.1.0 - 2026-05-23
