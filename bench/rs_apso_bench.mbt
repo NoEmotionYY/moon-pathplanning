@@ -249,6 +249,79 @@ fn heuristic_for(movement : @grid.MovementMode) -> @heuristics.HeuristicKind {
 }
 
 ///|
+struct SafetyMetrics {
+  evaluated : Int
+  safe : Int
+  min_clearance : Double
+} derive(Debug)
+
+///|
+fn no_safety_metrics() -> SafetyMetrics {
+  { evaluated: 0, safe: 0, min_clearance: 0.0 }
+}
+
+///|
+fn bool_int(value : Bool) -> Int {
+  if value {
+    1
+  } else {
+    0
+  }
+}
+
+///|
+fn continuous_safety_metrics(
+  path : Array[@core.Point],
+  obstacles : Array[@dynamic.ContinuousMovingObstacle],
+  options : @dynamic.CollisionOptions,
+  step_time : Double,
+  samples_per_segment : Int,
+) -> SafetyMetrics {
+  if path.length() < 2 || obstacles.is_empty() {
+    return no_safety_metrics()
+  }
+  let segments = @dynamic.continuous_segments_from_grid_path(path, step_time)
+  let safe = @dynamic.continuous_path_is_safe(
+    segments, obstacles, options, samples_per_segment,
+  )
+  let min_clearance = match
+    @dynamic.continuous_path_min_clearance(
+      segments, obstacles, options, samples_per_segment,
+    ) {
+    Some(clearance) => clearance.clearance
+    None => 0.0
+  }
+  { evaluated: 1, safe: bool_int(safe), min_clearance }
+}
+
+///|
+fn print_result_with_safety(
+  scenario : String,
+  algorithm : String,
+  result : @core.PathResult,
+  iterations : Int,
+  candidates : Int,
+  best_fitness : Double,
+  seed : Int,
+  population_size : Int,
+  max_iterations : Int,
+  repeats : Int,
+  elapsed_us_total : Double,
+  safety : SafetyMetrics,
+) -> Unit {
+  let elapsed_us_avg = elapsed_us_total / repeats.to_double()
+  println(
+    "\{scenario},\{algorithm},\{status_name(result)},\{result.path.length()}," +
+    "\{result.total_cost},\{@swarm.path_length(result.path)}," +
+    "\{@swarm.path_smoothness(result.path)},\{result.visited_nodes}," +
+    "\{result.expanded_nodes},\{iterations},\{candidates},\{best_fitness}," +
+    "\{seed},\{population_size},\{max_iterations},\{repeats}," +
+    "\{elapsed_us_total},\{elapsed_us_avg},\{safety.evaluated}," +
+    "\{safety.safe},\{safety.min_clearance}",
+  )
+}
+
+///|
 fn print_result(
   scenario : String,
   algorithm : String,
@@ -262,14 +335,19 @@ fn print_result(
   repeats : Int,
   elapsed_us_total : Double,
 ) -> Unit {
-  let elapsed_us_avg = elapsed_us_total / repeats.to_double()
-  println(
-    "\{scenario},\{algorithm},\{status_name(result)},\{result.path.length()}," +
-    "\{result.total_cost},\{@swarm.path_length(result.path)}," +
-    "\{@swarm.path_smoothness(result.path)},\{result.visited_nodes}," +
-    "\{result.expanded_nodes},\{iterations},\{candidates},\{best_fitness}," +
-    "\{seed},\{population_size},\{max_iterations},\{repeats}," +
-    "\{elapsed_us_total},\{elapsed_us_avg}",
+  print_result_with_safety(
+    scenario,
+    algorithm,
+    result,
+    iterations,
+    candidates,
+    best_fitness,
+    seed,
+    population_size,
+    max_iterations,
+    repeats,
+    elapsed_us_total,
+    no_safety_metrics(),
   )
 }
 
@@ -469,7 +547,7 @@ fn run_dynamic_scenarios() -> Unit {
     repeats,
     reflected_elapsed,
   )
-  let continuous = @dynamic.continuous_moving_obstacle(0.0, 0.0, 1.0, 1.0, 0.0)
+  let continuous = @dynamic.continuous_moving_obstacle(0.5, 0.0, 1.0, 0.5, 0.0)
   let continuous_start = @clock.monotonic_clock_start()
   let mut continuous_path = @dynamic.jump_avoidance_over_continuous_time(
     map,
@@ -488,7 +566,14 @@ fn run_dynamic_scenarios() -> Unit {
     )
   }
   let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)
-  print_result(
+  let continuous_safety = continuous_safety_metrics(
+    continuous_path,
+    [continuous],
+    options,
+    1.0,
+    4,
+  )
+  print_result_with_safety(
     "dynamic_5x1",
     "dynamic_continuous",
     adjusted_result(base, continuous_path),
@@ -500,6 +585,7 @@ fn run_dynamic_scenarios() -> Unit {
     0,
     repeats,
     continuous_elapsed,
+    continuous_safety,
   )
   run_dynamic_crossing_scenario()
 }
@@ -625,7 +711,14 @@ fn run_dynamic_crossing_scenario() -> Unit {
     )
   }
   let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)
-  print_result(
+  let continuous_safety = continuous_safety_metrics(
+    continuous_path,
+    [continuous_horizontal, continuous_vertical],
+    options,
+    1.0,
+    4,
+  )
+  print_result_with_safety(
     "dynamic_10x10_crossing",
     "dynamic_continuous",
     adjusted_result(base, continuous_path),
@@ -637,6 +730,7 @@ fn run_dynamic_crossing_scenario() -> Unit {
     0,
     repeats,
     continuous_elapsed,
+    continuous_safety,
   )
 }
 
@@ -758,7 +852,8 @@ fn main {
   println(
     "scenario,algorithm,status,path_nodes,total_cost,path_length,smoothness," +
     "visited_nodes,expanded_nodes,iterations,candidates,best_fitness,seed," +
-    "population_size,max_iterations,repeats,elapsed_us_total,elapsed_us_avg",
+    "population_size,max_iterations,repeats,elapsed_us_total,elapsed_us_avg," +
+    "safety_evaluated,continuous_safe,min_clearance",
   )
   let args = @env.args()
   match json_args(args) {
