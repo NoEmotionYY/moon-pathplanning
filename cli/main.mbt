@@ -167,10 +167,22 @@ fn run_json_file(path : String) -> Bool {
 }
 
 ///|
+fn run_example(name : String) -> Bool {
+  match @json_map.example_json(name) {
+    Some(text) => run_json_text("example:\{name}", text)
+    None => {
+      println("Unknown example map: \{name}")
+      false
+    }
+  }
+}
+
+///|
 fn usage() -> Unit {
   println("Usage:")
   println("  moon run cli")
   println("  moon run cli -- --json <grid-json>")
+  println("  moon run cli -- --example <name>")
   println("  moon run cli --target native -- <map.json>")
   println("  moon run cli --target native -- --map <map.json>")
 }
@@ -182,6 +194,25 @@ fn json_arg(args : Array[String]) -> String? {
     match args[index] {
       "--help" | "-h" => return Some("")
       "--json" | "-j" =>
+        if index + 1 < args.length() {
+          return Some(args[index + 1])
+        } else {
+          return Some("")
+        }
+      _ => ()
+    }
+    index = index + 1
+  }
+  None
+}
+
+///|
+fn example_arg(args : Array[String]) -> String? {
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some("")
+      "--example" | "-e" =>
         if index + 1 < args.length() {
           return Some(args[index + 1])
         } else {
@@ -222,10 +253,15 @@ fn main {
     Some("") => usage()
     Some(text) => if !run_json_text("inline-json", text) { usage() }
     None =>
-      match map_arg(args) {
+      match example_arg(args) {
         Some("") => usage()
-        Some(path) => if !run_json_file(path) { usage() }
-        None => run_demo()
+        Some(name) => if !run_example(name) { usage() }
+        None =>
+          match map_arg(args) {
+            Some("") => usage()
+            Some(path) => if !run_json_file(path) { usage() }
+            None => run_demo()
+          }
       }
   }
 }

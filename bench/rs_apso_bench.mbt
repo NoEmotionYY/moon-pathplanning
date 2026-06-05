@@ -1077,10 +1077,22 @@ fn run_json_file(path : String) -> Bool {
 }
 
 ///|
+fn run_example(name : String) -> Bool {
+  match @json_map.example_json(name) {
+    Some(text) => run_json_text("example:\{name}", text)
+    None => {
+      println("Unknown benchmark example map: \{name}")
+      false
+    }
+  }
+}
+
+///|
 fn usage() -> Unit {
   println("Usage:")
   println("  moon run ./bench")
   println("  moon run ./bench -- --json <grid-json>")
+  println("  moon run ./bench -- --example <name> [--example <name>]")
   println("  moon run ./bench --target native -- <map.json> [more.json]")
   println("  moon run ./bench --target native -- --map <map.json>")
 }
@@ -1107,6 +1119,31 @@ fn json_args(args : Array[String]) -> Array[String]? {
     None
   } else {
     Some(texts)
+  }
+}
+
+///|
+fn example_args(args : Array[String]) -> Array[String]? {
+  let names = []
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some([])
+      "--example" | "-e" =>
+        if index + 1 < args.length() {
+          names.push(args[index + 1])
+          index = index + 1
+        } else {
+          return Some([])
+        }
+      _ => ()
+    }
+    index = index + 1
+  }
+  if names.length() == 0 {
+    None
+  } else {
+    Some(names)
   }
 }
 
@@ -1147,6 +1184,17 @@ fn run_json_files(paths : Array[String]) -> Bool {
 }
 
 ///|
+fn run_examples(names : Array[String]) -> Bool {
+  let mut ok = true
+  for name in names {
+    if !run_example(name) {
+      ok = false
+    }
+  }
+  ok
+}
+
+///|
 fn run_json_texts(texts : Array[String]) -> Bool {
   let mut ok = true
   for index, text in texts {
@@ -1174,14 +1222,23 @@ fn main {
         ignore(run_json_texts(texts))
       }
     None =>
-      match map_args(args) {
-        Some(paths) =>
-          if paths.length() == 0 {
+      match example_args(args) {
+        Some(names) =>
+          if names.length() == 0 {
             usage()
           } else {
-            ignore(run_json_files(paths))
+            ignore(run_examples(names))
           }
-        None => run_default_scenarios()
+        None =>
+          match map_args(args) {
+            Some(paths) =>
+              if paths.length() == 0 {
+                usage()
+              } else {
+                ignore(run_json_files(paths))
+              }
+            None => run_default_scenarios()
+          }
       }
   }
 }

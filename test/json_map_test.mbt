@@ -35,3 +35,32 @@ test "json importer rejects unsupported schema" {
   let parsed = @json_map.grid_from_json("{\"format\":\"other\"}")
   assert_eq(parsed is None, true)
 }
+
+///|
+test "json embedded examples parse without filesystem" {
+  let names = @json_map.example_names()
+  assert_eq(names.length(), 4)
+  match @json_map.example_json("simple_grid") {
+    Some(text) =>
+      match @json_map.grid_from_json(text) {
+        Some(data) => {
+          assert_eq(data.map.width, 6)
+          assert_eq(data.map.height, 5)
+          assert_eq(data.movement is @grid.FourWay, true)
+        }
+        None => fail("expected simple embedded example to parse")
+      }
+    None => fail("expected simple embedded example")
+  }
+  match @json_map.example_grid_data("examples/rs_apso_20x20_complex.json") {
+    Some(data) => {
+      assert_eq(data.map.width, 20)
+      assert_eq(data.map.height, 20)
+      assert_eq(data.map.obstacles.length(), 82)
+      assert_eq(data.map.terrain.length(), 5)
+      assert_eq(data.movement is @grid.EightWay, true)
+    }
+    None => fail("expected complex embedded example")
+  }
+  assert_eq(@json_map.example_json("missing") is None, true)
+}
