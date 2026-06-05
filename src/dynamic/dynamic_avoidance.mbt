@@ -635,6 +635,23 @@ fn push_unique(points : Array[@core.Point], point : @core.Point) -> Unit {
 }
 
 ///|
+fn contains_point(points : Array[@core.Point], point : @core.Point) -> Bool {
+  for item in points {
+    if item.same(point) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn push_candidate(points : Array[@core.Point], point : @core.Point) -> Unit {
+  if !contains_point(points, point) {
+    points.push(point)
+  }
+}
+
+///|
 fn candidate_score(point : @core.Point, goal : @core.Point) -> Double {
   @heuristics.euclidean(point, goal)
 }
@@ -681,6 +698,105 @@ fn choose_jump_point(
       } else {
         chosen = candidate
         found = true
+      }
+    }
+  }
+  chosen
+}
+
+///|
+fn continuous_jump_candidates(
+  current : @core.Point,
+  target : @core.Point,
+  goal : @core.Point,
+) -> Array[@core.Point] {
+  let dx = sign(goal.x - current.x)
+  let dy = sign(goal.y - current.y)
+  let candidates = []
+  push_candidate(candidates, target)
+  if dx != 0 {
+    push_candidate(candidates, @core.point(current.x + dx * 2, current.y))
+    push_candidate(candidates, @core.point(current.x + dx, current.y))
+    push_candidate(candidates, @core.point(current.x, current.y + 1))
+    push_candidate(candidates, @core.point(current.x, current.y - 1))
+    push_candidate(candidates, @core.point(current.x + dx, current.y + 1))
+    push_candidate(candidates, @core.point(current.x + dx, current.y - 1))
+    push_candidate(candidates, @core.point(current.x + dx * 2, current.y + 1))
+    push_candidate(candidates, @core.point(current.x + dx * 2, current.y - 1))
+  }
+  if dy != 0 {
+    push_candidate(candidates, @core.point(current.x, current.y + dy * 2))
+    push_candidate(candidates, @core.point(current.x, current.y + dy))
+    push_candidate(candidates, @core.point(current.x + 1, current.y))
+    push_candidate(candidates, @core.point(current.x - 1, current.y))
+    push_candidate(candidates, @core.point(current.x + 1, current.y + dy))
+    push_candidate(candidates, @core.point(current.x - 1, current.y + dy))
+    push_candidate(candidates, @core.point(current.x + 1, current.y + dy * 2))
+    push_candidate(candidates, @core.point(current.x - 1, current.y + dy * 2))
+  }
+  candidates
+}
+
+///|
+fn better_clearance_jump_candidate(
+  candidate : @core.Point,
+  chosen : @core.Point,
+  candidate_clearance : Double,
+  chosen_clearance : Double,
+  goal : @core.Point,
+) -> Bool {
+  candidate_clearance > chosen_clearance ||
+  (
+    candidate_clearance == chosen_clearance &&
+    candidate_score(candidate, goal) < candidate_score(chosen, goal)
+  )
+}
+
+///|
+fn choose_continuous_clearance_jump_point(
+  map : @grid.GridMap,
+  current : @core.Point,
+  target : @core.Point,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  start_time : Double,
+  end_time : Double,
+  samples : Int,
+) -> @core.Point {
+  let goal = map.goal
+  let candidates = continuous_jump_candidates(current, target, goal)
+  let mut chosen = current
+  let mut chosen_clearance = 0.0
+  let mut found = false
+  for candidate in candidates {
+    if map.is_walkable(candidate) {
+      let segment = continuous_segment(
+        continuous_point_from_grid(current),
+        continuous_point_from_grid(candidate),
+        start_time,
+        end_time,
+      )
+      match
+        continuous_segment_min_clearance(segment, obstacles, options, samples) {
+        Some(clearance) =>
+          if !found ||
+            better_clearance_jump_candidate(
+              candidate,
+              chosen,
+              clearance.clearance,
+              chosen_clearance,
+              goal,
+            ) {
+            chosen = candidate
+            chosen_clearance = clearance.clearance
+            found = true
+          }
+        None =>
+          if !found ||
+            candidate_score(candidate, goal) < candidate_score(chosen, goal) {
+            chosen = candidate
+            found = true
+          }
       }
     }
   }
@@ -739,6 +855,48 @@ pub fn jump_avoidance(
     let next = path[index]
     if any_collision(next, obstacles, options) {
       push_unique(adjusted, choose_jump_point(map, current, obstacles, options))
+    } else {
+      push_unique(adjusted, next)
+    }
+  }
+  adjusted
+}
+
+///|
+pub fn jump_avoidance_over_continuous_clearance(
+  map : @grid.GridMap,
+  path : Array[@core.Point],
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  step_time : Double,
+  samples_per_segment : Int,
+) -> Array[@core.Point] {
+  if path.length() < 2 || obstacles.is_empty() {
+    return path
+  }
+  let adjusted = []
+  adjusted.push(path[0])
+  let safe_step_time = if step_time <= 0.0 { 1.0 } else { step_time }
+  for index in 1..<path.length() {
+    let current = adjusted[adjusted.length() - 1]
+    let next = path[index]
+    let start_time = (index - 1).to_double() * safe_step_time
+    let end_time = index.to_double() * safe_step_time
+    let segment = continuous_segment(
+      continuous_point_from_grid(current),
+      continuous_point_from_grid(next),
+      start_time,
+      end_time,
+    )
+    if continuous_segment_collides(
+        segment, obstacles, options, samples_per_segment,
+      ) {
+      push_unique(
+        adjusted,
+        choose_continuous_clearance_jump_point(
+          map, current, next, obstacles, options, start_time, end_time, samples_per_segment,
+        ),
+      )
     } else {
       push_unique(adjusted, next)
     }

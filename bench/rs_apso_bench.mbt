@@ -549,20 +549,22 @@ fn run_dynamic_scenarios() -> Unit {
   )
   let continuous = @dynamic.continuous_moving_obstacle(0.5, 0.0, 1.0, 0.5, 0.0)
   let continuous_start = @clock.monotonic_clock_start()
-  let mut continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+  let mut continuous_path = @dynamic.jump_avoidance_over_continuous_clearance(
     map,
     base.path,
     [continuous],
     options,
     1.0,
+    4,
   )
   for _ in 1..<repeats {
-    continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+    continuous_path = @dynamic.jump_avoidance_over_continuous_clearance(
       map,
       base.path,
       [continuous],
       options,
       1.0,
+      4,
     )
   }
   let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)
@@ -694,20 +696,22 @@ fn run_dynamic_crossing_scenario() -> Unit {
     2.0, 0.0, 1.0, 0.0, 1.0,
   )
   let continuous_start = @clock.monotonic_clock_start()
-  let mut continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+  let mut continuous_path = @dynamic.jump_avoidance_over_continuous_clearance(
     map,
     base.path,
     [continuous_horizontal, continuous_vertical],
     options,
     1.0,
+    4,
   )
   for _ in 1..<repeats {
-    continuous_path = @dynamic.jump_avoidance_over_continuous_time(
+    continuous_path = @dynamic.jump_avoidance_over_continuous_clearance(
       map,
       base.path,
       [continuous_horizontal, continuous_vertical],
       options,
       1.0,
+      4,
     )
   }
   let continuous_elapsed = @clock.monotonic_clock_end(continuous_start)

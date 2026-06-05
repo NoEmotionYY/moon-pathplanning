@@ -317,6 +317,64 @@ test "dynamic continuous avoidance leaves safe path unchanged" {
 }
 
 ///|
+test "dynamic continuous clearance avoidance leaves safe path unchanged" {
+  let map = @grid.new_grid(5, 3, @core.point(0, 1), @core.point(4, 1))
+  let path = [
+    @core.point(0, 1),
+    @core.point(1, 1),
+    @core.point(2, 1),
+    @core.point(3, 1),
+    @core.point(4, 1),
+  ]
+  let obstacle = @dynamic.continuous_moving_obstacle(0.0, 4.0, 1.0, 0.5, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let adjusted = @dynamic.jump_avoidance_over_continuous_clearance(
+    map,
+    path,
+    [obstacle],
+    options,
+    1.0,
+    4,
+  )
+  assert_eq(adjusted.length(), path.length())
+  assert_eq(adjusted[1].same(path[1]), true)
+  assert_eq(adjusted[4].same(path[4]), true)
+}
+
+///|
+test "dynamic continuous clearance avoidance chooses lateral safe jump" {
+  let map = @grid.new_grid(5, 3, @core.point(0, 1), @core.point(4, 1))
+  let path = [
+    @core.point(0, 1),
+    @core.point(1, 1),
+    @core.point(2, 1),
+    @core.point(3, 1),
+    @core.point(4, 1),
+  ]
+  let obstacle = @dynamic.continuous_moving_obstacle(1.0, 1.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let adjusted = @dynamic.jump_avoidance_over_continuous_clearance(
+    map,
+    path,
+    [obstacle],
+    options,
+    1.0,
+    4,
+  )
+  assert_eq(adjusted[1].y != 1, true)
+  let first_segment = @dynamic.continuous_segment(
+    @dynamic.continuous_point_from_grid(adjusted[0]),
+    @dynamic.continuous_point_from_grid(adjusted[1]),
+    0.0,
+    1.0,
+  )
+  assert_eq(
+    @dynamic.continuous_segment_collides(first_segment, [obstacle], options, 4),
+    false,
+  )
+}
+
+///|
 test "dynamic continuous avoidance jumps after obstacle enters radius" {
   let map = @grid.new_grid(5, 1, @core.point(0, 0), @core.point(4, 0))
   let path = [
