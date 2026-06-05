@@ -166,13 +166,16 @@ moon run ./bench --target native -- --map examples/weighted_grid.json
 输出为 CSV，当前包含 `scenario`、`algorithm`、`status`、`path_nodes`、`total_cost`、
 `path_length`、`smoothness`、`visited_nodes`、`expanded_nodes`、`iterations`、
 `candidates`、`best_fitness`、`seed`、`population_size`、`max_iterations`、`repeats`、
-`elapsed_us_total` 和 `elapsed_us_avg`。
+`elapsed_us_total`、`elapsed_us_avg`、`safety_evaluated`、`continuous_safe` 和
+`min_clearance`。
 经典算法的 swarm 参数字段为 `0`；PSO 与 RS-APSO 会额外记录区域候选数量、实际迭代次数、
 最终适应度和固定 seed 配置。当前默认重复次数为 5，耗时使用 `moonbitlang/core/bench`
 提供的 monotonic clock 记录。
 动态场景使用 `dynamic_5x1` 和 `dynamic_10x10_crossing`，算法列分别输出
 `astar_static`、`dynamic_time`、`dynamic_reflected` 和 `dynamic_continuous`，用于比较静态
 路径、整数速度动态障碍物、边界往复预测和连续坐标时间步预测后的路径修正结果。
+其中连续动态行会把修正路径转换为连续线段，并记录连续采样是否安全和最小安全间距；
+普通静态或离散动态行的 `safety_evaluated` 为 `0`。
 native 后端传入 JSON v1 地图文件时，runner 会只输出这些文件场景的 A 星、Dijkstra、
 PSO 和 RS-APSO 指标；无参数时仍输出内置 20x20 与动态避障场景。
 使用 `--json/-j` 传入 JSON v1 字符串时也会只输出这些 inline 场景，并且不依赖文件系统。
