@@ -11,8 +11,8 @@
 `obstacles` 与 terrain 中的 `point` 都写成 `[x, y]`。
 20x20 RS-APSO 文件用于固定项目内 benchmark 输入，是根据论文实验尺寸和障碍复杂度整理的
 代表性场景，不声称逐像素复刻论文图 8 与图 9。
-库内可用 `@json_map.grid_from_json(text)` 解析同一 schema 的 JSON 字符串；CLI 可在
-native 后端读取这些 JSON 文件。
+库内可用 `@json_map.grid_from_json(text)` 解析同一 schema 的 JSON 字符串；CLI 和 benchmark
+runner 可通过 `--json/-j` 直接接收 JSON 字符串，CLI 也可在 native 后端读取这些 JSON 文件。
 
 可以通过仓库根目录的 `moon run ./bench` 运行当前 benchmark runner。runner 会复用这两类
 20x20 场景，输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次重复运行、
@@ -20,6 +20,7 @@ native 后端读取这些 JSON 文件。
 对比静态 A 星基线、整数速度、边界往复和连续坐标时间步修正。也可以在 native 后端直接指定 JSON 文件，例如
 `moon run ./bench --target native -- examples/simple_grid.json` 或
 `moon run ./bench --target native -- --map examples/weighted_grid.json`。
+不依赖文件系统的字符串输入可使用 `moon run ./bench -- --json <grid-json>`。
 
 ## CLI demo
 
@@ -30,9 +31,10 @@ moon run cli
 ```
 
 当前 CLI 使用内置 demo 地图，展示 Planner 对 A 星算法的调度结果。文件型 JSON CLI
-导入使用 native 后端：
+导入使用 native 后端；字符串型 JSON 输入可用 `--json/-j`：
 
 ```bash
+moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 ```

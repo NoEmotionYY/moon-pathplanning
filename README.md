@@ -25,16 +25,16 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 - 区域搜索预处理：障碍物边界角识别、候选搜索区域生成和空地图自由区域回退。
 - RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、PSO/RS-APSO 主循环。
 - 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估和跳跃避障路径修正。
-- Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例、序列化和字符串解析、SVG 导出、CLI demo 与支持 JSON 文件输入的 benchmark runner。
+- Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例、序列化和字符串解析、SVG 导出、CLI demo，以及支持 JSON 文件和 JSON 字符串输入的 benchmark runner。
 
 ## 当前完成情况
 
 初步工程已包含源码、测试文件、示例地图、文档、CI 和 benchmark 说明，并已按论文方向
 开始补充区域搜索、swarm 基础模块和动态避障模块，其中 PSO/RS-APSO 已能在区域候选点中
 搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图、序列化和
-字符串解析入口。CLI v1 支持内置 demo 地图，也支持 native 后端读取 JSON 地图文件；
+字符串解析入口。CLI v1 支持内置 demo 地图、`--json` 字符串输入，也支持 native 后端读取 JSON 地图文件；
 `bench` runner 已固定两个 20x20 RS-APSO 场景和一个动态避障 5x1 场景，并以 5 次重复输出
-CSV 指标和耗时统计；native 后端也可读取 JSON v1 地图文件运行同格式 benchmark。
+CSV 指标和耗时统计；runner 也支持 `--json` 字符串输入，native 后端还可读取 JSON v1 地图文件运行同格式 benchmark。
 
 ## 快速开始
 
@@ -44,12 +44,15 @@ CSV 指标和耗时统计；native 后端也可读取 JSON v1 地图文件运行
 moon check
 moon test
 moon run cli
+moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run cli --target native -- examples/simple_grid.json
 moon run ./bench
+moon run ./bench -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run ./bench --target native -- examples/simple_grid.json
 ```
 
 当前 CLI 会运行内置 A 星示例并打印路径节点数、总代价、访问节点数和展开节点数。
+字符串型 JSON 输入使用 `--json/-j`，不依赖文件读取；PowerShell 中需要像上面的示例一样转义 JSON 双引号。
 文件型 JSON 输入需要 native 后端，命令形如
 `moon run cli --target native -- --map examples/weighted_grid.json`。
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO 和 RS-APSO

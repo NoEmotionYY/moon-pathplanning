@@ -22,6 +22,6 @@
 Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录 seed、种群大小、最大迭代次数、默认 5 次
 重复运行次数、总耗时和平均耗时。runner 也输出 `dynamic_5x1` 与 `dynamic_10x10_crossing`
 动态避障场景，覆盖静态 A 星基线、整数速度动态修正、边界往复修正和连续坐标时间步修正。
-benchmark runner 已能在
-native 后端通过位置参数或 `--map/-m` 读取 JSON v1 地图文件，并按文件中的 movement 选择
-启发式和 swarm movement；下一步应补更多复杂动态组合和跨后端文件输入策略。
+benchmark runner 已能通过 `--json/-j` 读取 JSON v1 字符串，不依赖文件系统；native 后端还
+支持位置参数或 `--map/-m` 读取 JSON v1 地图文件，并按文件中的 movement 选择启发式和
+swarm movement；下一步应补更多复杂动态组合和跨后端文件打包策略。
