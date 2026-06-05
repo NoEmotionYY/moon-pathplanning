@@ -181,7 +181,7 @@ moon run ./bench --target native -- --map examples/weighted_grid.json
 经典算法的 swarm 参数字段为 `0`；PSO 与 RS-APSO 会额外记录区域候选数量、实际迭代次数、
 最终适应度和固定 seed 配置。当前默认重复次数为 5，耗时使用 `moonbitlang/core/bench`
 提供的 monotonic clock 记录。
-动态场景使用 `dynamic_5x1` 和 `dynamic_10x10_crossing`，算法列分别输出
+动态场景使用 `dynamic_5x1`、`dynamic_10x10_crossing` 和 `dynamic_12x12_mixed`，算法列分别输出
 `astar_static`、`dynamic_time`、`dynamic_reflected`、`dynamic_continuous` 和
 `dynamic_continuous_wait`，用于比较静态路径、整数速度动态障碍物、边界往复预测、
 连续安全感知修正和连续等待修正后的路径结果。其中连续动态行会把修正路径转换为连续线段，

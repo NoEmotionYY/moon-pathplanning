@@ -30,7 +30,8 @@
 - benchmark runner 新增 native 后端 JSON 文件输入参数，支持位置参数和 `--map/-m` 读取 JSON v1 地图并输出 CSV 指标。
 - benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
 - benchmark runner 新增连续动态安全指标列：`safety_evaluated`、`continuous_safe` 和 `min_clearance`。
-- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 57 项测试全部通过。
+- benchmark runner 新增 `dynamic_12x12_mixed` 场景，覆盖静态障碍、三类移动障碍物、边界往复、连续安全感知和连续等待修正的混合动态组合。
+- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 58 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 
 ## 0.1.0 - 2026-05-23
