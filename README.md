@@ -24,14 +24,14 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 - BFS、DFS、Dijkstra、A 星和双向 A 星搜索。
 - 区域搜索预处理：障碍物边界角识别、候选搜索区域生成和空地图自由区域回退。
 - RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、PSO/RS-APSO 主循环。
-- 连续几何基础组件：栅格中心线段栅格化、静态线段可见性检查和路径快捷平滑。
+- 连续几何与采样规划基础组件：栅格中心线段栅格化、静态线段可见性检查、路径快捷平滑和基础 RRT 采样规划。
 - 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待避障和跳跃避障路径修正。
-- Planner 算法调度，包含经典搜索、基础 PSO 和 RS-APSO；JSON v1 示例、序列化、字符串解析、嵌入式示例地图、SVG 导出、CLI demo，以及支持 JSON 文件、JSON 字符串和示例名输入的 benchmark runner。
+- Planner 算法调度，包含经典搜索、基础 PSO、RS-APSO 和 RRT；JSON v1 示例、序列化、字符串解析、嵌入式示例地图、SVG 导出、CLI demo，以及支持 JSON 文件、JSON 字符串和示例名输入的 benchmark runner。
 
 ## 当前完成情况
 
 初步工程已包含源码、测试文件、示例地图、文档、CI 和 benchmark 说明，并已按论文方向
-开始补充区域搜索、swarm 基础模块、连续几何基础模块和动态避障模块，其中 PSO/RS-APSO 已能在区域候选点中
+开始补充区域搜索、swarm 基础模块、连续几何与基础 RRT 采样规划模块和动态避障模块，其中 PSO/RS-APSO 已能在区域候选点中
 搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图、序列化和
 字符串解析入口。CLI v1 支持内置 demo 地图、`--json` 字符串输入、`--example` 跨后端示例名输入，也支持 native 后端读取 JSON 地图文件；
 `bench` runner 已固定两个 20x20 RS-APSO 场景和三个动态避障场景，并以 5 次重复输出
@@ -101,7 +101,7 @@ let result = @planner.plan(map, @planner.AStar, @planner.default_options())
 
 MoonBit 测试位于 `test/`，覆盖最短路径、无路径、障碍绕行、权重地图、三类算法
 一致性、移动模式、起点等于终点、非法地图输入、JSON 字符串解析、区域搜索、
-RS-APSO 基础能力、连续几何和动态避障，包含整数栅格、线段可见性、路径快捷平滑、边界往复、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断、最小安全间距评估、连续安全感知修正、连续等待修正和混合穿越障碍物场景。
+RS-APSO 基础能力、连续几何、基础 RRT 采样规划和动态避障，包含整数栅格、线段可见性、路径快捷平滑、采样树绕障、固定 seed 复现、无路返回、边界往复、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断、最小安全间距评估、连续安全感知修正、连续等待修正和混合穿越障碍物场景。
 标准检查命令是 `moon check` 与 `moon test`。
 
 ## 可视化说明
@@ -115,7 +115,7 @@ RS-APSO 基础能力、连续几何和动态避障，包含整数栅格、线段
 - 第一阶段：基础工程、地图模型和五类搜索算法。
 - 第二阶段：JSON、CLI、SVG 和 benchmark 完善。
 - 第三阶段：基于论文资料推进区域搜索、RS-APSO 和动态避障。
-- 第四阶段：LPA*、D* Lite、RRT、RRT-Connect 与 RRT*。
+- 第四阶段：LPA*、D* Lite、RRT-Connect 与 RRT*，并继续扩展基础 RRT 的 benchmark 和可视化案例。
 - 第五阶段：mooncakes.io 发布与 MoonBit 生态适配。
 
 详细设计、迁移说明、RS-APSO 开发准备与路线图见 `docs/`。

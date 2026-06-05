@@ -19,10 +19,11 @@ let result = @planner.plan(map, @planner.AStar, options)
 
 `PlannerOptions` 选择四方向或八方向移动，也能为 A 星算法选择启发函数。
 
-Planner 当前支持 `Bfs`、`Dfs`、`Dijkstra`、`AStar`、`BidirectionalAStar`、`Pso` 和
-`RsApso`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
+Planner 当前支持 `Bfs`、`Dfs`、`Dijkstra`、`AStar`、`BidirectionalAStar`、`Pso`、
+`RsApso` 和 `Rrt`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
 如果需要迭代次数、候选数量和适应度等附加信息，应直接调用 `@swarm.pso_plan()` 或
-`@swarm.rs_apso_plan()`。
+`@swarm.rs_apso_plan()`；如果需要 RRT 迭代次数和采样树节点数，应直接调用
+`@continuous.rrt_plan()`。
 
 ## 算法调用示例
 
@@ -85,11 +86,18 @@ let visible = @continuous.segment_is_walkable(
   map, @core.point(0, 0), @core.point(4, 4),
 )
 let shortened = @continuous.shortcut_path(map, result.path)
+let rrt = @continuous.rrt_plan(map, @continuous.default_rrt_options())
 ```
 
 `rasterized_segment_cells(start, goal)` 会用整数栅格中心线段生成经过的栅格序列，并保留起终点。
 `segment_is_walkable(map, start, goal)` 会检查该序列中的每个栅格是否可行走；若线段穿过障碍物或地图外区域则返回 `false`。
-`shortcut_path(map, path)` 会在静态可见性允许时跳过中间路点，保留首尾点，并为后续 RRT、RRT-Connect、RRT* 或路径平滑后处理提供基础几何入口。
+`shortcut_path(map, path)` 会在静态可见性允许时跳过中间路点，保留首尾点。
+基础 RRT 入口由 `RrtOptions`、`default_rrt_options()`、`rrt_options(max_iterations, seed, goal_sample_rate)`
+和 `rrt_plan(map, options)` 组成；`rrt_plan()` 会在可行走栅格中心采样，选择最近树节点，
+用 `segment_is_walkable()` 判断能否直连，并在找到终点后对树路径做快捷平滑。返回的
+`RrtPathResult` 保留统一 `PathResult`，并附加实际迭代次数和采样树节点数。Planner 的
+`Rrt` 算法类型使用默认 RRT 参数；后续 RRT-Connect、RRT* 或更丰富路径平滑后处理可继续复用
+同一线段可见性入口。
 
 ## 动态避障 API
 
