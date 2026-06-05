@@ -20,6 +20,7 @@
 - 动态避障新增边界往复反射预测和对应跳跃避障场景测试。
 - CLI 新增 native 后端 JSON 文件输入，支持 `moon run cli --target native -- <map.json>`。
 - CLI 与 benchmark runner 新增 `--json/-j` JSON 字符串输入参数，复用 JSON v1 解析入口且不依赖文件系统。
+- 新增嵌入式示例地图入口 `example_json(name)` 和 `example_grid_data(name)`，CLI 与 benchmark runner 支持 `--example/-e`，可在非 native 后端通过示例名复用 JSON v1 地图。
 - 动态避障新增连续坐标动态障碍物、按时间步预测、连续碰撞检测和跳跃避障测试。
 - 动态避障新增连续轨迹安全评估，支持从离散路径生成带时间线段并采样检测连续动态障碍物碰撞风险。
 - 动态避障新增连续碰撞诊断报告，支持返回首个碰撞线段、采样点、障碍物索引、碰撞时间和双方连续坐标。
@@ -31,7 +32,7 @@
 - benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
 - benchmark runner 新增连续动态安全指标列：`safety_evaluated`、`continuous_safe` 和 `min_clearance`。
 - benchmark runner 新增 `dynamic_12x12_mixed` 场景，覆盖静态障碍、三类移动障碍物、边界往复、连续安全感知和连续等待修正的混合动态组合。
-- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 58 项测试全部通过。
+- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 59 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 
 ## 0.1.0 - 2026-05-23

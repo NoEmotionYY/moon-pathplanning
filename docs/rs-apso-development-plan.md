@@ -160,16 +160,16 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 重复运行、总耗时和平均耗时，并新增 `dynamic_5x1`、`dynamic_10x10_crossing` 与
 `dynamic_12x12_mixed` 场景对比静态
 A 星基线、整数速度动态修正、边界往复修正和连续坐标时间步修正。CLI 与 benchmark runner
-已支持 `--json/-j` 字符串输入，native 后端也可读取 JSON v1 地图文件；动态连续行使用连续安全感知修正并输出
+已支持 `--json/-j` 字符串输入和 `--example/-e` 嵌入式示例名输入，native 后端也可读取 JSON v1 地图文件；动态连续行使用连续安全感知修正并输出
 `safety_evaluated`、`continuous_safe` 和 `min_clearance`，用于暴露连续线段采样层面的剩余风险。
 `dynamic_continuous_wait` 额外输出允许等待后的连续修正结果，便于比较空间绕行和时间等待两类策略。
 `dynamic_12x12_mixed` 固定带静态障碍的 12x12 对角场景，用三条动态障碍物轨迹压测混合组合下的修正指标。
-后续可继续补跨后端文件打包策略和更高级连续空间模型。
+后续可继续补更高级连续空间模型。
 
 ## 当前开放问题
 
 - 已通过官方 MoonBit Windows x86_64 便携工具链完成 `moon check` 与 `moon test`；后续需要把工具链安装或临时 `MOON_HOME` 设置沉淀为稳定开发步骤。
-- JSON v1 已具备字符串解析入口，20x20 论文基准地图目前已作为项目 benchmark 输入固化；CLI 与 benchmark runner 已能通过 `--json/-j` 接收 JSON 字符串，CLI 也能在 native 后端读取 JSON 文件并运行 A 星 demo。
+- JSON v1 已具备字符串解析入口和嵌入式示例地图入口，20x20 论文基准地图目前已作为项目 benchmark 输入固化；CLI 与 benchmark runner 已能通过 `--json/-j` 接收 JSON 字符串、通过 `--example/-e` 复用包内示例，CLI 也能在 native 后端读取 JSON 文件并运行 A 星 demo。
 - 障碍物膨胀半径需要结合机器人尺寸决定，库层提供参数，不内置具体机器人尺寸。
 - 当前 PSO 随机源已采用固定 seed 的可复现实现；benchmark runner 已把 seed、种群大小、最大迭代次数、重复次数和耗时统计显式记录到输出。
 - 论文仿真时间基于 MATLAB 环境，MoonBit benchmark 只能比较项目内相对性能，不直接声称复现论文耗时。

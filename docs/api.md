@@ -169,6 +169,7 @@ let svg = @svg.grid_region_to_svg(map, region, result.path, 20)
 ```bash
 moon run ./bench
 moon run ./bench -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
+moon run ./bench -- --example rs_apso_20x20_simple
 moon run ./bench --target native -- examples/simple_grid.json
 moon run ./bench --target native -- --map examples/weighted_grid.json
 ```
@@ -190,6 +191,8 @@ moon run ./bench --target native -- --map examples/weighted_grid.json
 native 后端传入 JSON v1 地图文件时，runner 会只输出这些文件场景的 A 星、Dijkstra、
 PSO 和 RS-APSO 指标；无参数时仍输出内置 20x20 与动态避障场景。
 使用 `--json/-j` 传入 JSON v1 字符串时也会只输出这些 inline 场景，并且不依赖文件系统。
+使用 `--example/-e` 传入嵌入式示例名时也会输出同格式指标；该入口复用包内示例地图字符串，
+可在没有文件系统读取能力的目标后端运行固定示例。
 
 ## PathResult 字段
 
@@ -222,15 +225,19 @@ MoonBit 模块提供 schema 对应序列化和字符串解析入口：
 ```moonbit
 let text = @json_map.grid_to_json(map, @grid.FourWay)
 let parsed = @json_map.grid_from_json(text)
+let embedded = @json_map.example_json("weighted_grid")
 ```
 
 `grid_from_json(text)` 使用 `moonbitlang/core/json` 解析字符串，成功时返回
 `GridJsonData?` 中的 `map` 与 `movement`，遇到不支持的 `format`、字段缺失或类型错误时
-返回 `None`。CLI 和 benchmark runner 都可用 `--json/-j` 直接接收 JSON 字符串；文件读取不放
+返回 `None`。`example_names()` 会列出包内嵌入的稳定示例名，`example_json(name)` 和
+`example_grid_data(name)` 可按示例名返回 JSON 字符串或解析后的地图数据。CLI 和 benchmark
+runner 都可用 `--json/-j` 直接接收 JSON 字符串，也可用 `--example/-e` 复用嵌入式示例；文件读取不放
 在库入口内，当前由 native 后端边界负责：
 
 ```bash
 moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
+moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 ```
