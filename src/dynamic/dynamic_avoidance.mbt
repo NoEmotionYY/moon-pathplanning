@@ -16,6 +16,20 @@ pub(all) struct ContinuousMovingObstacle {
 } derive(Debug)
 
 ///|
+pub(all) struct ContinuousPoint {
+  x : Double
+  y : Double
+} derive(Debug)
+
+///|
+pub(all) struct ContinuousSegment {
+  start : ContinuousPoint
+  goal : ContinuousPoint
+  start_time : Double
+  end_time : Double
+} derive(Debug)
+
+///|
 pub(all) struct CollisionOptions {
   robot_speed : Double
   unit_grid_length : Double
@@ -49,6 +63,63 @@ pub fn continuous_moving_obstacle(
   velocity_y : Double,
 ) -> ContinuousMovingObstacle {
   { x, y, speed, velocity_x, velocity_y }
+}
+
+///|
+pub fn continuous_point(x : Double, y : Double) -> ContinuousPoint {
+  { x, y }
+}
+
+///|
+pub fn continuous_point_from_grid(point : @core.Point) -> ContinuousPoint {
+  { x: point.x.to_double(), y: point.y.to_double() }
+}
+
+///|
+pub fn continuous_segment(
+  start : ContinuousPoint,
+  goal : ContinuousPoint,
+  start_time : Double,
+  end_time : Double,
+) -> ContinuousSegment {
+  { start, goal, start_time, end_time }
+}
+
+///|
+pub fn ContinuousPoint::distance_squared(
+  self : ContinuousPoint,
+  other : ContinuousPoint,
+) -> Double {
+  let dx = self.x - other.x
+  let dy = self.y - other.y
+  dx * dx + dy * dy
+}
+
+///|
+pub fn ContinuousPoint::interpolate(
+  self : ContinuousPoint,
+  goal : ContinuousPoint,
+  ratio : Double,
+) -> ContinuousPoint {
+  {
+    x: self.x + (goal.x - self.x) * ratio,
+    y: self.y + (goal.y - self.y) * ratio,
+  }
+}
+
+///|
+pub fn ContinuousSegment::point_at_time(
+  self : ContinuousSegment,
+  time : Double,
+) -> ContinuousPoint {
+  let duration = self.end_time - self.start_time
+  if duration <= 0.0 || time >= self.end_time {
+    self.goal
+  } else if time <= self.start_time {
+    self.start
+  } else {
+    self.start.interpolate(self.goal, (time - self.start_time) / duration)
+  }
 }
 
 ///|
@@ -206,6 +277,98 @@ pub fn would_collide_continuous(
   let dy = robot_point.y.to_double() - obstacle.y
   let radius = continuous_collision_radius(options, obstacle)
   dx * dx + dy * dy <= radius * radius
+}
+
+///|
+pub fn would_collide_continuous_point(
+  robot_point : ContinuousPoint,
+  obstacle : ContinuousMovingObstacle,
+  options : CollisionOptions,
+) -> Bool {
+  let obstacle_point = continuous_point(obstacle.x, obstacle.y)
+  let radius = continuous_collision_radius(options, obstacle)
+  robot_point.distance_squared(obstacle_point) <= radius * radius
+}
+
+///|
+fn any_continuous_point_collision(
+  point : ContinuousPoint,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+) -> Bool {
+  for obstacle in obstacles {
+    if would_collide_continuous_point(point, obstacle, options) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+pub fn continuous_segment_collides(
+  segment : ContinuousSegment,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples : Int,
+) -> Bool {
+  if obstacles.is_empty() {
+    return false
+  }
+  let safe_samples = if samples < 1 { 1 } else { samples }
+  let duration = segment.end_time - segment.start_time
+  for index in 0..<(safe_samples + 1) {
+    let ratio = index.to_double() / safe_samples.to_double()
+    let time = segment.start_time + duration * ratio
+    let point = segment.point_at_time(time)
+    let projected = []
+    for obstacle in obstacles {
+      projected.push(obstacle.at_time(time))
+    }
+    if any_continuous_point_collision(point, projected, options) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+pub fn continuous_segments_from_grid_path(
+  path : Array[@core.Point],
+  step_time : Double,
+) -> Array[ContinuousSegment] {
+  let segments = []
+  if path.length() < 2 {
+    return segments
+  }
+  let safe_step_time = if step_time <= 0.0 { 1.0 } else { step_time }
+  for index in 1..<path.length() {
+    segments.push(
+      continuous_segment(
+        continuous_point_from_grid(path[index - 1]),
+        continuous_point_from_grid(path[index]),
+        (index - 1).to_double() * safe_step_time,
+        index.to_double() * safe_step_time,
+      ),
+    )
+  }
+  segments
+}
+
+///|
+pub fn continuous_path_is_safe(
+  segments : Array[ContinuousSegment],
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples_per_segment : Int,
+) -> Bool {
+  for segment in segments {
+    if continuous_segment_collides(
+        segment, obstacles, options, samples_per_segment,
+      ) {
+      return false
+    }
+  }
+  true
 }
 
 ///|

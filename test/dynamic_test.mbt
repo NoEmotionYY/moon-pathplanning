@@ -81,6 +81,46 @@ test "dynamic continuous collision detects fractional position" {
 }
 
 ///|
+test "dynamic continuous segment interpolates by time" {
+  let segment = @dynamic.continuous_segment(
+    @dynamic.continuous_point(0.0, 0.0),
+    @dynamic.continuous_point(4.0, 0.0),
+    2.0,
+    6.0,
+  )
+  let before = segment.point_at_time(1.0)
+  let middle = segment.point_at_time(4.0)
+  let after = segment.point_at_time(8.0)
+  assert_eq(before.x, 0.0)
+  assert_eq(middle.x, 2.0)
+  assert_eq(after.x, 4.0)
+}
+
+///|
+test "dynamic continuous trajectory detects obstacle along segment" {
+  let path = [@core.point(0, 0), @core.point(4, 0)]
+  let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)
+  let obstacle = @dynamic.continuous_moving_obstacle(2.0, 0.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  assert_eq(
+    @dynamic.continuous_path_is_safe(segments, [obstacle], options, 4),
+    false,
+  )
+}
+
+///|
+test "dynamic continuous trajectory leaves distant obstacle safe" {
+  let path = [@core.point(0, 0), @core.point(4, 0)]
+  let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)
+  let obstacle = @dynamic.continuous_moving_obstacle(2.0, 3.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  assert_eq(
+    @dynamic.continuous_path_is_safe(segments, [obstacle], options, 4),
+    true,
+  )
+}
+
+///|
 test "dynamic reflected obstacle moves horizontally within boundaries" {
   let obstacle = @dynamic.moving_obstacle_with_velocity(
     @core.point(0, 0),
