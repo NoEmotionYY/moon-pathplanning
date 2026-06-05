@@ -9,6 +9,7 @@ pub(all) enum AlgorithmType {
   RsApso
   Rrt
   RrtConnect
+  RrtStar
 } derive(Debug)
 
 ///|
@@ -73,6 +74,11 @@ fn plan_rrt_connect(map : @grid.GridMap) -> @core.PathResult {
 }
 
 ///|
+fn plan_rrt_star(map : @grid.GridMap) -> @core.PathResult {
+  @continuous.rrt_star_plan(map, @continuous.default_rrt_star_options()).result
+}
+
+///|
 pub fn plan(
   map : @grid.GridMap,
   algorithm : AlgorithmType,
@@ -89,5 +95,6 @@ pub fn plan(
     RsApso => plan_rs_apso(map, options)
     Rrt => plan_rrt(map)
     RrtConnect => plan_rrt_connect(map)
+    RrtStar => plan_rrt_star(map)
   }
 }
