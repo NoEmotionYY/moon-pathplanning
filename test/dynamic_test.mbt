@@ -150,6 +150,55 @@ test "dynamic continuous trajectory reports no collision when safe" {
 }
 
 ///|
+test "dynamic continuous trajectory reports negative minimum clearance" {
+  let path = [@core.point(0, 0), @core.point(4, 0)]
+  let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)
+  let far = @dynamic.continuous_moving_obstacle(0.0, 4.0, 1.0, 0.0, 0.0)
+  let blocking = @dynamic.continuous_moving_obstacle(2.0, 0.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  match
+    @dynamic.continuous_path_min_clearance(
+      segments,
+      [far, blocking],
+      options,
+      4,
+    ) {
+    Some(clearance) => {
+      assert_eq(clearance.segment_index, 0)
+      assert_eq(clearance.sample_index, 2)
+      assert_eq(clearance.obstacle_index, 1)
+      assert_eq(clearance.time, 2.0)
+      assert_eq(clearance.distance, 0.0)
+      assert_eq(clearance.radius > 0.34, true)
+      assert_eq(clearance.radius < 0.36, true)
+      assert_eq(clearance.clearance < 0.0, true)
+    }
+    None => fail("expected continuous clearance report")
+  }
+}
+
+///|
+test "dynamic continuous trajectory reports positive minimum clearance" {
+  let path = [@core.point(0, 0), @core.point(4, 0)]
+  let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)
+  let obstacle = @dynamic.continuous_moving_obstacle(2.0, 1.0, 1.0, 0.0, 0.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  match
+    @dynamic.continuous_path_min_clearance(segments, [obstacle], options, 4) {
+    Some(clearance) => {
+      assert_eq(clearance.segment_index, 0)
+      assert_eq(clearance.sample_index, 2)
+      assert_eq(clearance.obstacle_index, 0)
+      assert_eq(clearance.distance > 0.99, true)
+      assert_eq(clearance.distance < 1.01, true)
+      assert_eq(clearance.clearance > 0.64, true)
+      assert_eq(clearance.clearance < 0.66, true)
+    }
+    None => fail("expected continuous clearance report")
+  }
+}
+
+///|
 test "dynamic continuous trajectory leaves distant obstacle safe" {
   let path = [@core.point(0, 0), @core.point(4, 0)]
   let segments = @dynamic.continuous_segments_from_grid_path(path, 4.0)

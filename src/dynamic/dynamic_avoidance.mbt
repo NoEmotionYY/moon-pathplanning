@@ -40,6 +40,19 @@ pub(all) struct ContinuousCollision {
 } derive(Debug)
 
 ///|
+pub(all) struct ContinuousClearance {
+  segment_index : Int
+  sample_index : Int
+  obstacle_index : Int
+  time : Double
+  robot : ContinuousPoint
+  obstacle : ContinuousPoint
+  distance : Double
+  radius : Double
+  clearance : Double
+} derive(Debug)
+
+///|
 pub(all) struct CollisionOptions {
   robot_speed : Double
   unit_grid_length : Double
@@ -103,6 +116,18 @@ pub fn ContinuousPoint::distance_squared(
   let dx = self.x - other.x
   let dy = self.y - other.y
   dx * dx + dy * dy
+}
+
+///|
+fn sqrt(value : Double) -> Double {
+  if value <= 0.0 {
+    return 0.0
+  }
+  let mut root = value
+  for _ in 0..<12 {
+    root = (root + value / root) / 2.0
+  }
+  root
 }
 
 ///|
@@ -358,6 +383,96 @@ pub fn continuous_segment_first_collision(
 }
 
 ///|
+fn continuous_clearance_with_options(
+  robot : ContinuousPoint,
+  obstacle : ContinuousMovingObstacle,
+  options : CollisionOptions,
+  segment_index : Int,
+  sample_index : Int,
+  obstacle_index : Int,
+  time : Double,
+) -> ContinuousClearance {
+  let obstacle_point = continuous_point(obstacle.x, obstacle.y)
+  let distance = sqrt(robot.distance_squared(obstacle_point))
+  let radius = continuous_collision_radius(options, obstacle)
+  {
+    segment_index,
+    sample_index,
+    obstacle_index,
+    time,
+    robot,
+    obstacle: obstacle_point,
+    distance,
+    radius,
+    clearance: distance - radius,
+  }
+}
+
+///|
+fn better_clearance(
+  left : ContinuousClearance?,
+  right : ContinuousClearance,
+) -> ContinuousClearance? {
+  match left {
+    Some(current) =>
+      if right.clearance < current.clearance {
+        Some(right)
+      } else {
+        Some(current)
+      }
+    None => Some(right)
+  }
+}
+
+///|
+fn continuous_segment_min_clearance_with_index(
+  segment : ContinuousSegment,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples : Int,
+  segment_index : Int,
+) -> ContinuousClearance? {
+  if obstacles.is_empty() {
+    return None
+  }
+  let safe_samples = if samples < 1 { 1 } else { samples }
+  let duration = segment.end_time - segment.start_time
+  let mut best = None
+  for sample_index in 0..<(safe_samples + 1) {
+    let ratio = sample_index.to_double() / safe_samples.to_double()
+    let time = segment.start_time + duration * ratio
+    let robot = segment.point_at_time(time)
+    for obstacle_index, obstacle in obstacles {
+      best = better_clearance(
+        best,
+        continuous_clearance_with_options(
+          robot,
+          obstacle.at_time(time),
+          options,
+          segment_index,
+          sample_index,
+          obstacle_index,
+          time,
+        ),
+      )
+    }
+  }
+  best
+}
+
+///|
+pub fn continuous_segment_min_clearance(
+  segment : ContinuousSegment,
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples : Int,
+) -> ContinuousClearance? {
+  continuous_segment_min_clearance_with_index(
+    segment, obstacles, options, samples, 0,
+  )
+}
+
+///|
 pub fn continuous_segments_from_grid_path(
   path : Array[@core.Point],
   step_time : Double,
@@ -410,6 +525,26 @@ pub fn continuous_path_first_collision(
     }
   }
   None
+}
+
+///|
+pub fn continuous_path_min_clearance(
+  segments : Array[ContinuousSegment],
+  obstacles : Array[ContinuousMovingObstacle],
+  options : CollisionOptions,
+  samples_per_segment : Int,
+) -> ContinuousClearance? {
+  let mut best = None
+  for segment_index, segment in segments {
+    match
+      continuous_segment_min_clearance_with_index(
+        segment, obstacles, options, samples_per_segment, segment_index,
+      ) {
+      Some(clearance) => best = better_clearance(best, clearance)
+      None => ()
+    }
+  }
+  best
 }
 
 ///|
