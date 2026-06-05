@@ -405,6 +405,54 @@ test "dynamic continuous wait avoidance delays in narrow corridor" {
 }
 
 ///|
+test "dynamic continuous wait handles mixed crossing obstacles" {
+  let map = @grid.new_grid(6, 6, @core.point(0, 0), @core.point(5, 5))
+  let path = [
+    @core.point(0, 0),
+    @core.point(1, 1),
+    @core.point(2, 2),
+    @core.point(3, 3),
+    @core.point(4, 4),
+    @core.point(5, 5),
+  ]
+  let horizontal = @dynamic.continuous_moving_obstacle(0.0, 1.0, 1.0, 1.0, 0.0)
+  let vertical = @dynamic.continuous_moving_obstacle(2.0, 0.0, 1.0, 0.0, 1.0)
+  let options = @dynamic.collision_options(2.0, 0.5, 0.1)
+  let base_segments = @dynamic.continuous_segments_from_grid_path(path, 1.0)
+  assert_eq(
+    @dynamic.continuous_path_is_safe(
+      base_segments,
+      [horizontal, vertical],
+      options,
+      4,
+    ),
+    false,
+  )
+  let adjusted = @dynamic.jump_avoidance_over_continuous_wait(
+    map,
+    path,
+    [horizontal, vertical],
+    options,
+    1.0,
+    4,
+    2,
+  )
+  let adjusted_segments = @dynamic.continuous_segments_from_grid_path(
+    adjusted, 1.0,
+  )
+  assert_eq(adjusted.length() > path.length(), true)
+  assert_eq(
+    @dynamic.continuous_path_is_safe(
+      adjusted_segments,
+      [horizontal, vertical],
+      options,
+      4,
+    ),
+    true,
+  )
+}
+
+///|
 test "dynamic continuous avoidance jumps after obstacle enters radius" {
   let map = @grid.new_grid(5, 1, @core.point(0, 0), @core.point(4, 0))
   let path = [
