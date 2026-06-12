@@ -213,7 +213,10 @@ moon run ./bench --target native -- --map examples/weighted_grid.json
 `elapsed_us_total`、`elapsed_us_avg`、`safety_evaluated`、`continuous_safe` 和
 `min_clearance`。
 经典算法的 swarm 参数字段为 `0`；PSO 与 RS-APSO 会额外记录区域候选数量、实际迭代次数、
-最终适应度和固定 seed 配置。当前默认重复次数为 5，耗时使用 `moonbitlang/core/bench`
+最终适应度和固定 seed 配置。静态 20x20 和 JSON 输入场景也会输出 `rrt`、`rrt_connect`
+和 `rrt_star` 行；这些行的 `candidates` 表示采样树节点数，`best_fitness` 与
+`population_size` 为 `0`，benchmark 固定使用 seed 42，并将 RRT/RRT-Connect 最大采样次数
+设为 600、目标采样率设为 0.2，RRT* 最大采样次数设为 600、重连半径设为 3。当前默认重复次数为 5，耗时使用 `moonbitlang/core/bench`
 提供的 monotonic clock 记录。
 动态场景使用 `dynamic_5x1`、`dynamic_10x10_crossing` 和 `dynamic_12x12_mixed`，算法列分别输出
 `astar_static`、`dynamic_time`、`dynamic_reflected`、`dynamic_continuous` 和
@@ -222,7 +225,7 @@ moon run ./bench --target native -- --map examples/weighted_grid.json
 并记录连续采样是否安全和最小安全间距；
 普通静态或离散动态行的 `safety_evaluated` 为 `0`。
 native 后端传入 JSON v1 地图文件时，runner 会只输出这些文件场景的 A 星、Dijkstra、
-PSO 和 RS-APSO 指标；无参数时仍输出内置 20x20 与动态避障场景。
+PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 指标；无参数时仍输出内置 20x20 与动态避障场景。
 使用 `--json/-j` 传入 JSON v1 字符串时也会只输出这些 inline 场景，并且不依赖文件系统。
 使用 `--example/-e` 传入嵌入式示例名时也会输出同格式指标；该入口复用包内示例地图字符串，
 可在没有文件系统读取能力的目标后端运行固定示例。
