@@ -397,6 +397,8 @@ fn run_scenario(
     movement,
     @swarm.default_fitness_weights(),
   )
+  let rrt_options = @continuous.rrt_options(600, 42, 0.2)
+  let rrt_star_options = @continuous.rrt_star_options(600, 42, 0.2, 3)
   let region = @region.build_search_region(map, @region.default_options())
   let heuristic = heuristic_for(movement)
   let astar_start = @clock.monotonic_clock_start()
@@ -423,6 +425,24 @@ fn run_scenario(
     rs_apso = @swarm.rs_apso_plan(map, region, swarm_options)
   }
   let rs_apso_elapsed = @clock.monotonic_clock_end(rs_apso_start)
+  let rrt_start = @clock.monotonic_clock_start()
+  let mut rrt = @continuous.rrt_plan(map, rrt_options)
+  for _ in 1..<repeats {
+    rrt = @continuous.rrt_plan(map, rrt_options)
+  }
+  let rrt_elapsed = @clock.monotonic_clock_end(rrt_start)
+  let rrt_connect_start = @clock.monotonic_clock_start()
+  let mut rrt_connect = @continuous.rrt_connect_plan(map, rrt_options)
+  for _ in 1..<repeats {
+    rrt_connect = @continuous.rrt_connect_plan(map, rrt_options)
+  }
+  let rrt_connect_elapsed = @clock.monotonic_clock_end(rrt_connect_start)
+  let rrt_star_start = @clock.monotonic_clock_start()
+  let mut rrt_star = @continuous.rrt_star_plan(map, rrt_star_options)
+  for _ in 1..<repeats {
+    rrt_star = @continuous.rrt_star_plan(map, rrt_star_options)
+  }
+  let rrt_star_elapsed = @clock.monotonic_clock_end(rrt_star_start)
   print_result(
     name,
     "astar",
@@ -474,6 +494,45 @@ fn run_scenario(
     swarm_options.max_iterations,
     repeats,
     rs_apso_elapsed,
+  )
+  print_result(
+    name,
+    "rrt",
+    rrt.result,
+    rrt.iterations,
+    rrt.nodes,
+    0.0,
+    rrt_options.seed,
+    0,
+    rrt_options.max_iterations,
+    repeats,
+    rrt_elapsed,
+  )
+  print_result(
+    name,
+    "rrt_connect",
+    rrt_connect.result,
+    rrt_connect.iterations,
+    rrt_connect.nodes,
+    0.0,
+    rrt_options.seed,
+    0,
+    rrt_options.max_iterations,
+    repeats,
+    rrt_connect_elapsed,
+  )
+  print_result(
+    name,
+    "rrt_star",
+    rrt_star.result,
+    rrt_star.iterations,
+    rrt_star.nodes,
+    0.0,
+    rrt_star_options.seed,
+    0,
+    rrt_star_options.max_iterations,
+    repeats,
+    rrt_star_elapsed,
   )
 }
 
