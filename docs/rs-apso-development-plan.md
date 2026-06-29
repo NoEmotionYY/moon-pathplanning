@@ -120,7 +120,7 @@ Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 
 
 当前已覆盖碰撞半径、近距离碰撞判断、跳跃避障修正、安全路径不变、左右移动、上下移动和
 双向移动障碍物，并新增水平/垂直边界往复、连续坐标投影、连续坐标碰撞、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待动态避障、混合穿越障碍物
-和进入碰撞半径后的跳跃修正测试。基础 RRT、RRT-Connect 和 RRT* 已提供连续空间采样规划入口并接入静态 benchmark CSV，后续可继续补可视化对比。
+和进入碰撞半径后的跳跃修正测试。基础 RRT、RRT-Connect 和 RRT* 已提供连续空间采样规划入口，接入静态 benchmark CSV，并提供 SVG 对比导出。
 
 ### 第四阶段：连续空间几何与基础采样规划
 
@@ -186,7 +186,7 @@ A 星基线、整数速度动态修正、边界往复修正和连续坐标时间
 `safety_evaluated`、`continuous_safe` 和 `min_clearance`，用于暴露连续线段采样层面的剩余风险。
 `dynamic_continuous_wait` 额外输出允许等待后的连续修正结果，便于比较空间绕行和时间等待两类策略。
 `dynamic_12x12_mixed` 固定带静态障碍的 12x12 对角场景，用三条动态障碍物轨迹压测混合组合下的修正指标。
-基础 RRT、RRT-Connect 与 RRT* 已接入 Planner 和 benchmark CSV；静态场景固定使用 seed 42，RRT/RRT-Connect 最大采样次数 600、目标采样率 0.2，RRT* 最大采样次数 600、重连半径 3。
+基础 RRT、RRT-Connect 与 RRT* 已接入 Planner、benchmark CSV 和 SVG 对比导出；静态 benchmark 场景固定使用 seed 42，RRT/RRT-Connect 最大采样次数 600、目标采样率 0.2，RRT* 最大采样次数 600、重连半径 3。
 
 ## 当前开放问题
 

@@ -186,13 +186,31 @@ let clearance = @dynamic.continuous_path_min_clearance(
 
 ## 可视化 API
 
-基础 SVG 导出用于展示地图和最终路径；区域搜索 SVG 导出用于调试 RS-APSO 预处理：
+基础 SVG 导出用于展示地图和最终路径；区域搜索 SVG 导出用于调试 RS-APSO 预处理；多路径 SVG 导出可用于对比不同算法结果：
 
 ```moonbit
 let svg = @svg.grid_region_to_svg(map, region, result.path, 20)
+let layered = @svg.grid_paths_to_svg(
+  map,
+  [
+    @svg.path_layer("A*", astar.path, "#e6584d"),
+    @svg.path_layer("RRT*", rrt_star.result.path, "#2a9d5b"),
+  ],
+  20,
+)
+let rrt_svg = @svg.rrt_comparison_to_svg(
+  map,
+  @continuous.rrt_options(600, 42, 0.2),
+  @continuous.rrt_star_options(600, 42, 0.2, 3),
+  20,
+)
 ```
 
 `grid_region_to_svg()` 会叠加候选搜索区域、障碍物边界角、障碍物、路径、起点和终点。
+`SvgPathLayer` 与 `path_layer(name, path, color)` 用于描述一条命名路径；`grid_paths_to_svg()`
+会在同一地图上按颜色叠加多条路径，并在底部追加图例。`rrt_comparison_to_svg()`
+会运行 RRT、RRT-Connect 与 RRT* 并复用多路径 SVG 导出；`default_rrt_comparison_to_svg()`
+使用连续规划默认参数，适合快速观察基础采样规划差异。
 
 ## Benchmark Runner
 

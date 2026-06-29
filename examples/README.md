@@ -17,7 +17,7 @@
 CLI 也可在 native 后端读取这些 JSON 文件。
 
 可以通过仓库根目录的 `moon run ./bench` 运行当前 benchmark runner。runner 会复用这两类
-20x20 场景，输出 A 星、Dijkstra、PSO 和 RS-APSO 的 CSV 指标，并记录默认 5 次重复运行、
+20x20 场景，输出 A 星、Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的 CSV 指标，并记录默认 5 次重复运行、
 总耗时和平均耗时；同时输出 `dynamic_5x1`、`dynamic_10x10_crossing` 与
 `dynamic_12x12_mixed` 动态避障场景，用于
 对比静态 A 星基线、整数速度、边界往复、连续安全感知修正和连续等待修正。连续动态行还会记录
@@ -52,4 +52,6 @@ moon run cli --target native -- --map examples/weighted_grid.json
 调用 `@svg.grid_to_svg(map, result.path, cell_size)` 可得到 SVG 字符串。该导出适合
 在示例程序或展示层写入文件。调试 RS-APSO 区域搜索时，可调用
 `@svg.grid_region_to_svg(map, region, result.path, cell_size)` 叠加候选搜索区域和障碍物
-边界角。仓库只保留导出代码，不保留大批生成图片。
+边界角。对比多条路径时，可调用 `@svg.grid_paths_to_svg()` 叠加命名路径；对比采样规划时，
+`@svg.rrt_comparison_to_svg(map, rrt_options, rrt_star_options, cell_size)` 会把 RRT、RRT-Connect
+和 RRT* 绘制到同一张 SVG 中，并在底部生成图例。仓库只保留导出代码，不保留大批生成图片。
