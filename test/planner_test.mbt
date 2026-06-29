@@ -8,6 +8,8 @@ test "planner dispatches every algorithm" {
     @planner.Dijkstra,
     @planner.AStar,
     @planner.BidirectionalAStar,
+    @planner.LpaStar,
+    @planner.DStarLite,
     @planner.Pso,
     @planner.RsApso,
     @planner.Rrt,
@@ -39,4 +41,17 @@ test "planner dispatches swarm algorithms through region search" {
   assert_eq(rs_apso.status is @core.Found, true)
   assert_eq(pso.path[0].same(map.start), true)
   assert_eq(rs_apso.path[rs_apso.path.length() - 1].same(map.goal), true)
+}
+
+///|
+test "planner dispatches incremental algorithms" {
+  let map = @grid.new_grid(5, 3, @core.point(0, 1), @core.point(4, 1)).with_obstacle(
+    @core.point(2, 1),
+  )
+  let lpa = @planner.plan(map, @planner.LpaStar, @planner.default_options())
+  let dstar = @planner.plan(map, @planner.DStarLite, @planner.default_options())
+  assert_eq(lpa.status is @core.Found, true)
+  assert_eq(dstar.status is @core.Found, true)
+  assert_eq(lpa.path[0].same(map.start), true)
+  assert_eq(dstar.path[dstar.path.length() - 1].same(map.goal), true)
 }

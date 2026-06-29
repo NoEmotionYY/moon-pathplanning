@@ -5,6 +5,8 @@ pub(all) enum AlgorithmType {
   Dijkstra
   AStar
   BidirectionalAStar
+  LpaStar
+  DStarLite
   Pso
   RsApso
   Rrt
@@ -91,6 +93,10 @@ pub fn plan(
     AStar => @algorithms.astar(map, options.movement, options.heuristic)
     BidirectionalAStar =>
       @algorithms.bidirectional_astar(map, options.movement, options.heuristic)
+    LpaStar =>
+      @algorithms.lpa_star_plan(map, options.movement, options.heuristic).result
+    DStarLite =>
+      @algorithms.d_star_lite_plan(map, options.movement, options.heuristic).result
     Pso => plan_pso(map, options)
     RsApso => plan_rs_apso(map, options)
     Rrt => plan_rrt(map)
