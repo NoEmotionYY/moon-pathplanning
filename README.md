@@ -35,7 +35,7 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图、序列化和
 字符串解析入口。CLI v1 支持内置 demo 地图、`--json` 字符串输入、`--example` 跨后端示例名输入，也支持 native 后端读取 JSON 地图文件；
 `bench` runner 已固定两个 20x20 RS-APSO 场景和三个动态避障场景，并以 5 次重复输出
-经典搜索、PSO/RS-APSO、RRT/RRT-Connect/RRT* 的 CSV 指标、耗时统计和连续动态行安全指标；runner 也支持 `--json` 字符串输入和 `--example` 示例名输入，native 后端还可读取 JSON v1 地图文件运行同格式 benchmark。
+经典搜索、PSO/RS-APSO、RS-APSO 参数变体、RRT/RRT-Connect/RRT* 的 CSV 指标、耗时统计和连续动态行安全指标；runner 也支持 `--json` 字符串输入和 `--example` 示例名输入，native 后端还可读取 JSON v1 地图文件运行同格式 benchmark。
 
 ## 快速开始
 
@@ -59,7 +59,7 @@ moon run ./bench --target native -- examples/simple_grid.json
 嵌入式示例地图使用 `--example/-e`，当前支持 `simple_grid`、`weighted_grid`、`rs_apso_20x20_simple` 和 `rs_apso_20x20_complex`，适合默认后端下复用示例内容。
 文件型 JSON 输入需要 native 后端，命令形如
 `moon run cli --target native -- --map examples/weighted_grid.json`。
-benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT*
+benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO、RS-APSO、RS-APSO 参数变体、RRT、RRT-Connect 和 RRT*
 的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量或采样树节点数、最终适应度、swarm 或采样参数、
 重复次数和总/平均耗时；同时输出 `dynamic_5x1`、`dynamic_10x10_crossing` 和
 `dynamic_12x12_mixed` 下静态 A 星基线、

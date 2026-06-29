@@ -79,7 +79,7 @@ SVG 导出和基础 benchmark 说明。RS-APSO 后续开发应复用这些基础
 后续继续补充：
 
 - 更贴近连续空间 PSO 的速度/位置模型。
-- 更系统的 RS-APSO 参数 benchmark 对比。
+- 更贴近连续空间 PSO 的速度/位置模型和更多跨地图参数分析。
 
 Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 `PathResult`。`PsoPathResult`
 附加的迭代次数、候选数量和最终适应度仍通过 `src/swarm` 直接调用获取。
@@ -178,8 +178,9 @@ Planner 已新增 `Rrt`、`RrtConnect` 与 `RrtStar` 算法类型，使用默认
 最终适应度、实际迭代次数和运行时间。
 当前已在 `examples/rs_apso_20x20_simple.json` 和 `examples/rs_apso_20x20_complex.json`
 固化代表性 20x20 输入，并新增 `bench` main 包作为初始 runner。当前 runner 通过
-`moon run ./bench` 输出 A 星、Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的 CSV 指标，并记录默认 5 次
-重复运行、总耗时、平均耗时、swarm 参数和采样树节点数，并新增 `dynamic_5x1`、`dynamic_10x10_crossing` 与
+`moon run ./bench` 输出 A 星、Dijkstra、PSO、RS-APSO、RS-APSO 参数变体、RRT、RRT-Connect 和 RRT* 的 CSV 指标，并记录默认 5 次
+重复运行、总耗时、平均耗时、swarm 参数和采样树节点数；当前参数变体包括
+`rs_apso_p30_i60_s2` 和 `rs_apso_p80_i80_s4`，用于比较种群规模、最大迭代次数和停滞阈值影响，并新增 `dynamic_5x1`、`dynamic_10x10_crossing` 与
 `dynamic_12x12_mixed` 场景对比静态
 A 星基线、整数速度动态修正、边界往复修正和连续坐标时间步修正。CLI 与 benchmark runner
 已支持 `--json/-j` 字符串输入和 `--example/-e` 嵌入式示例名输入，native 后端也可读取 JSON v1 地图文件；动态连续行使用连续安全感知修正并输出

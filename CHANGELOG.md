@@ -22,6 +22,7 @@
 - 新增 `rs_apso_20x20_simple.json` 与 `rs_apso_20x20_complex.json`，固定 RS-APSO benchmark 代表性输入。
 - 新增 `bench` main 包，可通过 `moon run ./bench` 输出 20x20 simple/complex 场景下 A 星、Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的 CSV 指标。
 - benchmark runner 新增 RRT、RRT-Connect 与 RRT* 静态场景 CSV 行，记录固定 seed、采样参数、采样树节点数和重复耗时。
+- benchmark runner 新增 RS-APSO 参数对比行 `rs_apso_p30_i60_s2` 和 `rs_apso_p80_i80_s4`，用于比较种群规模、最大迭代次数和停滞阈值影响。
 - benchmark runner 新增默认 5 次重复运行、总耗时和平均耗时字段。
 - 新增 `grid_from_json(text)`，支持 JSON v1 地图字符串解析并返回地图和移动模式。
 - 动态避障新增边界往复反射预测和对应跳跃避障场景测试。
