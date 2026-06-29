@@ -85,3 +85,30 @@ test "swarm pso and rs-apso plans are deterministic for fixed seed" {
   assert_eq(adaptive_first.result.total_cost, adaptive_second.result.total_cost)
   assert_eq(adaptive_first.best_fitness, adaptive_second.best_fitness)
 }
+
+///|
+test "swarm rs-apso escape stays deterministic under immediate stagnation" {
+  let map = @grid.new_grid(7, 5, @core.point(0, 2), @core.point(6, 2)).with_obstacles([
+      @core.point(3, 0),
+      @core.point(3, 1),
+      @core.point(3, 3),
+      @core.point(3, 4),
+    ],
+  )
+  let region = @region.build_search_region(map, @region.default_options())
+  let options = @swarm.options(
+    10,
+    16,
+    11,
+    1,
+    @grid.FourWay,
+    @swarm.default_fitness_weights(),
+  )
+  let first = @swarm.rs_apso_plan(map, region, options)
+  let second = @swarm.rs_apso_plan(map, region, options)
+  assert_eq(first.result.status is @core.Found, true)
+  assert_eq(first.iterations, 16)
+  assert_eq(first.candidates, region.cell_count())
+  assert_eq(first.result.total_cost, second.result.total_cost)
+  assert_eq(first.best_fitness, second.best_fitness)
+}

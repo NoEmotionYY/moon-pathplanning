@@ -206,22 +206,33 @@ fn choose_waypoint(
 
 ///|
 fn escape_waypoint(
+  map : @grid.GridMap,
   region : @region.SearchRegion,
   global_best : Particle,
   parameters : AdaptiveParameters,
+  options : PsoOptions,
   state : RandomState,
 ) -> (RandomState, @core.Point) {
-  let (choice_state, choice) = state.next_double()
-  let total = parameters.escape_factor + parameters.social_factor + 1.0
-  let escape_limit = parameters.escape_factor / total
-  let social_limit = escape_limit + parameters.social_factor / total
-  if choice < escape_limit {
-    random_waypoint(region, choice_state)
-  } else if choice < social_limit {
-    (choice_state, global_best.best_waypoint)
+  let mut next_state = state
+  let mut chosen = global_best.best_waypoint
+  let mut chosen_fitness = candidate_fitness(map, chosen, options)
+  let samples = if parameters.escape_factor >= 2.0 {
+    4
+  } else if parameters.escape_factor >= 1.5 {
+    3
   } else {
-    random_waypoint(region, choice_state)
+    2
   }
+  for _ in 0..<samples {
+    let (sample_state, candidate) = random_waypoint(region, next_state)
+    next_state = sample_state
+    let fitness = candidate_fitness(map, candidate, options)
+    if fitness < chosen_fitness {
+      chosen = candidate
+      chosen_fitness = fitness
+    }
+  }
+  (next_state, chosen)
 }
 
 ///|
@@ -251,7 +262,7 @@ fn next_particle(
     )
   } else if particle.stagnant_steps + 1 >= positive(options.stagnation_limit, 3) {
     let (escape_state, escape_point) = escape_waypoint(
-      region, global_best, parameters, next_state,
+      map, region, global_best, parameters, options, next_state,
     )
     let escape_fitness = candidate_fitness(map, escape_point, options)
     let escaped = if escape_fitness < particle.best_fitness {
