@@ -9,7 +9,7 @@
 ## 第二阶段：JSON、CLI、SVG、benchmark
 
 - 固化示例地图 schema 与基础 JSON 序列化。
-- 提供演示 CLI 和 SVG 路径导出。
+- 提供演示 CLI、SVG 路径导出和自包含 HTML 可视化导出。
 - 记录 benchmark 场景并为热点数据结构建立性能基线。
 
 ## 第三阶段：区域搜索与 RS-APSO
@@ -44,12 +44,12 @@
 - 新增动态 benchmark 连续安全指标，输出连续动态行是否安全以及最小安全间距。
 - 新增 12x12 混合动态 benchmark 场景，覆盖静态障碍、三方向动态障碍物、边界往复、连续安全感知和连续等待修正。
 - 新增 RRT、RRT-Connect 与 RRT* 静态 benchmark CSV 行，记录采样树节点数、固定 seed、采样参数和重复耗时。
-- 新增多路径 SVG 叠加导出和 RRT、RRT-Connect、RRT* 对比 SVG 入口。
+- 新增多路径 SVG 叠加导出、HTML 包装导出和 RRT、RRT-Connect、RRT* 对比 SVG/HTML 入口。
 - 继续完善更高级的连续空间规划模型。
 
 ## 第四阶段：增量规划与采样规划
 
-- 引入 LPA* 与 D* Lite 处理地图增量变化。
+- 新增 LPA* 与 D* Lite 阶段入口，保留 `g/rhs/key` 状态、变化单元记录和 Planner 统一调度；后续继续演进为复用上一轮 open list 的完整增量实现。
 - 在基础 RRT/RRT-Connect/RRT* 之上补充更丰富的连续空间建模边界。
 - 补充更丰富的障碍物、采样与可视化案例。
 

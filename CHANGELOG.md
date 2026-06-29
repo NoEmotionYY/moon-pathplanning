@@ -23,6 +23,8 @@
 - 新增 `bench` main 包，可通过 `moon run ./bench` 输出 20x20 simple/complex 场景下 A 星、Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的 CSV 指标。
 - benchmark runner 新增 RRT、RRT-Connect 与 RRT* 静态场景 CSV 行，记录固定 seed、采样参数、采样树节点数和重复耗时。
 - benchmark runner 新增 RS-APSO 参数对比行 `rs_apso_p30_i60_s2` 和 `rs_apso_p80_i80_s4`，用于比较种群规模、最大迭代次数和停滞阈值影响。
+- 新增 HTML 可视化导出入口，可将基础路径、区域搜索、多路径和 RRT 系列对比 SVG 包装为自包含 HTML 文档。
+- 新增 LPA* 与 D* Lite 阶段入口，保留 `g/rhs/key` 状态、变化单元记录和 Planner 统一调度，为后续完整增量复用实现保留 API 边界。
 - benchmark runner 新增默认 5 次重复运行、总耗时和平均耗时字段。
 - 新增 `grid_from_json(text)`，支持 JSON v1 地图字符串解析并返回地图和移动模式。
 - 动态避障新增边界往复反射预测和对应跳跃避障场景测试。
@@ -40,7 +42,7 @@
 - benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
 - benchmark runner 新增连续动态安全指标列：`safety_evaluated`、`continuous_safe` 和 `min_clearance`。
 - benchmark runner 新增 `dynamic_12x12_mixed` 场景，覆盖静态障碍、三类移动障碍物、边界往复、连续安全感知和连续等待修正的混合动态组合。
-- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 75 项测试全部通过。
+- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 80 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 
 ## 0.1.0 - 2026-05-23

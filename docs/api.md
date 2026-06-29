@@ -19,8 +19,8 @@ let result = @planner.plan(map, @planner.AStar, options)
 
 `PlannerOptions` 选择四方向或八方向移动，也能为 A 星算法选择启发函数。
 
-Planner 当前支持 `Bfs`、`Dfs`、`Dijkstra`、`AStar`、`BidirectionalAStar`、`Pso`、
-`RsApso`、`Rrt`、`RrtConnect` 和 `RrtStar`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
+Planner 当前支持 `Bfs`、`Dfs`、`Dijkstra`、`AStar`、`BidirectionalAStar`、`LpaStar`、`DStarLite`、`Pso`、
+`RsApso`、`Rrt`、`RrtConnect` 和 `RrtStar`。`LpaStar` 与 `DStarLite` 是当前阶段版增量规划入口，Planner 会返回统一 `PathResult`；如果需要观察 `g/rhs/key` 状态或变化单元记录，应直接调用 `@algorithms.lpa_star_plan()`、`@algorithms.lpa_star_replan()`、`@algorithms.d_star_lite_plan()` 或 `@algorithms.d_star_lite_replan()`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
 如果需要迭代次数、候选数量和适应度等附加信息，应直接调用 `@swarm.pso_plan()` 或
 `@swarm.rs_apso_plan()`；如果需要 RRT/RRT-Connect/RRT* 迭代次数和采样树节点数，应直接调用
 `@continuous.rrt_plan()`、`@continuous.rrt_connect_plan()` 或 `@continuous.rrt_star_plan()`。
@@ -34,6 +34,26 @@ let result = @algorithms.bfs(map, @grid.FourWay)
 ```
 
 直接调用适合算法教学；业务入口推荐使用 Planner，以便保持返回字段一致。
+
+## 增量规划阶段 API
+
+LPA* 与 D* Lite 当前先提供 MoonBit 原生阶段入口，用于统一调度、测试增量变化场景并保留 `g/rhs/key` 状态结构。阶段版会在地图变化后重新生成一致的搜索状态，后续可以继续演进为复用上一轮 open list 的完整增量实现：
+
+```moonbit
+let initial = @algorithms.lpa_star_plan(
+  map, @grid.FourWay, @heuristics.Manhattan,
+)
+let changed = @core.point(2, 1)
+let updated = map.with_obstacle(changed)
+let replanned = @algorithms.lpa_star_replan(
+  updated, @grid.FourWay, @heuristics.Manhattan, [changed],
+)
+let dstar = @algorithms.d_star_lite_plan(
+  updated, @grid.FourWay, @heuristics.Manhattan,
+)
+```
+
+`IncrementalPlanResult` 包含统一 `PathResult`、路径节点对应的 `IncrementalNode` 数组和 `changed_cells`。`IncrementalNode` 记录 `point`、`g`、`rhs`、`key1` 和 `key2`，便于后续实现真正的优先队列增量更新时保持 API 兼容。
 
 ## 网格安全 API
 
@@ -206,13 +226,16 @@ let rrt_svg = @svg.rrt_comparison_to_svg(
   @continuous.rrt_star_options(600, 42, 0.2, 3),
   20,
 )
+let html = @svg.grid_to_html("A* path", map, astar.path, 20)
 ```
 
 `grid_region_to_svg()` 会叠加候选搜索区域、障碍物边界角、障碍物、路径、起点和终点。
 `SvgPathLayer` 与 `path_layer(name, path, color)` 用于描述一条命名路径；`grid_paths_to_svg()`
 会在同一地图上按颜色叠加多条路径，并在底部追加图例。`rrt_comparison_to_svg()`
 会运行 RRT、RRT-Connect 与 RRT* 并复用多路径 SVG 导出；`default_rrt_comparison_to_svg()`
-使用连续规划默认参数，适合快速观察基础采样规划差异。
+使用连续规划默认参数，适合快速观察基础采样规划差异。`grid_to_html()`、`grid_region_to_html()`、
+`grid_paths_to_html()`、`rrt_comparison_to_html()` 和 `default_rrt_comparison_to_html()` 会把对应 SVG
+包装为带基础样式的自包含 HTML 文档，适合由 CLI 或示例程序写入 `.html` 文件查看。
 
 ## Benchmark Runner
 

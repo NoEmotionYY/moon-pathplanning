@@ -14,9 +14,9 @@
 - 仓库已从空目录初始化为 `main` 分支 MoonBit 工程，具备 MIT 许可证、README、CHANGELOG 和 CI。
 - 已完成中文执行日志、设计说明、迁移说明、API 文档、路线图和示例说明。
 - 已实现 `src/core`、`src/grid`、`src/graph` 与 `src/heuristics` 基础模型。
-- 已实现 BFS、DFS、Dijkstra、A 星、双向 A 星、基础 PSO、基础 RS-APSO、基础 RRT、基础 RRT-Connect、基础 RRT* 和统一 Planner。
+- 已实现 BFS、DFS、Dijkstra、A 星、双向 A 星、LPA*/D* Lite 阶段入口、基础 PSO、基础 RS-APSO、基础 RRT、基础 RRT-Connect、基础 RRT* 和统一 Planner。
 - 已创建 MoonBit 测试，覆盖普通路径、障碍绕行、权重地图、无路径、非法输入和算法调度。
-- 已实现 JSON v1 schema 示例、序列化与字符串解析、嵌入式示例地图、SVG 导出、CLI demo、native JSON 文件输入和 benchmark 说明。
+- 已实现 JSON v1 schema 示例、序列化与字符串解析、嵌入式示例地图、SVG/HTML 导出、CLI demo、native JSON 文件输入和 benchmark 说明。
 - 已根据本地 PDF《基于区域搜索粒子群算法的机器人路径规划》整理 RS-APSO 后续开发准备。
 - 已新增 RS-APSO 开发准备文档，并同步更新 README、路线图、API 草案、benchmark 说明和 CHANGELOG。
 - 已实现 `src/region` 区域搜索模块，支持障碍物边界角识别、四方向候选区域生成和空地图回退。
@@ -29,8 +29,8 @@
 - 已新增并扩展 `test/dynamic_test.mbt`，覆盖论文碰撞半径、近距离碰撞、跳跃避障、安全路径不变、左右移动、上下移动、双向移动障碍物、边界往复动态障碍物、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待动态避障和混合穿越动态障碍物。
 - 已实现 `adaptive_parameters()` 与基础离散 `rs_apso_plan()`，支持论文自适应参数调度、个体/群体学习选择、停滞后多候选逃逸重采样和固定 seed 复现。
 - 已扩展 `test/swarm_test.mbt`，覆盖自适应参数前后期趋势和 `rs_apso_plan()` 确定性。
-- 已将 `Pso`、`RsApso`、`Rrt`、`RrtConnect` 与 `RrtStar` 接入 Planner，统一返回 `PathResult`。
-- 已扩展 `test/planner_test.mbt`，覆盖 Planner 对 PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的调度。
+- 已将 `LpaStar`、`DStarLite`、`Pso`、`RsApso`、`Rrt`、`RrtConnect` 与 `RrtStar` 接入 Planner，统一返回 `PathResult`。
+- 已扩展 `test/planner_test.mbt`，覆盖 Planner 对 LPA*、D* Lite、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的调度。
 - 已实现 `GridMap::inflate_obstacles(radius)`，支持障碍物膨胀安全边距建模。
 - 已扩展 `test/grid_test.mbt`，覆盖障碍物膨胀、边界裁剪和膨胀后端点阻塞检查。
 - 已实现 `grid_region_to_svg()`，支持候选搜索区域和障碍物边界角 SVG 叠加导出。
@@ -45,7 +45,7 @@
 - 已新增并扩展 `test/continuous_test.mbt`，覆盖线段端点与对角线栅格化、障碍物阻断检测、直线路径快捷平滑、保留必要绕障拐点、RRT/RRT-Connect/RRT* 直连路径、带缺口绕障、固定 seed 复现、RRT* 代价不高于基础 RRT 和起点封闭无路径返回。
 - 已配置 GitHub `origin` 与 GitLink `gitlink` 远程仓库；早期 GitHub `main` 已推送成功，本轮新增 commit 仅提交到本地仓库。
 - GitLink push 已尝试但未完成，普通尝试缺少可用凭证提示，放开网络后的尝试超时。
-- 已使用便携 MoonBit 工具链执行 `moon version`、`moon check` 与 `moon test`；`moon check` 通过，`moon test` 75 项全部通过。
+- 已使用便携 MoonBit 工具链执行 `moon version`、`moon check` 与 `moon test`；`moon check` 通过，`moon test` 80 项全部通过。
 
 ## 已完成内容
 
@@ -69,7 +69,8 @@
 - 已实现 Dijkstra 加权路径搜索。
 - 已实现 A 星加权启发式搜索。
 - 已实现双向 A 星搜索。
-- 已实现 Planner 对经典搜索、基础 PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的统一 `plan()` 调度。
+- 已实现 Planner 对经典搜索、LPA*/D* Lite 阶段入口、基础 PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的统一 `plan()` 调度。
+- 已实现 `src/algorithms/incremental.mbt`，提供 LPA*/D* Lite 阶段规划和重规划入口，保留 `g/rhs/key` 状态和变化单元记录。
 
 ### 测试模块
 
@@ -90,12 +91,13 @@
 - 已补充 `src/swarm`、适应度/随机源测试、基础 PSO 测试和基础 RS-APSO 测试，并在 API 文档中记录 swarm 基础入口。
 - 已补充 `src/dynamic` 与动态避障测试，并在 API 文档中记录 dynamic 基础入口。
 - 已补充 `src/continuous` 与连续几何/RRT/RRT-Connect/RRT* 测试，并在 API 文档中记录连续线段可见性、路径快捷平滑、基础 RRT、RRT-Connect 和 RRT* 入口。
+- 已补充 `test/incremental_test.mbt`，覆盖 LPA* 状态节点、重规划变化单元和 D* Lite 无路状态。
 
 ### CI / CLI / 示例
 
 - 已创建 `examples/simple_grid.json` 与 `examples/weighted_grid.json`。
 - 已创建 `examples/rs_apso_20x20_simple.json` 与 `examples/rs_apso_20x20_complex.json`。
-- 已实现 `src/visualize/svg_exporter.mbt` SVG 字符串导出，并支持区域搜索候选格与边界角叠加。
+- 已实现 `src/visualize/svg_exporter.mbt` SVG 字符串导出，并支持区域搜索候选格与边界角叠加、多路径/RRT 对比导出和自包含 HTML 包装导出。
 - 已实现 `src/io/json_map.mbt` 的 `grid_from_json(text)` 字符串解析入口，支持 JSON v1 schema 的 `format`、尺寸、起终点、移动模式、障碍物和 terrain。
 - 已扩展 `cli/main.mbt`，支持 native 后端读取 JSON v1 地图文件并运行 A 星 demo。
 - 已创建 `cli/main.mbt`、`examples/README.md` 与 `bench/benchmark_notes.md`。
@@ -107,7 +109,7 @@
 - 需要在具备 GitLink 凭证或可交互认证后重新 push `gitlink/main`。
 - GitHub `main` 当前通过 `git ls-remote origin refs/heads/main` 验证指向 `66a8e8b47ee4d57ab3074d54e8a65f48d38bf918`；本地 `main` 仍有多条未 push 提交，且显示 `behind 1`，本轮未执行 pull/rebase/merge。
 - 更高级连续空间模型仍在后续路线图中。
-- RS-APSO 当前已完成开发准备文档、`src/region` 第一阶段代码、`src/swarm` 基础层、RS-APSO 停滞后多候选逃逸重采样、RS-APSO 参数 benchmark 对比、`src/continuous` 连续几何基础层、基础 RRT/RRT-Connect/RRT* 采样规划、基础离散 PSO/RS-APSO 主循环、Planner 接入、20x20 benchmark 固定输入、benchmark 重复耗时统计、JSON 字符串解析入口、嵌入式示例地图入口、CLI/benchmark JSON 字符串输入、CLI/benchmark 示例名输入、native JSON 文件型 CLI 输入、benchmark JSON 文件输入参数、`src/dynamic` 基础层、边界往复动态障碍物场景、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待动态避障、`dynamic_5x1`、`dynamic_10x10_crossing` 和 `dynamic_12x12_mixed` 动态避障 benchmark 场景、动态 benchmark 连续安全指标，并已把 RRT/RRT-Connect/RRT* 加入 benchmark CSV 和 SVG 对比导出。
+- RS-APSO 当前已完成开发准备文档、`src/region` 第一阶段代码、`src/swarm` 基础层、RS-APSO 停滞后多候选逃逸重采样、RS-APSO 参数 benchmark 对比、`src/continuous` 连续几何基础层、基础 RRT/RRT-Connect/RRT* 采样规划、LPA*/D* Lite 阶段入口、基础离散 PSO/RS-APSO 主循环、Planner 接入、20x20 benchmark 固定输入、benchmark 重复耗时统计、JSON 字符串解析入口、嵌入式示例地图入口、CLI/benchmark JSON 字符串输入、CLI/benchmark 示例名输入、native JSON 文件型 CLI 输入、benchmark JSON 文件输入参数、`src/dynamic` 基础层、边界往复动态障碍物场景、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待动态避障、`dynamic_5x1`、`dynamic_10x10_crossing` 和 `dynamic_12x12_mixed` 动态避障 benchmark 场景、动态 benchmark 连续安全指标，并已把 RRT/RRT-Connect/RRT* 加入 benchmark CSV 和 SVG/HTML 对比导出。
 
 ## 本轮分批提交与验证记录
 
@@ -164,10 +166,15 @@
 - `docs: 记录 RS-APSO 停滞逃逸增强`：更新 README、API、路线图、RS-APSO 开发准备、benchmark notes、执行日志和 CHANGELOG；验证 `git diff --check`。
 - `feat: 添加 RS-APSO 参数 benchmark 对比`：benchmark runner 在静态、inline JSON、嵌入式示例和 native JSON 文件输入场景中新增 `rs_apso_p30_i60_s2` 与 `rs_apso_p80_i80_s4` 行；验证 `moon fmt`、`moon check`、`moon test` 75/75、`moon run ./bench`、`git diff --check`。
 - `docs: 记录 RS-APSO 参数 benchmark 对比`：更新 README、API、路线图、RS-APSO 开发准备、benchmark notes、示例说明、执行日志和 CHANGELOG；验证 `git diff --check`。
+- `feat: 添加 HTML 可视化导出`：新增基础路径、区域搜索、多路径和 RRT 系列对比的自包含 HTML 包装导出，并补充 HTML 导出测试；验证 `moon fmt`、`moon check`、`moon test` 76/76、`git diff --check`。
+- `feat: 添加 LPA 星与 D 星 Lite 阶段入口`：新增 `src/algorithms/incremental.mbt`、`LpaStar`/`DStarLite` Planner 调度和增量阶段测试；验证 `moon fmt`、`moon check`、`moon test` 80/80、`git diff --check`。
 
 ## 当前 commit 记录摘要
 
 ```bash
+9c7331f feat: 添加 LPA 星与 D 星 Lite 阶段入口
+d3d94ab feat: 添加 HTML 可视化导出
+71020b2 docs: 记录 RS-APSO 参数 benchmark 对比
 7750823 feat: 添加 RS-APSO 参数 benchmark 对比
 3190c32 feat: 增强 RS-APSO 停滞逃逸策略
 b23b04a feat: 添加 RRT 系列 SVG 对比导出

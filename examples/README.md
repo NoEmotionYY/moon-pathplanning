@@ -47,11 +47,13 @@ moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 ```
 
-## SVG
+## SVG / HTML
 
 调用 `@svg.grid_to_svg(map, result.path, cell_size)` 可得到 SVG 字符串。该导出适合
 在示例程序或展示层写入文件。调试 RS-APSO 区域搜索时，可调用
 `@svg.grid_region_to_svg(map, region, result.path, cell_size)` 叠加候选搜索区域和障碍物
 边界角。对比多条路径时，可调用 `@svg.grid_paths_to_svg()` 叠加命名路径；对比采样规划时，
 `@svg.rrt_comparison_to_svg(map, rrt_options, rrt_star_options, cell_size)` 会把 RRT、RRT-Connect
-和 RRT* 绘制到同一张 SVG 中，并在底部生成图例。仓库只保留导出代码，不保留大批生成图片。
+和 RRT* 绘制到同一张 SVG 中，并在底部生成图例。需要直接打开查看时，可使用
+`@svg.grid_to_html()`、`@svg.grid_region_to_html()`、`@svg.grid_paths_to_html()` 或
+`@svg.rrt_comparison_to_html()` 生成自包含 HTML 文档。仓库只保留导出代码，不保留大批生成图片。
