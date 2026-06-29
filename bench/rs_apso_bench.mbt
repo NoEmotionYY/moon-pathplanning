@@ -383,6 +383,46 @@ fn adjusted_result(
 }
 
 ///|
+fn run_rs_apso_variant(
+  name : String,
+  map : @grid.GridMap,
+  region : @region.SearchRegion,
+  movement : @grid.MovementMode,
+  population_size : Int,
+  max_iterations : Int,
+  stagnation_limit : Int,
+  repeats : Int,
+) -> Unit {
+  let options = @swarm.options(
+    population_size,
+    max_iterations,
+    42,
+    stagnation_limit,
+    movement,
+    @swarm.default_fitness_weights(),
+  )
+  let start = @clock.monotonic_clock_start()
+  let mut rs_apso = @swarm.rs_apso_plan(map, region, options)
+  for _ in 1..<repeats {
+    rs_apso = @swarm.rs_apso_plan(map, region, options)
+  }
+  let elapsed = @clock.monotonic_clock_end(start)
+  print_result(
+    name,
+    "rs_apso_p\{population_size}_i\{max_iterations}_s\{stagnation_limit}",
+    rs_apso.result,
+    rs_apso.iterations,
+    rs_apso.candidates,
+    rs_apso.best_fitness,
+    options.seed,
+    options.population_size,
+    options.max_iterations,
+    repeats,
+    elapsed,
+  )
+}
+
+///|
 fn run_scenario(
   name : String,
   map : @grid.GridMap,
@@ -495,6 +535,8 @@ fn run_scenario(
     repeats,
     rs_apso_elapsed,
   )
+  run_rs_apso_variant(name, map, region, movement, 30, 60, 2, repeats)
+  run_rs_apso_variant(name, map, region, movement, 80, 80, 4, repeats)
   print_result(
     name,
     "rrt",
