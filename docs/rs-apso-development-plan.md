@@ -74,12 +74,12 @@ SVG 导出和基础 benchmark 说明。RS-APSO 后续开发应复用这些基础
 - `candidate_path(map, waypoint, movement)`：用 A 星拼接 `start -> waypoint -> goal` 的可行路径。
 - `pso_plan(map, region, options)`：在区域候选路点中运行基础离散 PSO。
 - `adaptive_parameters(iteration, max_iterations)`：按论文公式生成惯性权重、认知因子、社会因子和逃逸加速因子。
-- `rs_apso_plan(map, region, options)`：在基础离散 PSO 中引入自适应参数调度。
+- `rs_apso_plan(map, region, options)`：在基础离散 PSO 中引入自适应参数调度；粒子停滞达到阈值后，会按逃逸因子进行多候选重采样，并选择适应度较低的逃逸点。
 
 后续继续补充：
 
 - 更贴近连续空间 PSO 的速度/位置模型。
-- 更完整的较差区域逃逸策略和 benchmark 对比。
+- 更系统的 RS-APSO 参数 benchmark 对比。
 
 Planner 已新增 `Pso` 与 `RsApso` 算法类型，并在统一入口中返回 `PathResult`。`PsoPathResult`
 附加的迭代次数、候选数量和最终适应度仍通过 `src/swarm` 直接调用获取。
@@ -149,7 +149,7 @@ Planner 已新增 `Rrt`、`RrtConnect` 与 `RrtStar` 算法类型，使用默认
 - 基础 PSO 在固定 seed 下返回确定路径和确定适应度。
 - RS-APSO 的候选搜索区域小于全图自由栅格数量，并能生成可行路径。
 - 平滑度权重变化会影响折线拐角数量或角度惩罚。
-- 连续三次适应度变差时触发较差区域逃逸逻辑。
+- 连续多次适应度变差时触发较差区域逃逸逻辑；停滞阈值设为 1 时仍应保持固定 seed 复现。
 - 动态障碍物未进入碰撞半径时路径不变，进入后产生有效跳跃点。
 - 左右、上下和双向移动障碍物可按路径步数预测并触发跳跃修正。
 - 边界往复移动障碍物可在水平/垂直边界内反弹，且进入碰撞半径后触发跳跃修正。

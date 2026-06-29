@@ -74,7 +74,9 @@ let result = @swarm.rs_apso_plan(map, region, swarm_options)
 当前可用的基础能力包括 `path_length()`、`path_smoothness()`、`path_fitness()`、
 `default_fitness_weights()`、`random_state(seed)`、`default_options()`、`candidate_path()`
 、`adaptive_parameters()`、`pso_plan()` 和 `rs_apso_plan()`。当前 `rs_apso_plan()` 将粒子
-表示为区域候选中间路点，并用自适应参数影响个体学习、群体学习和逃逸选择。正式 API 需要
+表示为区域候选中间路点，并用自适应参数影响个体学习、群体学习和逃逸选择；当粒子达到
+`stagnation_limit` 后，会按逃逸因子从全局最优和多次随机候选中选择适应度较低的逃逸点，
+在保持固定 seed 可复现的同时减少单次随机逃逸的不稳定性。正式 API 需要
 在 MoonBit 工具链可用后结合实现细节收敛。
 
 ## 连续几何 API

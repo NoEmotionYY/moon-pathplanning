@@ -23,7 +23,7 @@ graph primitives, examples, tests, CLI demos, and SVG output.
 - Manhattan、Euclidean、Chebyshev 与 Octile 启发函数。
 - BFS、DFS、Dijkstra、A 星和双向 A 星搜索。
 - 区域搜索预处理：障碍物边界角识别、候选搜索区域生成和空地图自由区域回退。
-- RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、PSO/RS-APSO 主循环。
+- RS-APSO 基础组件：路径长度/平滑度适应度、固定 seed 随机源、自适应参数、停滞后多候选逃逸重采样、PSO/RS-APSO 主循环。
 - 连续几何与采样规划基础组件：栅格中心线段栅格化、静态线段可见性检查、路径快捷平滑、基础 RRT、RRT-Connect 和 RRT* 采样规划。
 - 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待避障和跳跃避障路径修正。
 - Planner 算法调度，包含经典搜索、基础 PSO、RS-APSO、RRT、RRT-Connect 和 RRT*；JSON v1 示例、序列化、字符串解析、嵌入式示例地图、SVG 导出、RRT 系列路径对比 SVG、CLI demo，以及支持 JSON 文件、JSON 字符串和示例名输入的 benchmark runner。
@@ -101,7 +101,7 @@ let result = @planner.plan(map, @planner.AStar, @planner.default_options())
 
 MoonBit 测试位于 `test/`，覆盖最短路径、无路径、障碍绕行、权重地图、三类算法
 一致性、移动模式、起点等于终点、非法地图输入、JSON 字符串解析、区域搜索、
-RS-APSO 基础能力、连续几何、基础 RRT/RRT-Connect/RRT* 采样规划和动态避障，包含整数栅格、线段可见性、路径快捷平滑、单树/双树采样绕障、RRT* 邻域择优与重连、固定 seed 复现、无路返回、边界往复、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断、最小安全间距评估、连续安全感知修正、连续等待修正和混合穿越障碍物场景。
+RS-APSO 基础能力、连续几何、基础 RRT/RRT-Connect/RRT* 采样规划和动态避障，包含整数栅格、线段可见性、路径快捷平滑、单树/双树采样绕障、RRT* 邻域择优与重连、固定 seed 复现、RS-APSO 即时停滞逃逸复现、无路返回、边界往复、连续坐标动态障碍物、连续轨迹安全评估、连续碰撞诊断、最小安全间距评估、连续安全感知修正、连续等待修正和混合穿越障碍物场景。
 标准检查命令是 `moon check` 与 `moon test`。
 
 ## 可视化说明

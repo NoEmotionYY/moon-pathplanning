@@ -17,7 +17,7 @@
 和实际迭代次数，避免只比较单次耗时。
 
 当前本地验证基线：已用 MoonBit `0.1.20260529` 便携工具链执行 `moon check` 与 `moon test`，
-74 项测试全部通过。后续 benchmark runner 应在输出中记录同类工具链版本和目标后端信息。
+75 项测试全部通过。后续 benchmark runner 应在输出中记录同类工具链版本和目标后端信息。
 当前 runner 可通过 `moon run ./bench` 执行，输出 20x20 simple/complex 场景下 A 星、
 Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的 CSV 指标，并记录 seed、种群大小或采样参数、最大迭代次数、默认 5 次
 重复运行次数、总耗时和平均耗时。runner 也输出 `dynamic_5x1`、`dynamic_10x10_crossing`

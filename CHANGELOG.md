@@ -15,6 +15,7 @@
 - 新增基础离散 `pso_plan()`，支持从区域候选中间路点生成可行路径并保持固定 seed 可复现。
 - 新增 `src/dynamic` 动态避障基础模块与测试，支持碰撞半径、碰撞判断、速度方向预测和跳跃避障路径修正。
 - 新增 `adaptive_parameters()` 与基础离散 `rs_apso_plan()`，支持论文自适应参数调度和固定 seed 复现。
+- RS-APSO 停滞逃逸增强为多候选重采样，按逃逸因子比较全局最优与随机候选适应度，并保持固定 seed 可复现。
 - Planner 新增 `Pso`、`RsApso`、`Rrt`、`RrtConnect` 与 `RrtStar` 算法类型，通过区域搜索候选集或基础采样树统一返回 `PathResult`。
 - 新增 `grid_region_to_svg()` 与测试，支持候选搜索区域和障碍物边界角 SVG 叠加导出。
 - 新增 `grid_paths_to_svg()` 与 `rrt_comparison_to_svg()`，支持多条命名路径叠加和 RRT/RRT-Connect/RRT* SVG 对比导出。
@@ -38,7 +39,7 @@
 - benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
 - benchmark runner 新增连续动态安全指标列：`safety_evaluated`、`continuous_safe` 和 `min_clearance`。
 - benchmark runner 新增 `dynamic_12x12_mixed` 场景，覆盖静态障碍、三类移动障碍物、边界往复、连续安全感知和连续等待修正的混合动态组合。
-- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 74 项测试全部通过。
+- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 75 项测试全部通过。
 - 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
 
 ## 0.1.0 - 2026-05-23
