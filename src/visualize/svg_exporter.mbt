@@ -229,3 +229,68 @@ pub fn default_rrt_comparison_to_svg(
     cell_size,
   )
 }
+
+///|
+fn html_document(title : String, svg : String) -> String {
+  "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>\{title}</title><style>body{margin:0;background:#f6f8fb;color:#27313a;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}main{max-width:960px;margin:0 auto;padding:24px}h1{font-size:20px;font-weight:650;margin:0 0 16px}svg{display:block;max-width:100%;height:auto;border:1px solid #c8d0d9;background:#f6f8fb}</style></head><body><main><h1>\{title}</h1>\{svg}</main></body></html>"
+}
+
+///|
+pub fn grid_to_html(
+  title : String,
+  map : @grid.GridMap,
+  path : Array[@core.Point],
+  cell_size : Int,
+) -> String {
+  html_document(title, grid_to_svg(map, path, cell_size))
+}
+
+///|
+pub fn grid_region_to_html(
+  title : String,
+  map : @grid.GridMap,
+  region : @region.SearchRegion,
+  path : Array[@core.Point],
+  cell_size : Int,
+) -> String {
+  html_document(title, grid_region_to_svg(map, region, path, cell_size))
+}
+
+///|
+pub fn grid_paths_to_html(
+  title : String,
+  map : @grid.GridMap,
+  layers : Array[SvgPathLayer],
+  cell_size : Int,
+) -> String {
+  html_document(title, grid_paths_to_svg(map, layers, cell_size))
+}
+
+///|
+pub fn rrt_comparison_to_html(
+  title : String,
+  map : @grid.GridMap,
+  rrt_options : @continuous.RrtOptions,
+  rrt_star_options : @continuous.RrtStarOptions,
+  cell_size : Int,
+) -> String {
+  html_document(
+    title,
+    rrt_comparison_to_svg(map, rrt_options, rrt_star_options, cell_size),
+  )
+}
+
+///|
+pub fn default_rrt_comparison_to_html(
+  title : String,
+  map : @grid.GridMap,
+  cell_size : Int,
+) -> String {
+  rrt_comparison_to_html(
+    title,
+    map,
+    @continuous.default_rrt_options(),
+    @continuous.default_rrt_star_options(),
+    cell_size,
+  )
+}

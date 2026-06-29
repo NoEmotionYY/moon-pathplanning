@@ -71,3 +71,19 @@ test "svg exporter can render rrt comparison paths" {
   assert_eq(rrt_star.result.status is @core.Found, true)
   assert_eq(comparison.length() > base.length(), true)
 }
+
+///|
+test "html exporter wraps svg output" {
+  let map = @grid.new_grid(3, 3, @core.point(0, 0), @core.point(2, 2)).with_obstacle(
+    @core.point(1, 1),
+  )
+  let path = [
+    @core.point(0, 0),
+    @core.point(0, 1),
+    @core.point(0, 2),
+    @core.point(2, 2),
+  ]
+  let svg = @svg.grid_to_svg(map, path, 18)
+  let html = @svg.grid_to_html("A* path", map, path, 18)
+  assert_eq(html.length() > svg.length(), true)
+}
