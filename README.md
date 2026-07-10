@@ -50,6 +50,7 @@ moon run cli
 moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
+moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 moon run ./bench
 moon run ./bench -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run ./bench -- --example rs_apso_20x20_simple
@@ -61,6 +62,8 @@ moon run ./bench --target native -- examples/simple_grid.json
 嵌入式示例地图使用 `--example/-e`，当前支持 `simple_grid`、`weighted_grid`、`rs_apso_20x20_simple` 和 `rs_apso_20x20_complex`，适合默认后端下复用示例内容。
 文件型 JSON 输入需要 native 后端，命令形如
 `moon run cli --target native -- --map examples/weighted_grid.json`。
+HTML 可视化导出同样需要 native 后端，命令形如
+`moon run cli --target native -- --example weighted_grid --html weighted_grid.html`，会在打印路径指标后生成包含网格、障碍物、起点、终点和最终路径的自包含 HTML 文件。
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO、RS-APSO、RS-APSO 参数变体、RRT、RRT-Connect 和 RRT*
 的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量或采样树节点数、最终适应度、swarm 或采样参数、
 重复次数和总/平均耗时；同时输出 `dynamic_5x1`、`dynamic_10x10_crossing` 和
@@ -115,6 +118,7 @@ RS-APSO 基础能力、LPA*/D* Lite 阶段入口、连续几何、基础 RRT/RRT
 `src/visualize/svg_exporter.mbt` 会导出网格、起点、终点、障碍物和最终路径的 SVG
 字符串，也能通过 `grid_region_to_svg()` 叠加区域搜索候选格和障碍物边界角。调用方可将
 字符串写入展示层或示例文件；`grid_paths_to_svg()` 可叠加多条命名路径，`rrt_comparison_to_svg()` 可用固定采样参数把 RRT、RRT-Connect 和 RRT* 三条路径绘制到同一张 SVG 中。`grid_to_html()`、`grid_region_to_html()`、`grid_paths_to_html()` 和 `rrt_comparison_to_html()` 会把对应 SVG 包装为自包含 HTML 文档，便于直接落地成 `.html` 查看。仓库不提交大量生成图片。
+CLI 已支持在 native 后端用 `--html/-o <output.html>` 直接导出基础路径 HTML。
 
 ## 开发路线
 

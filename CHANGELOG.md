@@ -31,6 +31,7 @@
 - 动态避障新增边界往复反射预测和对应跳跃避障场景测试。
 - CLI 新增 native 后端 JSON 文件输入，支持 `moon run cli --target native -- <map.json>`。
 - CLI 与 benchmark runner 新增 `--json/-j` JSON 字符串输入参数，复用 JSON v1 解析入口且不依赖文件系统。
+- CLI 新增 native 后端 `--html/-o <output.html>` 可视化导出参数，可将当前 A 星规划结果写成自包含 HTML 文件。
 - 新增嵌入式示例地图入口 `example_json(name)` 和 `example_grid_data(name)`，CLI 与 benchmark runner 支持 `--example/-e`，可在非 native 后端通过示例名复用 JSON v1 地图。
 - 动态避障新增连续坐标动态障碍物、按时间步预测、连续碰撞检测和跳跃避障测试。
 - 动态避障新增连续轨迹安全评估，支持从离散路径生成带时间线段并采样检测连续动态障碍物碰撞风险。

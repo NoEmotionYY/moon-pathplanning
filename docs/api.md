@@ -236,6 +236,12 @@ let html = @svg.grid_to_html("A* path", map, astar.path, 20)
 使用连续规划默认参数，适合快速观察基础采样规划差异。`grid_to_html()`、`grid_region_to_html()`、
 `grid_paths_to_html()`、`rrt_comparison_to_html()` 和 `default_rrt_comparison_to_html()` 会把对应 SVG
 包装为带基础样式的自包含 HTML 文档，适合由 CLI 或示例程序写入 `.html` 文件查看。
+CLI 可在 native 后端直接写出基础路径 HTML，例如：
+
+```bash
+moon run cli --target native -- --example weighted_grid --html weighted_grid.html
+moon run cli --target native -- --map examples/weighted_grid.json -o weighted_grid.html
+```
 
 ## Benchmark Runner
 
@@ -322,4 +328,5 @@ moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"
 moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
+moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 ```

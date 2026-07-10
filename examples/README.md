@@ -45,7 +45,11 @@ moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"
 moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
+moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 ```
+
+`--html/-o <output.html>` 会把当前 A 星规划结果写成自包含 HTML 文件，展示网格、障碍物、
+起点、终点和最终路径；写文件需要 native 后端。
 
 ## SVG / HTML
 
@@ -57,3 +61,4 @@ moon run cli --target native -- --map examples/weighted_grid.json
 和 RRT* 绘制到同一张 SVG 中，并在底部生成图例。需要直接打开查看时，可使用
 `@svg.grid_to_html()`、`@svg.grid_region_to_html()`、`@svg.grid_paths_to_html()` 或
 `@svg.rrt_comparison_to_html()` 生成自包含 HTML 文档。仓库只保留导出代码，不保留大批生成图片。
+CLI 的 `--html/-o` 参数已复用基础 `grid_to_html()`，适合快速查看单张地图的 A 星结果。

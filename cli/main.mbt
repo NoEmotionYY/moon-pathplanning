@@ -32,6 +32,16 @@ extern "C" fn file_read(
 
 ///|
 #cfg(target="native")
+#borrow(buffer, file)
+extern "C" fn file_write(
+  buffer : Bytes,
+  size : Int,
+  nitems : Int,
+  file : FileHandle,
+) -> Int = "moonbit_fwrite_ffi"
+
+///|
+#cfg(target="native")
 extern "C" fn file_close(file : FileHandle) -> Int = "moonbit_fclose_ffi"
 
 ///|
@@ -69,10 +79,31 @@ fn read_text_file(path : String) -> String? {
 }
 
 ///|
+#cfg(target="native")
+fn write_text_file(path : String, text : String) -> Bool {
+  let file = file_open(c_string(path), c_string("wb"))
+  if is_null_file(file) {
+    return false
+  }
+  let buffer = @utf8.encode(text)
+  let written = file_write(buffer, 1, buffer.length(), file)
+  ignore(file_close(file))
+  written == buffer.length()
+}
+
+///|
 #cfg(not(target="native"))
 fn read_text_file(path : String) -> String? {
   let _ = path
   None
+}
+
+///|
+#cfg(not(target="native"))
+fn write_text_file(path : String, text : String) -> Bool {
+  let _ = path
+  let _ = text
+  false
 }
 
 ///|
@@ -119,6 +150,33 @@ fn print_result(
 }
 
 ///|
+fn export_html(
+  source : String,
+  map : @grid.GridMap,
+  result : @core.PathResult,
+  html_path : String?,
+) -> Bool {
+  match html_path {
+    None => true
+    Some(path) => {
+      let html = @svg.grid_to_html(
+        "Moon PathPlanning: \{source}",
+        map,
+        result.path,
+        24,
+      )
+      if write_text_file(path, html) {
+        println("html output: \{path}")
+        true
+      } else {
+        println("Could not write HTML file: \{path}")
+        false
+      }
+    }
+  }
+}
+
+///|
 fn demo_map() -> @grid.GridMap {
   @grid.new_grid(6, 5, @core.point(0, 0), @core.point(5, 4)).with_obstacles([
     @core.point(1, 1),
@@ -129,15 +187,17 @@ fn demo_map() -> @grid.GridMap {
 }
 
 ///|
-fn run_demo() -> Unit {
+fn run_demo(html_path : String?) -> Bool {
   let movement = @grid.FourWay
+  let map = demo_map()
   let options = @planner.options(movement, heuristic_for(movement))
-  let result = @planner.plan(demo_map(), @planner.AStar, options)
+  let result = @planner.plan(map, @planner.AStar, options)
   print_result("builtin-demo", movement, result)
+  export_html("builtin-demo", map, result, html_path)
 }
 
 ///|
-fn run_json_text(source : String, text : String) -> Bool {
+fn run_json_text(source : String, text : String, html_path : String?) -> Bool {
   match @json_map.grid_from_json(text) {
     Some(data) => {
       let options = @planner.options(
@@ -146,7 +206,7 @@ fn run_json_text(source : String, text : String) -> Bool {
       )
       let result = @planner.plan(data.map, @planner.AStar, options)
       print_result(source, data.movement, result)
-      true
+      export_html(source, data.map, result, html_path)
     }
     None => {
       println("Invalid grid JSON: \{source}")
@@ -156,9 +216,9 @@ fn run_json_text(source : String, text : String) -> Bool {
 }
 
 ///|
-fn run_json_file(path : String) -> Bool {
+fn run_json_file(path : String, html_path : String?) -> Bool {
   match read_text_file(path) {
-    Some(text) => run_json_text(path, text)
+    Some(text) => run_json_text(path, text, html_path)
     None => {
       println("Could not read JSON file: \{path}")
       false
@@ -167,9 +227,9 @@ fn run_json_file(path : String) -> Bool {
 }
 
 ///|
-fn run_example(name : String) -> Bool {
+fn run_example(name : String, html_path : String?) -> Bool {
   match @json_map.example_json(name) {
-    Some(text) => run_json_text("example:\{name}", text)
+    Some(text) => run_json_text("example:\{name}", text, html_path)
     None => {
       println("Unknown example map: \{name}")
       false
@@ -185,6 +245,9 @@ fn usage() -> Unit {
   println("  moon run cli -- --example <name>")
   println("  moon run cli --target native -- <map.json>")
   println("  moon run cli --target native -- --map <map.json>")
+  println(
+    "  moon run cli --target native -- --example <name> --html <output.html>",
+  )
 }
 
 ///|
@@ -226,6 +289,25 @@ fn example_arg(args : Array[String]) -> String? {
 }
 
 ///|
+fn html_arg(args : Array[String]) -> String? {
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some("")
+      "--html" | "-o" =>
+        if index + 1 < args.length() {
+          return Some(args[index + 1])
+        } else {
+          return Some("")
+        }
+      _ => ()
+    }
+    index = index + 1
+  }
+  None
+}
+
+///|
 fn map_arg(args : Array[String]) -> String? {
   let mut index = 1
   let mut path : String? = None
@@ -235,6 +317,12 @@ fn map_arg(args : Array[String]) -> String? {
       "--map" | "-m" =>
         if index + 1 < args.length() {
           path = Some(args[index + 1])
+          index = index + 1
+        } else {
+          return Some("")
+        }
+      "--json" | "-j" | "--example" | "-e" | "--html" | "-o" =>
+        if index + 1 < args.length() {
           index = index + 1
         } else {
           return Some("")
@@ -249,18 +337,19 @@ fn map_arg(args : Array[String]) -> String? {
 ///|
 fn main {
   let args = @env.args()
+  let html_path = html_arg(args)
   match json_arg(args) {
     Some("") => usage()
-    Some(text) => if !run_json_text("inline-json", text) { usage() }
+    Some(text) => if !run_json_text("inline-json", text, html_path) { usage() }
     None =>
       match example_arg(args) {
         Some("") => usage()
-        Some(name) => if !run_example(name) { usage() }
+        Some(name) => if !run_example(name, html_path) { usage() }
         None =>
           match map_arg(args) {
             Some("") => usage()
-            Some(path) => if !run_json_file(path) { usage() }
-            None => run_demo()
+            Some(path) => if !run_json_file(path, html_path) { usage() }
+            None => if !run_demo(html_path) { usage() }
           }
       }
   }

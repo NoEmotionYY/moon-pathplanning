@@ -4,6 +4,7 @@ import {
   "NoEmotionYY/moon-pathplanning/src/heuristics",
   "NoEmotionYY/moon-pathplanning/src/io" @json_map,
   "NoEmotionYY/moon-pathplanning/src/planner",
+  "NoEmotionYY/moon-pathplanning/src/visualize" @svg,
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/env",
 }
