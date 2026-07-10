@@ -130,6 +130,11 @@ pub fn GridMap::validate(self : GridMap) -> @core.SearchError? {
   if !self.contains(self.goal) {
     return Some(@core.GoalOutOfBounds)
   }
+  for obstacle in self.obstacles {
+    if !self.contains(obstacle) {
+      return Some(@core.ObstacleOutOfBounds)
+    }
+  }
   if self.is_obstacle(self.start) {
     return Some(@core.StartBlocked)
   }
@@ -137,6 +142,9 @@ pub fn GridMap::validate(self : GridMap) -> @core.SearchError? {
     return Some(@core.GoalBlocked)
   }
   for cell in self.terrain {
+    if !self.contains(cell.point) {
+      return Some(@core.TerrainOutOfBounds)
+    }
     if cell.cost <= 0.0 {
       return Some(@core.InvalidTerrainCost)
     }

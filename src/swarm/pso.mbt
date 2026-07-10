@@ -53,6 +53,16 @@ fn append_segment(
 }
 
 ///|
+fn heuristic_for_movement(
+  movement : @grid.MovementMode,
+) -> @heuristics.HeuristicKind {
+  match movement {
+    @grid.FourWay => @heuristics.Manhattan
+    @grid.EightWay => @heuristics.Octile
+  }
+}
+
+///|
 pub fn candidate_path(
   map : @grid.GridMap,
   waypoint : @core.Point,
@@ -61,18 +71,19 @@ pub fn candidate_path(
   if !map.is_walkable(waypoint) {
     return @core.no_path_result(0, 0)
   }
+  let heuristic = heuristic_for_movement(movement)
   if waypoint.same(map.start) || waypoint.same(map.goal) {
-    return @algorithms.astar(map, movement, @heuristics.Manhattan)
+    return @algorithms.astar(map, movement, heuristic)
   }
   let first = @algorithms.astar(
     map_between(map, map.start, waypoint),
     movement,
-    @heuristics.Manhattan,
+    heuristic,
   )
   let second = @algorithms.astar(
     map_between(map, waypoint, map.goal),
     movement,
-    @heuristics.Manhattan,
+    heuristic,
   )
   if first.status is @core.Found && second.status is @core.Found {
     let path = []

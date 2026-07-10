@@ -37,6 +37,33 @@ test "json importer rejects unsupported schema" {
 }
 
 ///|
+test "json importer preserves invalid map for validation" {
+  let text = "{\"format\":\"moon-pathplanning.grid.v1\",\"width\":2,\"height\":2,\"start\":[0,0],\"goal\":[1,1],\"movement\":\"four_way\",\"obstacles\":[[2,1]],\"terrain\":[]}"
+  match @json_map.grid_from_json(text) {
+    Some(data) =>
+      assert_eq(data.map.validate() is Some(@core.ObstacleOutOfBounds), true)
+    None => fail("expected structurally valid JSON to parse")
+  }
+}
+
+///|
+test "json invalid map enters planner as invalid input" {
+  let text = "{\"format\":\"moon-pathplanning.grid.v1\",\"width\":2,\"height\":2,\"start\":[0,0],\"goal\":[1,1],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[{\"point\":[1,2],\"cost\":1.0}]}"
+  match @json_map.grid_from_json(text) {
+    Some(data) => {
+      let result = @planner.plan(
+        data.map,
+        @planner.AStar,
+        @planner.default_options(),
+      )
+      assert_eq(result.status is @core.InvalidInput, true)
+      assert_eq(result.error is Some(@core.TerrainOutOfBounds), true)
+    }
+    None => fail("expected structurally valid JSON to parse")
+  }
+}
+
+///|
 test "json embedded examples parse without filesystem" {
   let names = @json_map.example_names()
   assert_eq(names.length(), 4)

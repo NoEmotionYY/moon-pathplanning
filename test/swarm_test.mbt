@@ -58,6 +58,34 @@ test "swarm candidate path joins astar segments through waypoint" {
 }
 
 ///|
+test "swarm candidate path supports eight way movement" {
+  let map = @grid.new_grid(3, 3, @core.point(0, 0), @core.point(2, 2))
+  let result = @swarm.candidate_path(map, @core.point(1, 1), @grid.EightWay)
+  assert_eq(result.status is @core.Found, true)
+  assert_eq(result.path.length(), 3)
+  assert_eq(result.path[1].same(@core.point(1, 1)), true)
+}
+
+///|
+test "swarm candidate path uses octile astar cost for eight way movement" {
+  let map = @grid.new_grid(3, 3, @core.point(0, 0), @core.point(2, 2))
+  let candidate = @swarm.candidate_path(map, @core.point(1, 1), @grid.EightWay)
+  let direct = @algorithms.astar(map, @grid.EightWay, @heuristics.Octile)
+  assert_eq(candidate.status is @core.Found, true)
+  assert_eq(direct.status is @core.Found, true)
+  assert_eq(candidate.total_cost, direct.total_cost)
+}
+
+///|
+test "swarm candidate path keeps four way manhattan behavior" {
+  let map = @grid.new_grid(3, 3, @core.point(0, 0), @core.point(2, 2))
+  let candidate = @swarm.candidate_path(map, @core.point(1, 1), @grid.FourWay)
+  let direct = @algorithms.astar(map, @grid.FourWay, @heuristics.Manhattan)
+  assert_eq(candidate.status is @core.Found, true)
+  assert_eq(candidate.total_cost, direct.total_cost)
+}
+
+///|
 test "swarm pso and rs-apso plans are deterministic for fixed seed" {
   let map = @grid.new_grid(5, 3, @core.point(0, 1), @core.point(4, 1)).with_obstacle(
     @core.point(2, 1),
@@ -82,6 +110,32 @@ test "swarm pso and rs-apso plans are deterministic for fixed seed" {
   assert_eq(first.best_fitness, second.best_fitness)
   assert_eq(adaptive_first.result.status is @core.Found, true)
   assert_eq(adaptive_first.iterations, 12)
+  assert_eq(adaptive_first.result.total_cost, adaptive_second.result.total_cost)
+  assert_eq(adaptive_first.best_fitness, adaptive_second.best_fitness)
+}
+
+///|
+test "swarm pso and rs-apso remain deterministic for eight way fixed seed" {
+  let map = @grid.new_grid(5, 5, @core.point(0, 0), @core.point(4, 4)).with_obstacle(
+    @core.point(2, 2),
+  )
+  let region = @region.build_search_region(map, @region.default_options())
+  let options = @swarm.options(
+    8,
+    12,
+    7,
+    3,
+    @grid.EightWay,
+    @swarm.default_fitness_weights(),
+  )
+  let first = @swarm.pso_plan(map, region, options)
+  let second = @swarm.pso_plan(map, region, options)
+  let adaptive_first = @swarm.rs_apso_plan(map, region, options)
+  let adaptive_second = @swarm.rs_apso_plan(map, region, options)
+  assert_eq(first.result.status is @core.Found, true)
+  assert_eq(first.result.total_cost, second.result.total_cost)
+  assert_eq(first.best_fitness, second.best_fitness)
+  assert_eq(adaptive_first.result.status is @core.Found, true)
   assert_eq(adaptive_first.result.total_cost, adaptive_second.result.total_cost)
   assert_eq(adaptive_first.best_fitness, adaptive_second.best_fitness)
 }

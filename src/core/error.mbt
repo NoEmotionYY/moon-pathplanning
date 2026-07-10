@@ -3,6 +3,8 @@ pub(all) enum SearchError {
   InvalidDimensions
   StartOutOfBounds
   GoalOutOfBounds
+  ObstacleOutOfBounds
+  TerrainOutOfBounds
   StartBlocked
   GoalBlocked
   InvalidTerrainCost
@@ -15,6 +17,8 @@ pub fn SearchError::message(self : SearchError) -> String {
     InvalidDimensions => "grid dimensions must be positive"
     StartOutOfBounds => "start point is outside the grid"
     GoalOutOfBounds => "goal point is outside the grid"
+    ObstacleOutOfBounds => "obstacle point is outside the grid"
+    TerrainOutOfBounds => "terrain point is outside the grid"
     StartBlocked => "start point is blocked"
     GoalBlocked => "goal point is blocked"
     InvalidTerrainCost => "terrain cost must be positive"

@@ -195,4 +195,4 @@ A 星基线、整数速度动态修正、边界往复修正和连续坐标时间
 - JSON v1 已具备字符串解析入口和嵌入式示例地图入口，20x20 论文基准地图目前已作为项目 benchmark 输入固化；CLI 与 benchmark runner 已能通过 `--json/-j` 接收 JSON 字符串、通过 `--example/-e` 复用包内示例，CLI 也能在 native 后端读取 JSON 文件并运行 A 星 demo。
 - 障碍物膨胀半径需要结合机器人尺寸决定，库层提供参数，不内置具体机器人尺寸。
 - 当前 PSO 随机源已采用固定 seed 的可复现实现；benchmark runner 已把 seed、种群大小、最大迭代次数、重复次数和耗时统计显式记录到输出。
-- 论文仿真时间基于 MATLAB 环境，MoonBit benchmark 只能比较项目内相对性能，不直接声称复现论文耗时。
+- 论文仿真时间基于 MATLAB 环境，MoonBit benchmark 只能比较项目内相对性能，不直接声称达到论文耗时。

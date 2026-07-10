@@ -24,8 +24,8 @@
 - benchmark runner 新增 RRT、RRT-Connect 与 RRT* 静态场景 CSV 行，记录固定 seed、采样参数、采样树节点数和重复耗时。
 - benchmark runner 新增 RS-APSO 参数对比行 `rs_apso_p30_i60_s2` 和 `rs_apso_p80_i80_s4`，用于比较种群规模、最大迭代次数和停滞阈值影响。
 - 新增 HTML 可视化导出入口，可将基础路径、区域搜索、多路径和 RRT 系列对比 SVG 包装为自包含 HTML 文档。
-- 新增 LPA* 与 D* Lite 阶段入口，保留 `g/rhs/key` 状态、变化单元记录和 Planner 统一调度，为后续完整增量复用实现保留 API 边界。
-- 补齐验收 CI 步骤，执行 `moon fmt --deny-warn`、`moon info --deny-warn`、`moon check --deny-warn`、`moon test --deny-warn` 和 CLI smoke test；提交 `moon info` 生成的 `pkg.generated.mbti` 接口文件，并在文档中明确 LPA*/D* Lite 当前仍为阶段入口。
+- 新增 LPA* 与 D* Lite 阶段入口，保留 `g/rhs/key` 状态、变化单元记录和 Planner 统一调度，为后续增量状态复用保留 API 边界。
+- 补齐验收 CI 步骤，直接执行当前工具链真实支持的 `moon fmt --check`、`moon info`、`moon check --deny-warn`、`moon test --deny-warn` 和 CLI/示例/native/HTML/benchmark smoke test；提交 `moon info` 生成的 `pkg.generated.mbti` 接口文件，并在文档中明确 LPA*/D* Lite 当前仍为阶段入口。
 - benchmark runner 新增默认 5 次重复运行、总耗时和平均耗时字段。
 - 新增 `grid_from_json(text)`，支持 JSON v1 地图字符串解析并返回地图和移动模式。
 - 动态避障新增边界往复反射预测和对应跳跃避障场景测试。

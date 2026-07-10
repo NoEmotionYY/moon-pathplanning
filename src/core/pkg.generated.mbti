@@ -40,6 +40,8 @@ pub(all) enum SearchError {
   InvalidDimensions
   StartOutOfBounds
   GoalOutOfBounds
+  ObstacleOutOfBounds
+  TerrainOutOfBounds
   StartBlocked
   GoalBlocked
   InvalidTerrainCost
