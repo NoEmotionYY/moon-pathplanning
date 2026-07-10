@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/graph"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn new_weighted_graph() -> WeightedGraph
+
+// Errors
+
+// Types and methods
+pub(all) struct WeightedEdge {
+  from : @core.Point
+  to : @core.Point
+  weight : Double
+} derive(@debug.Debug)
+
+pub(all) struct WeightedGraph {
+  nodes : Array[@core.Point]
+  edges : Array[WeightedEdge]
+} derive(@debug.Debug)
+pub fn WeightedGraph::edge_weight(Self, @core.Point, @core.Point) -> Double?
+pub fn WeightedGraph::has_node(Self, @core.Point) -> Bool
+pub fn WeightedGraph::neighbors(Self, @core.Point) -> Array[WeightedEdge]
+pub fn WeightedGraph::with_edge(Self, @core.Point, @core.Point, Double) -> Self
+pub fn WeightedGraph::with_node(Self, @core.Point) -> Self
+pub fn WeightedGraph::without_edge(Self, @core.Point, @core.Point) -> Self
+pub fn WeightedGraph::without_node(Self, @core.Point) -> Self
+
+// Type aliases
+
+// Traits
+

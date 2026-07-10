@@ -1,0 +1,59 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/core"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn found_result(Array[Point], Double, Int, Int) -> PathResult
+
+pub fn invalid_result(SearchError) -> PathResult
+
+pub fn no_path_result(Int, Int) -> PathResult
+
+pub fn point(Int, Int) -> Point
+
+pub fn point_from_key(Int, Int) -> Point
+
+// Errors
+
+// Types and methods
+pub(all) struct PathResult {
+  path : Array[Point]
+  total_cost : Double
+  visited_nodes : Int
+  expanded_nodes : Int
+  status : SearchStatus
+  error : SearchError?
+} derive(@debug.Debug)
+
+#alias(Coord)
+pub(all) struct Point {
+  x : Int
+  y : Int
+} derive(@debug.Debug)
+pub fn Point::key(Self, Int) -> Int
+pub fn Point::same(Self, Self) -> Bool
+
+pub(all) enum SearchError {
+  InvalidDimensions
+  StartOutOfBounds
+  GoalOutOfBounds
+  StartBlocked
+  GoalBlocked
+  InvalidTerrainCost
+  UnsupportedJsonInput
+} derive(@debug.Debug)
+pub fn SearchError::message(Self) -> String
+
+pub(all) enum SearchStatus {
+  Found
+  NoPath
+  InvalidInput
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

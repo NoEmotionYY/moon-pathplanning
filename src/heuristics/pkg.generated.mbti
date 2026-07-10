@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/heuristics"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn chebyshev(@core.Point, @core.Point) -> Double
+
+pub fn estimate(HeuristicKind, @core.Point, @core.Point) -> Double
+
+pub fn euclidean(@core.Point, @core.Point) -> Double
+
+pub fn manhattan(@core.Point, @core.Point) -> Double
+
+pub fn octile(@core.Point, @core.Point) -> Double
+
+// Errors
+
+// Types and methods
+pub(all) enum HeuristicKind {
+  Manhattan
+  Euclidean
+  Chebyshev
+  Octile
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,47 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/visualize"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/continuous",
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/region",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn default_rrt_comparison_to_html(String, @grid.GridMap, Int) -> String
+
+pub fn default_rrt_comparison_to_svg(@grid.GridMap, Int) -> String
+
+pub fn grid_paths_to_html(String, @grid.GridMap, Array[SvgPathLayer], Int) -> String
+
+pub fn grid_paths_to_svg(@grid.GridMap, Array[SvgPathLayer], Int) -> String
+
+pub fn grid_region_to_html(String, @grid.GridMap, @region.SearchRegion, Array[@core.Point], Int) -> String
+
+pub fn grid_region_to_svg(@grid.GridMap, @region.SearchRegion, Array[@core.Point], Int) -> String
+
+pub fn grid_to_html(String, @grid.GridMap, Array[@core.Point], Int) -> String
+
+pub fn grid_to_svg(@grid.GridMap, Array[@core.Point], Int) -> String
+
+pub fn path_layer(String, Array[@core.Point], String) -> SvgPathLayer
+
+pub fn rrt_comparison_to_html(String, @grid.GridMap, @continuous.RrtOptions, @continuous.RrtStarOptions, Int) -> String
+
+pub fn rrt_comparison_to_svg(@grid.GridMap, @continuous.RrtOptions, @continuous.RrtStarOptions, Int) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct SvgPathLayer {
+  name : String
+  path : Array[@core.Point]
+  color : String
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/continuous"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn default_rrt_options() -> RrtOptions
+
+pub fn default_rrt_star_options() -> RrtStarOptions
+
+pub fn rasterized_segment_cells(@core.Point, @core.Point) -> Array[@core.Point]
+
+pub fn rrt_connect_plan(@grid.GridMap, RrtOptions) -> RrtPathResult
+
+pub fn rrt_options(Int, Int, Double) -> RrtOptions
+
+pub fn rrt_plan(@grid.GridMap, RrtOptions) -> RrtPathResult
+
+pub fn rrt_star_options(Int, Int, Double, Int) -> RrtStarOptions
+
+pub fn rrt_star_plan(@grid.GridMap, RrtStarOptions) -> RrtPathResult
+
+pub fn segment_is_walkable(@grid.GridMap, @core.Point, @core.Point) -> Bool
+
+pub fn shortcut_path(@grid.GridMap, Array[@core.Point]) -> Array[@core.Point]
+
+// Errors
+
+// Types and methods
+pub(all) struct RrtOptions {
+  max_iterations : Int
+  seed : Int
+  goal_sample_rate : Double
+} derive(@debug.Debug)
+
+pub(all) struct RrtPathResult {
+  result : @core.PathResult
+  iterations : Int
+  nodes : Int
+} derive(@debug.Debug)
+
+pub(all) struct RrtStarOptions {
+  max_iterations : Int
+  seed : Int
+  goal_sample_rate : Double
+  rewire_radius : Int
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

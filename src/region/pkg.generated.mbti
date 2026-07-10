@@ -1,0 +1,44 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/region"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn build_search_region(@grid.GridMap, RegionSearchOptions) -> SearchRegion
+
+pub fn default_options() -> RegionSearchOptions
+
+pub fn detect_boundary_corners(@grid.GridMap) -> Array[BoundaryCorner]
+
+pub fn options(Bool) -> RegionSearchOptions
+
+// Errors
+
+// Types and methods
+pub(all) struct BoundaryCorner {
+  point : @core.Point
+  free_neighbors : Int
+  horizontal_free : Int
+  vertical_free : Int
+} derive(@debug.Debug)
+
+pub(all) struct RegionSearchOptions {
+  include_all_walkable_when_empty : Bool
+} derive(@debug.Debug)
+
+pub(all) struct SearchRegion {
+  corners : Array[BoundaryCorner]
+  cells : Array[@core.Point]
+} derive(@debug.Debug)
+pub fn SearchRegion::cell_count(Self) -> Int
+pub fn SearchRegion::contains(Self, @core.Point) -> Bool
+pub fn SearchRegion::corner_count(Self) -> Int
+
+// Type aliases
+
+// Traits
+

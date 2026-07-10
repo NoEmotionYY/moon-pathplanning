@@ -1,0 +1,132 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/dynamic"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn collision_options(Double, Double, Double) -> CollisionOptions
+
+pub fn collision_radius(CollisionOptions, MovingObstacle) -> Double
+
+pub fn continuous_collision_radius(CollisionOptions, ContinuousMovingObstacle) -> Double
+
+pub fn continuous_moving_obstacle(Double, Double, Double, Double, Double) -> ContinuousMovingObstacle
+
+pub fn continuous_path_first_collision(Array[ContinuousSegment], Array[ContinuousMovingObstacle], CollisionOptions, Int) -> ContinuousCollision?
+
+pub fn continuous_path_is_safe(Array[ContinuousSegment], Array[ContinuousMovingObstacle], CollisionOptions, Int) -> Bool
+
+pub fn continuous_path_min_clearance(Array[ContinuousSegment], Array[ContinuousMovingObstacle], CollisionOptions, Int) -> ContinuousClearance?
+
+pub fn continuous_point(Double, Double) -> ContinuousPoint
+
+pub fn continuous_point_from_grid(@core.Point) -> ContinuousPoint
+
+pub fn continuous_segment(ContinuousPoint, ContinuousPoint, Double, Double) -> ContinuousSegment
+
+pub fn continuous_segment_collides(ContinuousSegment, Array[ContinuousMovingObstacle], CollisionOptions, Int) -> Bool
+
+pub fn continuous_segment_first_collision(ContinuousSegment, Array[ContinuousMovingObstacle], CollisionOptions, Int) -> ContinuousCollision?
+
+pub fn continuous_segment_min_clearance(ContinuousSegment, Array[ContinuousMovingObstacle], CollisionOptions, Int) -> ContinuousClearance?
+
+pub fn continuous_segments_from_grid_path(Array[@core.Point], Double) -> Array[ContinuousSegment]
+
+pub fn default_collision_options() -> CollisionOptions
+
+pub fn jump_avoidance(@grid.GridMap, Array[@core.Point], Array[MovingObstacle], CollisionOptions) -> Array[@core.Point]
+
+pub fn jump_avoidance_over_continuous_clearance(@grid.GridMap, Array[@core.Point], Array[ContinuousMovingObstacle], CollisionOptions, Double, Int) -> Array[@core.Point]
+
+pub fn jump_avoidance_over_continuous_time(@grid.GridMap, Array[@core.Point], Array[ContinuousMovingObstacle], CollisionOptions, Double) -> Array[@core.Point]
+
+pub fn jump_avoidance_over_continuous_wait(@grid.GridMap, Array[@core.Point], Array[ContinuousMovingObstacle], CollisionOptions, Double, Int, Int) -> Array[@core.Point]
+
+pub fn jump_avoidance_over_reflected_time(@grid.GridMap, Array[@core.Point], Array[MovingObstacle], CollisionOptions, Int, Int, Int, Int) -> Array[@core.Point]
+
+pub fn jump_avoidance_over_time(@grid.GridMap, Array[@core.Point], Array[MovingObstacle], CollisionOptions) -> Array[@core.Point]
+
+pub fn moving_obstacle(@core.Point, Double) -> MovingObstacle
+
+pub fn moving_obstacle_with_velocity(@core.Point, Double, Int, Int) -> MovingObstacle
+
+pub fn reflected_coordinate(Int, Int, Int, Int, Int) -> Int
+
+pub fn would_collide(@core.Point, MovingObstacle, CollisionOptions) -> Bool
+
+pub fn would_collide_continuous(@core.Point, ContinuousMovingObstacle, CollisionOptions) -> Bool
+
+pub fn would_collide_continuous_point(ContinuousPoint, ContinuousMovingObstacle, CollisionOptions) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct CollisionOptions {
+  robot_speed : Double
+  unit_grid_length : Double
+  proportion : Double
+} derive(@debug.Debug)
+
+pub(all) struct ContinuousClearance {
+  segment_index : Int
+  sample_index : Int
+  obstacle_index : Int
+  time : Double
+  robot : ContinuousPoint
+  obstacle : ContinuousPoint
+  distance : Double
+  radius : Double
+  clearance : Double
+} derive(@debug.Debug)
+
+pub(all) struct ContinuousCollision {
+  segment_index : Int
+  sample_index : Int
+  obstacle_index : Int
+  time : Double
+  robot : ContinuousPoint
+  obstacle : ContinuousPoint
+} derive(@debug.Debug)
+
+pub(all) struct ContinuousMovingObstacle {
+  x : Double
+  y : Double
+  speed : Double
+  velocity_x : Double
+  velocity_y : Double
+} derive(@debug.Debug)
+pub fn ContinuousMovingObstacle::at_step_time(Self, Int, Double) -> Self
+pub fn ContinuousMovingObstacle::at_time(Self, Double) -> Self
+
+pub(all) struct ContinuousPoint {
+  x : Double
+  y : Double
+} derive(@debug.Debug)
+pub fn ContinuousPoint::distance_squared(Self, Self) -> Double
+pub fn ContinuousPoint::interpolate(Self, Self, Double) -> Self
+
+pub(all) struct ContinuousSegment {
+  start : ContinuousPoint
+  goal : ContinuousPoint
+  start_time : Double
+  end_time : Double
+} derive(@debug.Debug)
+pub fn ContinuousSegment::point_at_time(Self, Double) -> ContinuousPoint
+
+pub(all) struct MovingObstacle {
+  position : @core.Point
+  speed : Double
+  velocity_x : Int
+  velocity_y : Int
+} derive(@debug.Debug)
+pub fn MovingObstacle::at_reflected_step(Self, Int, Int, Int, Int, Int) -> Self
+pub fn MovingObstacle::at_step(Self, Int) -> Self
+
+// Type aliases
+
+// Traits
+

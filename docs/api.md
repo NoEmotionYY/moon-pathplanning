@@ -20,7 +20,7 @@ let result = @planner.plan(map, @planner.AStar, options)
 `PlannerOptions` 选择四方向或八方向移动，也能为 A 星算法选择启发函数。
 
 Planner 当前支持 `Bfs`、`Dfs`、`Dijkstra`、`AStar`、`BidirectionalAStar`、`LpaStar`、`DStarLite`、`Pso`、
-`RsApso`、`Rrt`、`RrtConnect` 和 `RrtStar`。`LpaStar` 与 `DStarLite` 是当前阶段版增量规划入口，Planner 会返回统一 `PathResult`；如果需要观察 `g/rhs/key` 状态或变化单元记录，应直接调用 `@algorithms.lpa_star_plan()`、`@algorithms.lpa_star_replan()`、`@algorithms.d_star_lite_plan()` 或 `@algorithms.d_star_lite_replan()`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
+`RsApso`、`Rrt`、`RrtConnect` 和 `RrtStar`。`LpaStar` 与 `DStarLite` 是当前阶段版增量规划入口，Planner 会返回统一 `PathResult`；它们用于验证调度、状态结构和变化单元记录，尚不是复用上一轮 open list 的完整增量规划实现。如果需要观察 `g/rhs/key` 状态或变化单元记录，应直接调用 `@algorithms.lpa_star_plan()`、`@algorithms.lpa_star_replan()`、`@algorithms.d_star_lite_plan()` 或 `@algorithms.d_star_lite_replan()`。`Pso` 与 `RsApso` 会在内部构建默认区域搜索候选集并返回统一 `PathResult`；
 如果需要迭代次数、候选数量和适应度等附加信息，应直接调用 `@swarm.pso_plan()` 或
 `@swarm.rs_apso_plan()`；如果需要 RRT/RRT-Connect/RRT* 迭代次数和采样树节点数，应直接调用
 `@continuous.rrt_plan()`、`@continuous.rrt_connect_plan()` 或 `@continuous.rrt_star_plan()`。
@@ -37,7 +37,7 @@ let result = @algorithms.bfs(map, @grid.FourWay)
 
 ## 增量规划阶段 API
 
-LPA* 与 D* Lite 当前先提供 MoonBit 原生阶段入口，用于统一调度、测试增量变化场景并保留 `g/rhs/key` 状态结构。阶段版会在地图变化后重新生成一致的搜索状态，后续可以继续演进为复用上一轮 open list 的完整增量实现：
+LPA* 与 D* Lite 当前先提供 MoonBit 原生阶段入口，用于统一调度、测试增量变化场景并保留 `g/rhs/key` 状态结构。阶段版会在地图变化后重新生成一致的搜索状态，不复用上一轮 open list 或优先队列，因此不能等同于完整 LPA*/D* Lite 增量规划器。后续可以继续演进为复用上一轮 open list 的完整增量实现：
 
 ```moonbit
 let initial = @algorithms.lpa_star_plan(

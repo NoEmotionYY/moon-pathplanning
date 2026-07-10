@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/algorithms"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/heuristics",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn astar(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> @core.PathResult
+
+pub fn bfs(@grid.GridMap, @grid.MovementMode) -> @core.PathResult
+
+pub fn bidirectional_astar(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> @core.PathResult
+
+pub fn d_star_lite_plan(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> IncrementalPlanResult
+
+pub fn d_star_lite_replan(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind, Array[@core.Point]) -> IncrementalPlanResult
+
+pub fn dfs(@grid.GridMap, @grid.MovementMode) -> @core.PathResult
+
+pub fn dijkstra(@grid.GridMap, @grid.MovementMode) -> @core.PathResult
+
+pub fn lpa_star_plan(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> IncrementalPlanResult
+
+pub fn lpa_star_replan(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind, Array[@core.Point]) -> IncrementalPlanResult
+
+// Errors
+
+// Types and methods
+pub(all) struct IncrementalNode {
+  point : @core.Point
+  g : Double
+  rhs : Double
+  key1 : Double
+  key2 : Double
+} derive(@debug.Debug)
+
+pub(all) struct IncrementalPlanResult {
+  result : @core.PathResult
+  nodes : Array[IncrementalNode]
+  changed_cells : Array[@core.Point]
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

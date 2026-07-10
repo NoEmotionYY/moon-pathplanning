@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/planner"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/heuristics",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn default_options() -> PlannerOptions
+
+pub fn eight_way_options() -> PlannerOptions
+
+pub fn options(@grid.MovementMode, @heuristics.HeuristicKind) -> PlannerOptions
+
+pub fn plan(@grid.GridMap, AlgorithmType, PlannerOptions) -> @core.PathResult
+
+// Errors
+
+// Types and methods
+pub(all) enum AlgorithmType {
+  Bfs
+  Dfs
+  Dijkstra
+  AStar
+  BidirectionalAStar
+  LpaStar
+  DStarLite
+  Pso
+  RsApso
+  Rrt
+  RrtConnect
+  RrtStar
+} derive(@debug.Debug)
+
+pub(all) struct PlannerOptions {
+  movement : @grid.MovementMode
+  heuristic : @heuristics.HeuristicKind
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

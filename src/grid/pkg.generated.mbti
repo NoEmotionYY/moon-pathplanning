@@ -1,0 +1,54 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/grid"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn new_grid(Int, Int, @core.Point, @core.Point) -> GridMap
+
+pub fn terrain_cell(@core.Point, Double) -> TerrainCell
+
+// Errors
+
+// Types and methods
+pub(all) struct GridMap {
+  width : Int
+  height : Int
+  start : @core.Point
+  goal : @core.Point
+  obstacles : Array[@core.Point]
+  terrain : Array[TerrainCell]
+} derive(@debug.Debug)
+pub fn GridMap::contains(Self, @core.Point) -> Bool
+pub fn GridMap::inflate_obstacles(Self, Int) -> Self
+pub fn GridMap::is_obstacle(Self, @core.Point) -> Bool
+pub fn GridMap::is_walkable(Self, @core.Point) -> Bool
+pub fn GridMap::neighbors(Self, @core.Point, MovementMode) -> Array[Neighbor]
+pub fn GridMap::terrain_cost(Self, @core.Point) -> Double
+pub fn GridMap::validate(Self) -> @core.SearchError?
+pub fn GridMap::with_obstacle(Self, @core.Point) -> Self
+pub fn GridMap::with_obstacles(Self, Array[@core.Point]) -> Self
+pub fn GridMap::with_terrain(Self, @core.Point, Double) -> Self
+
+pub(all) enum MovementMode {
+  FourWay
+  EightWay
+} derive(@debug.Debug)
+
+pub(all) struct Neighbor {
+  point : @core.Point
+  cost : Double
+} derive(@debug.Debug)
+
+pub(all) struct TerrainCell {
+  point : @core.Point
+  cost : Double
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

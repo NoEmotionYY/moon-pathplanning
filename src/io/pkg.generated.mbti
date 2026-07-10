@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/io"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn example_grid_data(String) -> GridJsonData?
+
+pub fn example_json(String) -> String?
+
+pub fn example_names() -> Array[String]
+
+pub fn grid_format_version() -> String
+
+pub fn grid_from_json(String) -> GridJsonData?
+
+pub fn grid_to_json(@grid.GridMap, @grid.MovementMode) -> String
+
+pub fn parsing_limit() -> @core.SearchError
+
+// Errors
+
+// Types and methods
+pub(all) struct GridJsonData {
+  map : @grid.GridMap
+  movement : @grid.MovementMode
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

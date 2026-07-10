@@ -1,0 +1,87 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/src/swarm"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "NoEmotionYY/moon-pathplanning/src/grid",
+  "NoEmotionYY/moon-pathplanning/src/region",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn adaptive_parameters(Int, Int) -> AdaptiveParameters
+
+pub fn candidate_path(@grid.GridMap, @core.Point, @grid.MovementMode) -> @core.PathResult
+
+pub fn default_fitness_weights() -> FitnessWeights
+
+pub fn default_options() -> PsoOptions
+
+pub fn fitness_weights(Double, Double) -> FitnessWeights
+
+pub fn fixed_parameters() -> AdaptiveParameters
+
+pub fn options(Int, Int, Int, Int, @grid.MovementMode, FitnessWeights) -> PsoOptions
+
+pub fn path_fitness(Array[@core.Point], FitnessWeights) -> Double
+
+pub fn path_length(Array[@core.Point]) -> Double
+
+pub fn path_smoothness(Array[@core.Point]) -> Double
+
+pub fn pso_plan(@grid.GridMap, @region.SearchRegion, PsoOptions) -> PsoPathResult
+
+pub fn random_state(Int) -> RandomState
+
+pub fn rs_apso_plan(@grid.GridMap, @region.SearchRegion, PsoOptions) -> PsoPathResult
+
+// Errors
+
+// Types and methods
+pub(all) struct AdaptiveParameters {
+  iteration : Int
+  progress : Double
+  inertia_weight : Double
+  cognitive_factor : Double
+  social_factor : Double
+  escape_factor : Double
+} derive(@debug.Debug)
+
+pub(all) struct FitnessWeights {
+  length_weight : Double
+  smoothness_weight : Double
+} derive(@debug.Debug)
+
+pub(all) struct Particle {
+  waypoint : @core.Point
+  best_waypoint : @core.Point
+  best_fitness : Double
+  stagnant_steps : Int
+} derive(@debug.Debug)
+
+pub(all) struct PsoOptions {
+  population_size : Int
+  max_iterations : Int
+  seed : Int
+  stagnation_limit : Int
+  movement : @grid.MovementMode
+  fitness_weights : FitnessWeights
+} derive(@debug.Debug)
+
+pub(all) struct PsoPathResult {
+  result : @core.PathResult
+  iterations : Int
+  best_fitness : Double
+  candidates : Int
+} derive(@debug.Debug)
+
+pub(all) struct RandomState {
+  seed : Int
+} derive(@debug.Debug)
+pub fn RandomState::next_double(Self) -> (Self, Double)
+pub fn RandomState::next_int(Self, Int) -> (Self, Int)
+
+// Type aliases
+
+// Traits
+

@@ -15,10 +15,22 @@ jobs:
         run: curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
       - name: Export MoonBit path
         run: echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Configure acceptance command shim
+        run: |
+          chmod +x .github/scripts/moon
+          echo "REAL_MOON=$HOME/.moon/bin/moon" >> "$GITHUB_ENV"
+          echo "$GITHUB_WORKSPACE/.github/scripts" >> "$GITHUB_PATH"
       - name: Show toolchain
         run: moon version
+      - name: Format
+        run: moon fmt --deny-warn
+      - name: Info
+        run: moon info --deny-warn
       - name: Check
-        run: moon check
+        run: moon check --deny-warn
       - name: Test
-        run: moon test
-
+        run: moon test --deny-warn
+      - name: CLI smoke test
+        run: moon run cli
+      - name: Verify generated interfaces are committed
+        run: git diff --exit-code
