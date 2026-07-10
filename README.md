@@ -43,22 +43,37 @@ graph primitives, examples, tests, CLI demos, SVG output, and HTML output.
 
 先安装 MoonBit 工具链，再在仓库根目录执行：
 
+通用命令：
+
 ```bash
 moon check
 moon test
 moon run cli
-moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 moon run ./bench
-moon run ./bench -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run ./bench -- --example rs_apso_20x20_simple
 moon run ./bench --target native -- examples/simple_grid.json
 ```
 
+Linux/macOS bash 的 inline JSON 示例：
+
+```bash
+moon run cli -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
+moon run ./bench -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
+```
+
+Windows PowerShell 的 inline JSON 示例：
+
+```powershell
+$json = '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
+moon run cli -- --json $json
+moon run ./bench -- --json $json
+```
+
 当前 CLI 会运行内置 A 星示例并打印路径节点数、总代价、访问节点数和展开节点数。
-字符串型 JSON 输入使用 `--json/-j`，不依赖文件读取；PowerShell 中需要像上面的示例一样转义 JSON 双引号。
+字符串型 JSON 输入使用 `--json/-j`，不依赖文件读取；不同 shell 的引号规则不同，请按上面的 bash 或 PowerShell 示例复制。
 嵌入式示例地图使用 `--example/-e`，当前支持 `simple_grid`、`weighted_grid`、`rs_apso_20x20_simple` 和 `rs_apso_20x20_complex`，适合默认后端下复用示例内容。
 文件型 JSON 输入需要 native 后端，命令形如
 `moon run cli --target native -- --map examples/weighted_grid.json`。

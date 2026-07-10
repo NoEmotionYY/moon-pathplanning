@@ -250,10 +250,20 @@ moon run cli --target native -- --map examples/weighted_grid.json -o weighted_gr
 
 ```bash
 moon run ./bench
-moon run ./bench -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run ./bench -- --example rs_apso_20x20_simple
 moon run ./bench --target native -- examples/simple_grid.json
 moon run ./bench --target native -- --map examples/weighted_grid.json
+```
+
+Inline JSON 示例需要按 shell 选择引号写法。
+
+```bash
+moon run ./bench -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
+```
+
+```powershell
+$json = '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
+moon run ./bench -- --json $json
 ```
 
 输出为 CSV，当前包含 `scenario`、`algorithm`、`status`、`path_nodes`、`total_cost`、
@@ -324,9 +334,19 @@ runner 都可用 `--json/-j` 直接接收 JSON 字符串，也可用 `--example/
 在库入口内，当前由 native 后端边界负责：
 
 ```bash
-moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
 moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
+```
+
+Inline JSON 示例需要按 shell 选择引号写法。
+
+```bash
+moon run cli -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
+```
+
+```powershell
+$json = '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
+moon run cli -- --json $json
 ```
