@@ -25,8 +25,9 @@ CLI 也可在 native 后端读取这些 JSON 文件。
 展示狭窄通道中的原地等待策略，`dynamic_12x12_mixed` 展示带静态障碍的混合动态组合。也可以在 native 后端直接指定 JSON 文件，例如
 `moon run ./bench --target native -- examples/simple_grid.json` 或
 `moon run ./bench --target native -- --map examples/weighted_grid.json`。
-不依赖文件系统的字符串输入可使用 `moon run ./bench -- --json <grid-json>`；
-嵌入式示例输入可使用 `moon run ./bench -- --example rs_apso_20x20_simple`。
+不依赖文件系统的 Bash 字符串输入可使用 `moon run ./bench -- --json <grid-json>`；
+Windows PowerShell 下建议使用 `moon run ./bench -- --example rs_apso_20x20_simple` 或
+`moon run ./bench --target native -- --map examples/weighted_grid.json`。
 
 ## CLI demo
 
@@ -37,13 +38,15 @@ moon run cli
 ```
 
 当前 CLI 使用内置 demo 地图，展示 Planner 对 A 星算法的调度结果。文件型 JSON CLI
-导入使用 native 后端；字符串型 JSON 输入可用 `--json/-j`，嵌入式示例输入可用
-`--example/-e`：
+导入使用 native 后端；Bash 字符串型 JSON 输入可用 `--json/-j`，嵌入式示例输入可用
+`--example/-e`。Windows PowerShell 下建议使用 `--example` 或 native `--map`：
 
 ```bash
-moon run cli -- --json '{\"format\":\"moon-pathplanning.grid.v1\",\"width\":3,\"height\":3,\"start\":[0,0],\"goal\":[2,2],\"movement\":\"four_way\",\"obstacles\":[],\"terrain\":[]}'
+moon run cli -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
+```
+
+```powershell
 moon run cli -- --example weighted_grid
-moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 ```

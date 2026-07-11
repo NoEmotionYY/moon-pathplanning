@@ -255,15 +255,17 @@ moon run ./bench --target native -- examples/simple_grid.json
 moon run ./bench --target native -- --map examples/weighted_grid.json
 ```
 
-Inline JSON 示例需要按 shell 选择引号写法。
+Bash inline JSON 示例：
 
 ```bash
 moon run ./bench -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
 ```
 
+Windows PowerShell 下建议使用 `--example` 或 native `--map` 输入。当前 MoonBit runner 在部分 Windows PowerShell 环境中传递 inline JSON 参数时可能处理其中的双引号，因此本项目不把 PowerShell inline JSON 作为已验证的推荐用法。
+
 ```powershell
-$json = '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
-moon run ./bench -- --json $json
+moon run ./bench -- --example rs_apso_20x20_simple
+moon run ./bench --target native -- --map examples/weighted_grid.json
 ```
 
 输出为 CSV，当前包含 `scenario`、`algorithm`、`status`、`path_nodes`、`total_cost`、
@@ -340,13 +342,15 @@ moon run cli --target native -- --map examples/weighted_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 ```
 
-Inline JSON 示例需要按 shell 选择引号写法。
+Bash inline JSON 示例：
 
 ```bash
 moon run cli -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
 ```
 
+Windows PowerShell 下建议使用 `--example` 或 native `--map` 输入。当前 MoonBit runner 在部分 Windows PowerShell 环境中传递 inline JSON 参数时可能处理其中的双引号，因此本项目不把 PowerShell inline JSON 作为已验证的推荐用法。
+
 ```powershell
-$json = '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
-moon run cli -- --json $json
+moon run cli -- --example weighted_grid
+moon run cli --target native -- --map examples/weighted_grid.json
 ```

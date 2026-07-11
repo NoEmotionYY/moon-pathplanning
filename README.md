@@ -72,16 +72,20 @@ moon run cli -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height"
 moon run ./bench -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
 ```
 
-Windows PowerShell 的 inline JSON 示例：
+Windows PowerShell 推荐使用内置示例或 JSON 文件输入：
 
 ```powershell
-$json = '{"format":"moon-pathplanning.grid.v1","width":3,"height":3,"start":[0,0],"goal":[2,2],"movement":"four_way","obstacles":[],"terrain":[]}'
-moon run cli -- --json $json
-moon run ./bench -- --json $json
+# 使用内置示例
+moon run cli -- --example weighted_grid
+moon run ./bench -- --example rs_apso_20x20_simple
+
+# 使用 JSON 文件，需要 native 后端
+moon run cli --target native -- --map examples/weighted_grid.json
+moon run ./bench --target native -- --map examples/weighted_grid.json
 ```
 
 当前 CLI 会运行内置 A 星示例并打印路径节点数、总代价、访问节点数和展开节点数。
-字符串型 JSON 输入使用 `--json/-j`，不依赖文件读取；不同 shell 的引号规则不同，请按上面的 bash 或 PowerShell 示例复制。
+Bash 中的字符串型 JSON 输入使用 `--json/-j`，不依赖文件读取。Windows PowerShell 下建议使用 `--example` 或 `--map` 输入；当前 MoonBit runner 在部分 Windows PowerShell 环境中传递 inline JSON 参数时可能处理其中的双引号，因此本项目不把 PowerShell inline JSON 作为已验证的推荐用法。
 嵌入式示例地图使用 `--example/-e`，当前支持 `simple_grid`、`weighted_grid`、`rs_apso_20x20_simple` 和 `rs_apso_20x20_complex`，适合默认后端下复用示例内容。
 文件型 JSON 输入需要 native 后端，命令形如
 `moon run cli --target native -- --map examples/weighted_grid.json`。
@@ -93,7 +97,7 @@ benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO
 `dynamic_12x12_mixed` 下静态 A 星基线、
 整数速度动态修正、边界往复修正、连续安全感知修正和连续等待修正的同格式 CSV 行，并为连续动态行记录
 `safety_evaluated`、`continuous_safe` 和 `min_clearance`。文件型 benchmark 输入需要 native
-后端，命令形如 `moon run ./bench --target native -- --map examples/weighted_grid.json`。
+后端，命令形如 `moon run ./bench --target native -- --map examples/weighted_grid.json`。CI 中的 benchmark 步骤是功能 smoke test，不作为性能基准；当前 runner 尚未提供 `--repeats` 这类命令行轻量参数。
 
 ## 示例地图格式
 

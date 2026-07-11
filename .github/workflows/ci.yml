@@ -36,6 +36,7 @@ jobs:
           moon run cli --target native -- --example weighted_grid --html /tmp/weighted_grid.html
           test -s /tmp/weighted_grid.html
       - name: Benchmark smoke test
+        # Functional smoke test, not a performance baseline; bench currently has no --repeats flag.
         run: moon run ./bench -- --example rs_apso_20x20_simple
       - name: Verify generated interfaces are committed
         run: git diff --exit-code
