@@ -66,7 +66,7 @@ test "json invalid map enters planner as invalid input" {
 ///|
 test "json embedded examples parse without filesystem" {
   let names = @json_map.example_names()
-  assert_eq(names.length(), 4)
+  assert_eq(names.length(), 5)
   match @json_map.example_json("simple_grid") {
     Some(text) =>
       match @json_map.grid_from_json(text) {
@@ -88,6 +88,17 @@ test "json embedded examples parse without filesystem" {
       assert_eq(data.movement is @grid.EightWay, true)
     }
     None => fail("expected complex embedded example")
+  }
+  match @json_map.example_grid_data("complex_maze") {
+    Some(data) => {
+      assert_eq(data.map.width, 25)
+      assert_eq(data.map.height, 25)
+      assert_eq(data.map.start.same(@core.point(1, 1)), true)
+      assert_eq(data.map.goal.same(@core.point(23, 23)), true)
+      assert_eq(data.map.obstacles.length(), 385)
+      assert_eq(data.movement is @grid.FourWay, true)
+    }
+    None => fail("expected complex maze embedded example")
   }
   assert_eq(@json_map.example_json("missing") is None, true)
 }

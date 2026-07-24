@@ -42,7 +42,7 @@ graph primitives, examples, tests, CLI demos, SVG output, and HTML output.
 初步工程已包含源码、测试文件、示例地图、文档、CI 和 benchmark 说明，并已按论文方向
 开始补充区域搜索、swarm 基础模块、连续几何与基础 RRT/RRT-Connect/RRT* 采样规划模块和动态避障模块，其中 PSO/RS-APSO 已能在区域候选点中
 搜索中间路点并用 A 星拼接可行路径。JSON v1 当前提供 schema、示例地图、序列化和
-字符串解析入口。CLI v1 支持内置 demo 地图、`--json` 字符串输入、`--example` 跨后端示例名输入，也支持 native 后端读取 JSON 地图文件；
+字符串解析入口。CLI v1 支持内置 demo 地图、`--algorithm` 算法选择、`--json` 字符串输入、`--example` 跨后端示例名输入，也支持 native 后端读取 JSON 地图文件；
 `bench` runner 已固定两个 20x20 RS-APSO 场景和三个动态避障场景，并以 5 次重复输出
 经典搜索、LPA*/D* Lite 阶段入口、PSO/RS-APSO、RS-APSO 参数变体、RRT/RRT-Connect/RRT* 的 CSV 指标、耗时统计和连续动态行安全指标；runner 也支持 `--json` 字符串输入和 `--example` 示例名输入，native 后端还可读取 JSON v1 地图文件运行同格式 benchmark。
 增量规划边界请按阶段能力理解：当前 LPA*/D* Lite 会在地图变化后重新生成一致的搜索状态，用于保留 API 和测试变化单元记录；增量状态复用仍在后续路线中。
@@ -60,6 +60,7 @@ moon run cli
 moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
+moon run cli --target native -- --algorithm dijkstra --example complex_maze --html dijkstra_complex_maze.html
 moon run ./bench
 moon run ./bench -- --example rs_apso_20x20_simple
 moon run ./bench --target native -- examples/simple_grid.json
@@ -77,6 +78,7 @@ Windows PowerShell 推荐使用内置示例或 JSON 文件输入：
 ```powershell
 # 使用内置示例
 moon run cli -- --example weighted_grid
+moon run cli -- --algorithm astar --example complex_maze
 moon run ./bench -- --example rs_apso_20x20_simple
 
 # 使用 JSON 文件，需要 native 后端
@@ -84,13 +86,13 @@ moon run cli --target native -- --map examples/weighted_grid.json
 moon run ./bench --target native -- --map examples/weighted_grid.json
 ```
 
-当前 CLI 会运行内置 A 星示例并打印路径节点数、总代价、访问节点数和展开节点数。
+当前 CLI 默认运行 A 星；通过 `--algorithm/-a` 可选择 `bfs`、`dfs`、`dijkstra`、`astar`、`bidirectional_astar`、`lpa_star`、`d_star_lite`、`pso`、`rs_apso`、`rrt`、`rrt_connect` 或 `rrt_star`，并打印路径节点数、总代价、访问节点数和展开节点数。
 Bash 中的字符串型 JSON 输入使用 `--json/-j`，不依赖文件读取。Windows PowerShell 下建议使用 `--example` 或 `--map` 输入；当前 MoonBit runner 在部分 Windows PowerShell 环境中传递 inline JSON 参数时可能处理其中的双引号，因此本项目不把 PowerShell inline JSON 作为已验证的推荐用法。
-嵌入式示例地图使用 `--example/-e`，当前支持 `simple_grid`、`weighted_grid`、`rs_apso_20x20_simple` 和 `rs_apso_20x20_complex`，适合默认后端下复用示例内容。
+嵌入式示例地图使用 `--example/-e`，当前支持 `simple_grid`、`weighted_grid`、`rs_apso_20x20_simple`、`rs_apso_20x20_complex` 和 `complex_maze`，适合默认后端下复用示例内容。
 文件型 JSON 输入需要 native 后端，命令形如
 `moon run cli --target native -- --map examples/weighted_grid.json`。
 HTML 可视化导出同样需要 native 后端，命令形如
-`moon run cli --target native -- --example weighted_grid --html weighted_grid.html`，会在打印路径指标后生成包含网格、障碍物、起点、终点和最终路径的自包含 HTML 文件。
+`moon run cli --target native -- --algorithm astar --example complex_maze --html astar_complex_maze.html`，会在打印路径指标后生成包含算法名称、场景名称、网格、障碍物、起点、终点和最终路径的自包含 HTML 文件。
 benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO、RS-APSO、RS-APSO 参数变体、RRT、RRT-Connect 和 RRT*
 的路径长度、平滑度、访问/展开节点数、迭代次数、候选数量或采样树节点数、最终适应度、swarm 或采样参数、
 重复次数和总/平均耗时；同时输出 `dynamic_5x1`、`dynamic_10x10_crossing` 和
@@ -103,7 +105,7 @@ benchmark runner 会对 20x20 simple/complex 场景输出 A 星、Dijkstra、PSO
 
 `examples/simple_grid.json` 与 `examples/weighted_grid.json` 使用
 `moon-pathplanning.grid.v1` schema；`examples/rs_apso_20x20_simple.json` 与
-`examples/rs_apso_20x20_complex.json` 固定 20x20 RS-APSO benchmark 输入：
+`examples/rs_apso_20x20_complex.json` 固定 20x20 RS-APSO benchmark 输入；`examples/complex_maze.json` 提供 25x25 四方向复杂迷宫，用于观察经典网格搜索在长通道和分支中的行为：
 
 ```json
 {

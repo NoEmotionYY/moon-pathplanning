@@ -4,6 +4,30 @@ fn p(x : Int, y : Int) -> @core.Point {
 }
 
 ///|
+fn push_h(cells : Array[@core.Point], y : Int, x1 : Int, x2 : Int) -> Unit {
+  for x in x1..<=x2 {
+    cells.push(p(x, y))
+  }
+}
+
+///|
+fn push_v(cells : Array[@core.Point], x : Int, y1 : Int, y2 : Int) -> Unit {
+  for y in y1..<=y2 {
+    cells.push(p(x, y))
+  }
+}
+
+///|
+fn has_point(cells : Array[@core.Point], x : Int, y : Int) -> Bool {
+  for cell in cells {
+    if cell.x == x && cell.y == y {
+      return true
+    }
+  }
+  false
+}
+
+///|
 fn simple_grid_data() -> GridJsonData {
   {
     map: @grid.new_grid(6, 5, p(0, 0), p(5, 4)).with_obstacles([
@@ -169,9 +193,90 @@ fn rs_apso_complex_data() -> GridJsonData {
 }
 
 ///|
+fn complex_maze_open_cells() -> Array[@core.Point] {
+  let cells = []
+  push_h(cells, 1, 1, 5)
+  push_v(cells, 5, 1, 5)
+  push_h(cells, 5, 5, 9)
+  push_v(cells, 9, 3, 9)
+  push_h(cells, 9, 3, 9)
+  push_v(cells, 3, 9, 15)
+  push_h(cells, 15, 3, 13)
+  push_v(cells, 13, 11, 15)
+  push_h(cells, 11, 13, 19)
+  push_v(cells, 19, 7, 11)
+  push_h(cells, 7, 15, 19)
+  push_v(cells, 15, 7, 19)
+  push_h(cells, 19, 15, 21)
+  push_v(cells, 21, 17, 23)
+  push_h(cells, 23, 21, 23)
+  push_v(cells, 1, 1, 7)
+  push_h(cells, 7, 1, 7)
+  push_v(cells, 7, 7, 13)
+  push_h(cells, 13, 7, 11)
+  push_v(cells, 11, 13, 17)
+  push_h(cells, 17, 5, 11)
+  push_v(cells, 5, 17, 21)
+  push_h(cells, 21, 5, 13)
+  push_v(cells, 13, 19, 21)
+  push_h(cells, 3, 1, 3)
+  push_v(cells, 3, 3, 5)
+  push_h(cells, 3, 7, 11)
+  push_v(cells, 11, 1, 5)
+  push_h(cells, 1, 11, 17)
+  push_v(cells, 17, 1, 5)
+  push_h(cells, 5, 13, 17)
+  push_h(cells, 9, 11, 17)
+  push_v(cells, 17, 9, 13)
+  push_h(cells, 13, 15, 21)
+  push_v(cells, 21, 9, 15)
+  push_h(cells, 15, 17, 23)
+  push_v(cells, 23, 13, 23)
+  push_h(cells, 3, 19, 23)
+  push_v(cells, 23, 1, 7)
+  push_h(cells, 7, 21, 23)
+  push_v(cells, 7, 17, 23)
+  push_h(cells, 23, 1, 7)
+  push_v(cells, 1, 17, 23)
+  push_h(cells, 19, 1, 7)
+  push_h(cells, 11, 1, 3)
+  push_h(cells, 11, 5, 7)
+  push_h(cells, 17, 15, 19)
+  push_v(cells, 9, 17, 21)
+  push_h(cells, 21, 9, 17)
+  push_v(cells, 17, 17, 21)
+  cells
+}
+
+///|
+fn complex_maze_obstacles() -> Array[@core.Point] {
+  let open = complex_maze_open_cells()
+  let obstacles = []
+  for y in 0..<25 {
+    for x in 0..<25 {
+      if !has_point(open, x, y) {
+        obstacles.push(p(x, y))
+      }
+    }
+  }
+  obstacles
+}
+
+///|
+fn complex_maze_data() -> GridJsonData {
+  {
+    map: @grid.new_grid(25, 25, p(1, 1), p(23, 23)).with_obstacles(
+      complex_maze_obstacles(),
+    ),
+    movement: @grid.FourWay,
+  }
+}
+
+///|
 pub fn example_names() -> Array[String] {
   [
     "simple_grid", "weighted_grid", "rs_apso_20x20_simple", "rs_apso_20x20_complex",
+    "complex_maze",
   ]
 }
 
@@ -198,6 +303,11 @@ pub fn example_grid_data(name : String) -> GridJsonData? {
     | "rs_apso_20x20_complex.json"
     | "examples/rs_apso_20x20_complex.json"
     | "examples\\rs_apso_20x20_complex.json" => Some(rs_apso_complex_data())
+    "maze"
+    | "complex_maze"
+    | "complex_maze.json"
+    | "examples/complex_maze.json"
+    | "examples\\complex_maze.json" => Some(complex_maze_data())
     _ => None
   }
 }

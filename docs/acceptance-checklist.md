@@ -17,8 +17,8 @@
 | RRT* | 基础实现 | `src/continuous/rrt_star.mbt` | `test/continuous_test.mbt` | `moon test` |
 | 动态避障 | 基础实现 | `src/dynamic/*.mbt` | `test/dynamic_test.mbt` | `moon run ./bench` |
 | JSON | 已完成 | `src/io/json_map.mbt`, `src/io/example_maps.mbt` | `test/json_map_test.mbt` | `moon run cli --target native -- --map examples/weighted_grid.json` |
-| CLI | 已完成 | `cli/main.mbt` | CI smoke test | `moon run cli` |
-| SVG/HTML | 已完成 | `src/visualize/svg_exporter.mbt` | `test/visualize_test.mbt` | `moon run cli --target native -- --example weighted_grid --html weighted_grid.html` |
+| CLI | 已完成 | `cli/main.mbt` | CI smoke test | `moon run cli -- --algorithm dijkstra --example complex_maze` |
+| SVG/HTML | 已完成 | `src/visualize/svg_exporter.mbt` | `test/visualize_test.mbt` | `moon run cli --target native -- --algorithm astar --example complex_maze --html astar_complex_maze.html` |
 | Benchmark | 已完成 | `bench/rs_apso_bench.mbt` | CI smoke test | `moon run ./bench -- --example rs_apso_20x20_simple` |
 
 ## 标准检查命令
@@ -40,6 +40,7 @@ moon run cli
 moon run cli -- --example weighted_grid
 moon run cli --target native -- --map examples/weighted_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
+moon run cli --target native -- --algorithm dijkstra --example complex_maze --html dijkstra_complex_maze.html
 moon run ./bench -- --example rs_apso_20x20_simple
 ```
 
@@ -49,6 +50,7 @@ moon run ./bench -- --example rs_apso_20x20_simple
 |---|---|
 | PowerShell inline JSON | 不作为推荐用法 |
 | PowerShell `--example` | 已支持 |
+| CLI `--algorithm` | 已支持 |
 | PowerShell native `--map` | 已支持 |
 | GitHub Actions | 以远程实际状态为准，未查询时不标记完成 |
 | GitLink 同步 | 待人工确认 |

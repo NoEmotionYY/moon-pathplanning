@@ -6,6 +6,7 @@
 - `weighted_grid.json` 演示八方向地图、障碍物和 terrain cost。
 - `rs_apso_20x20_simple.json` 演示论文风格 20x20 简单静态栅格。
 - `rs_apso_20x20_complex.json` 演示论文风格 20x20 复杂静态栅格、狭窄通道和 terrain cost。
+- `complex_maze.json` 演示 25x25 四方向复杂迷宫、长通道和分支死路。
 
 这些文件都使用 `moon-pathplanning.grid.v1` schema。`start`、`goal`、
 `obstacles` 与 terrain 中的 `point` 都写成 `[x, y]`。
@@ -37,7 +38,7 @@ Windows PowerShell 下建议使用 `moon run ./bench -- --example rs_apso_20x20_
 moon run cli
 ```
 
-当前 CLI 使用内置 demo 地图，展示 Planner 对 A 星算法的调度结果。文件型 JSON CLI
+当前 CLI 默认使用 A 星算法；通过 `--algorithm/-a` 可选择 BFS、Dijkstra、双向 A 星、PSO、RS-APSO、RRT 系列等 Planner 已支持的算法。文件型 JSON CLI
 导入使用 native 后端；Bash 字符串型 JSON 输入可用 `--json/-j`，嵌入式示例输入可用
 `--example/-e`。Windows PowerShell 下建议使用 `--example` 或 native `--map`：
 
@@ -49,10 +50,10 @@ moon run cli -- --json '{"format":"moon-pathplanning.grid.v1","width":3,"height"
 moon run cli -- --example weighted_grid
 moon run cli --target native -- --map examples/weighted_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
+moon run cli --target native -- --algorithm dijkstra --example complex_maze --html dijkstra_complex_maze.html
 ```
 
-`--html/-o <output.html>` 会把当前 A 星规划结果写成自包含 HTML 文件，展示网格、障碍物、
-起点、终点和最终路径；写文件需要 native 后端。
+`--html/-o <output.html>` 会把当前算法的规划结果写成自包含 HTML 文件，展示算法名称、场景名称、网格、障碍物、起点、终点和最终路径；写文件需要 native 后端。
 
 ## SVG / HTML
 
@@ -64,4 +65,4 @@ moon run cli --target native -- --example weighted_grid --html weighted_grid.htm
 和 RRT* 绘制到同一张 SVG 中，并在底部生成图例。需要直接打开查看时，可使用
 `@svg.grid_to_html()`、`@svg.grid_region_to_html()`、`@svg.grid_paths_to_html()` 或
 `@svg.rrt_comparison_to_html()` 生成自包含 HTML 文档。仓库只保留导出代码，不保留大批生成图片。
-CLI 的 `--html/-o` 参数已复用基础 `grid_to_html()`，适合快速查看单张地图的 A 星结果。
+CLI 的 `--html/-o` 参数已复用基础 `grid_to_html()`，适合快速查看单张地图在指定算法下的路径结果。

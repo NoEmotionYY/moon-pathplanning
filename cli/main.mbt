@@ -136,11 +136,13 @@ fn heuristic_for(movement : @grid.MovementMode) -> @heuristics.HeuristicKind {
 ///|
 fn print_result(
   source : String,
+  algorithm : @planner.AlgorithmType,
   movement : @grid.MovementMode,
   result : @core.PathResult,
 ) -> Unit {
-  println("Moon PathPlanning A* demo")
+  println("Moon PathPlanning demo")
   println("source: \{source}")
+  println("algorithm: \{algorithm_name(algorithm)}")
   println("movement: \{movement_name(movement)}")
   println("status: \{status_name(result)}")
   println("path nodes: \{result.path.length()}")
@@ -150,8 +152,77 @@ fn print_result(
 }
 
 ///|
+fn algorithm_name(algorithm : @planner.AlgorithmType) -> String {
+  match algorithm {
+    Bfs => "bfs"
+    Dfs => "dfs"
+    Dijkstra => "dijkstra"
+    AStar => "astar"
+    BidirectionalAStar => "bidirectional_astar"
+    LpaStar => "lpa_star"
+    DStarLite => "d_star_lite"
+    Pso => "pso"
+    RsApso => "rs_apso"
+    Rrt => "rrt"
+    RrtConnect => "rrt_connect"
+    RrtStar => "rrt_star"
+  }
+}
+
+///|
+fn algorithm_title(algorithm : @planner.AlgorithmType) -> String {
+  match algorithm {
+    Bfs => "BFS 算法"
+    Dfs => "DFS 算法"
+    Dijkstra => "Dijkstra 算法"
+    AStar => "A* 算法"
+    BidirectionalAStar => "双向 A* 算法"
+    LpaStar => "LPA* 算法"
+    DStarLite => "D* Lite 算法"
+    Pso => "PSO 算法"
+    RsApso => "RS-APSO 算法"
+    Rrt => "RRT 算法"
+    RrtConnect => "RRT-Connect 算法"
+    RrtStar => "RRT* 算法"
+  }
+}
+
+///|
+fn algorithm_from_name(name : String) -> @planner.AlgorithmType? {
+  match name {
+    "bfs" => Some(@planner.Bfs)
+    "dfs" => Some(@planner.Dfs)
+    "dijkstra" => Some(@planner.Dijkstra)
+    "astar" | "a_star" => Some(@planner.AStar)
+    "bidirectional_astar" | "bi_astar" => Some(@planner.BidirectionalAStar)
+    "lpa_star" => Some(@planner.LpaStar)
+    "d_star_lite" | "dstarlite" => Some(@planner.DStarLite)
+    "pso" => Some(@planner.Pso)
+    "rs_apso" => Some(@planner.RsApso)
+    "rrt" => Some(@planner.Rrt)
+    "rrt_connect" => Some(@planner.RrtConnect)
+    "rrt_star" | "rrtstar" => Some(@planner.RrtStar)
+    _ => None
+  }
+}
+
+///|
+fn display_source_title(source : String) -> String {
+  match source {
+    "builtin-demo" => "内置演示"
+    "example:simple_grid" => "简单网格示例"
+    "example:weighted_grid" => "加权网格示例"
+    "example:rs_apso_20x20_simple" => "20x20 简单场景"
+    "example:rs_apso_20x20_complex" => "20x20 复杂场景"
+    "example:complex_maze" => "复杂迷宫场景"
+    _ => source
+  }
+}
+
+///|
 fn export_html(
   source : String,
+  algorithm : @planner.AlgorithmType,
   map : @grid.GridMap,
   result : @core.PathResult,
   html_path : String?,
@@ -160,7 +231,7 @@ fn export_html(
     None => true
     Some(path) => {
       let html = @svg.grid_to_html(
-        "Moon PathPlanning: \{source}",
+        "Moon 路径规划：\{algorithm_title(algorithm)} - \{display_source_title(source)}",
         map,
         result.path,
         24,
@@ -187,26 +258,31 @@ fn demo_map() -> @grid.GridMap {
 }
 
 ///|
-fn run_demo(html_path : String?) -> Bool {
+fn run_demo(algorithm : @planner.AlgorithmType, html_path : String?) -> Bool {
   let movement = @grid.FourWay
   let map = demo_map()
   let options = @planner.options(movement, heuristic_for(movement))
-  let result = @planner.plan(map, @planner.AStar, options)
-  print_result("builtin-demo", movement, result)
-  export_html("builtin-demo", map, result, html_path)
+  let result = @planner.plan(map, algorithm, options)
+  print_result("builtin-demo", algorithm, movement, result)
+  export_html("builtin-demo", algorithm, map, result, html_path)
 }
 
 ///|
-fn run_json_text(source : String, text : String, html_path : String?) -> Bool {
+fn run_json_text(
+  source : String,
+  text : String,
+  algorithm : @planner.AlgorithmType,
+  html_path : String?,
+) -> Bool {
   match @json_map.grid_from_json(text) {
     Some(data) => {
       let options = @planner.options(
         data.movement,
         heuristic_for(data.movement),
       )
-      let result = @planner.plan(data.map, @planner.AStar, options)
-      print_result(source, data.movement, result)
-      export_html(source, data.map, result, html_path)
+      let result = @planner.plan(data.map, algorithm, options)
+      print_result(source, algorithm, data.movement, result)
+      export_html(source, algorithm, data.map, result, html_path)
     }
     None => {
       println("Invalid grid JSON: \{source}")
@@ -216,9 +292,13 @@ fn run_json_text(source : String, text : String, html_path : String?) -> Bool {
 }
 
 ///|
-fn run_json_file(path : String, html_path : String?) -> Bool {
+fn run_json_file(
+  path : String,
+  algorithm : @planner.AlgorithmType,
+  html_path : String?,
+) -> Bool {
   match read_text_file(path) {
-    Some(text) => run_json_text(path, text, html_path)
+    Some(text) => run_json_text(path, text, algorithm, html_path)
     None => {
       println("Could not read JSON file: \{path}")
       false
@@ -227,9 +307,13 @@ fn run_json_file(path : String, html_path : String?) -> Bool {
 }
 
 ///|
-fn run_example(name : String, html_path : String?) -> Bool {
+fn run_example(
+  name : String,
+  algorithm : @planner.AlgorithmType,
+  html_path : String?,
+) -> Bool {
   match @json_map.example_json(name) {
-    Some(text) => run_json_text("example:\{name}", text, html_path)
+    Some(text) => run_json_text("example:\{name}", text, algorithm, html_path)
     None => {
       println("Unknown example map: \{name}")
       false
@@ -246,7 +330,10 @@ fn usage() -> Unit {
   println("  moon run cli --target native -- <map.json>")
   println("  moon run cli --target native -- --map <map.json>")
   println(
-    "  moon run cli --target native -- --example <name> --html <output.html>",
+    "  moon run cli --target native -- --algorithm <name> --example <name> --html <output.html>",
+  )
+  println(
+    "Algorithms: bfs, dfs, dijkstra, astar, bidirectional_astar, lpa_star, d_star_lite, pso, rs_apso, rrt, rrt_connect, rrt_star",
   )
 }
 
@@ -308,6 +395,25 @@ fn html_arg(args : Array[String]) -> String? {
 }
 
 ///|
+fn algorithm_arg(args : Array[String]) -> String? {
+  let mut index = 1
+  while index < args.length() {
+    match args[index] {
+      "--help" | "-h" => return Some("")
+      "--algorithm" | "-a" =>
+        if index + 1 < args.length() {
+          return Some(args[index + 1])
+        } else {
+          return Some("")
+        }
+      _ => ()
+    }
+    index = index + 1
+  }
+  None
+}
+
+///|
 fn map_arg(args : Array[String]) -> String? {
   let mut index = 1
   let mut path : String? = None
@@ -321,7 +427,14 @@ fn map_arg(args : Array[String]) -> String? {
         } else {
           return Some("")
         }
-      "--json" | "-j" | "--example" | "-e" | "--html" | "-o" =>
+      "--json"
+      | "-j"
+      | "--example"
+      | "-e"
+      | "--html"
+      | "-o"
+      | "--algorithm"
+      | "-a" =>
         if index + 1 < args.length() {
           index = index + 1
         } else {
@@ -338,18 +451,40 @@ fn map_arg(args : Array[String]) -> String? {
 fn main {
   let args = @env.args()
   let html_path = html_arg(args)
+  let algorithm = match algorithm_arg(args) {
+    Some("") => {
+      usage()
+      return
+    }
+    Some(name) =>
+      match algorithm_from_name(name) {
+        Some(value) => value
+        None => {
+          println("Unknown algorithm: \{name}")
+          usage()
+          return
+        }
+      }
+    None => @planner.AStar
+  }
   match json_arg(args) {
     Some("") => usage()
-    Some(text) => if !run_json_text("inline-json", text, html_path) { usage() }
+    Some(text) =>
+      if !run_json_text("inline-json", text, algorithm, html_path) {
+        usage()
+      }
     None =>
       match example_arg(args) {
         Some("") => usage()
-        Some(name) => if !run_example(name, html_path) { usage() }
+        Some(name) => if !run_example(name, algorithm, html_path) { usage() }
         None =>
           match map_arg(args) {
             Some("") => usage()
-            Some(path) => if !run_json_file(path, html_path) { usage() }
-            None => if !run_demo(html_path) { usage() }
+            Some(path) =>
+              if !run_json_file(path, algorithm, html_path) {
+                usage()
+              }
+            None => if !run_demo(algorithm, html_path) { usage() }
           }
       }
   }

@@ -241,6 +241,7 @@ CLI 可在 native 后端直接写出基础路径 HTML，例如：
 ```bash
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
 moon run cli --target native -- --map examples/weighted_grid.json -o weighted_grid.html
+moon run cli --target native -- --algorithm dijkstra --example complex_maze --html dijkstra_complex_maze.html
 ```
 
 ## Benchmark Runner
@@ -340,7 +341,10 @@ moon run cli -- --example weighted_grid
 moon run cli --target native -- examples/simple_grid.json
 moon run cli --target native -- --map examples/weighted_grid.json
 moon run cli --target native -- --example weighted_grid --html weighted_grid.html
+moon run cli --target native -- --algorithm astar --example complex_maze --html astar_complex_maze.html
 ```
+
+CLI 默认使用 `astar`；需要切换算法时可传入 `--algorithm/-a`。当前可选值为 `bfs`、`dfs`、`dijkstra`、`astar`、`bidirectional_astar`、`lpa_star`、`d_star_lite`、`pso`、`rs_apso`、`rrt`、`rrt_connect` 和 `rrt_star`。HTML 标题会按算法名和场景名生成，便于保留可复现的结果图。
 
 Bash inline JSON 示例：
 
