@@ -12,21 +12,30 @@ const isIntegerTuple = (value: unknown): value is PointTuple =>
 const inBounds = ([x, y]: PointTuple, width: number, height: number) =>
   x >= 0 && y >= 0 && x < width && y < height
 
-export function validateGridDocument(value: unknown): asserts value is GridMapDocument {
+export interface GridDocumentValidationOptions {
+  maximumSize?: number
+}
+
+export function validateGridDocument(
+  value: unknown,
+  options: GridDocumentValidationOptions = {},
+): asserts value is GridMapDocument {
   if (!value || typeof value !== 'object') throw new Error('地图根节点必须是对象')
   const map = value as Record<string, unknown>
   if (map.format !== 'moon-pathplanning.grid.v1') throw new Error('不支持的地图格式')
+  const maximumSize =
+    options.maximumSize ?? MAP_SIZE_LIMITS.recommendedMax
   if (
     !Number.isInteger(map.width) ||
     !Number.isInteger(map.height) ||
     Number(map.width) < MAP_SIZE_LIMITS.min ||
     Number(map.height) < MAP_SIZE_LIMITS.min ||
-    Number(map.width) > MAP_SIZE_LIMITS.recommendedMax ||
-    Number(map.height) > MAP_SIZE_LIMITS.recommendedMax
+    Number(map.width) > maximumSize ||
+    Number(map.height) > maximumSize
   ) {
     throw new Error(
       `地图尺寸必须在 ${MAP_SIZE_LIMITS.min}×${MAP_SIZE_LIMITS.min} 到 ` +
-      `${MAP_SIZE_LIMITS.recommendedMax}×${MAP_SIZE_LIMITS.recommendedMax} 之间`,
+      `${maximumSize}×${maximumSize} 之间`,
     )
   }
   const width = Number(map.width)
