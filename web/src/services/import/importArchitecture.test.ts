@@ -3,7 +3,9 @@ import { MAP_SIZE_LIMITS } from '@/config/mapLimits'
 import { validateGridDocument } from '@/utils/validation'
 import { detectImportFileType } from './fileTypeDetector'
 import {
+  createDefaultMazePreprocessOptions,
   createDefaultMazeImportOptions,
+  DEFAULT_MAZE_PREPROCESS_OPTIONS,
   DEFAULT_MAZE_IMPORT_OPTIONS,
 } from './importDefaults'
 import {
@@ -129,5 +131,17 @@ describe('迷宫导入默认参数与地图限制', () => {
       ...map,
       width: MAP_SIZE_LIMITS.recommendedMax + 1,
     })).toThrow('地图尺寸必须在')
+  })
+
+  it('提供集中且可复制的图像预处理默认参数', () => {
+    expect(DEFAULT_MAZE_PREPROCESS_OPTIONS).toEqual({
+      cropMargin: 1,
+      transparentBackground: 'auto',
+      minimumAlpha: 8,
+      minimumForegroundPixels: 8,
+    })
+    const options = createDefaultMazePreprocessOptions()
+    options.cropMargin = 4
+    expect(DEFAULT_MAZE_PREPROCESS_OPTIONS.cropMargin).toBe(1)
   })
 })
