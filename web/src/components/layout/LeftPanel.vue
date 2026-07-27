@@ -5,42 +5,38 @@ import { useGridStore } from '@/stores/grid'
 import { usePlannerStore } from '@/stores/planner'
 import { useMapImportExport, type ExampleName } from '@/composables/useMapImportExport'
 import { useToast } from '@/composables/useToast'
-import { MAX_GRID_SIZE, MIN_GRID_SIZE } from '@/utils/validation'
+import { MAP_SIZE_LIMITS } from '@/config/mapLimits'
 import AlgorithmSelector from '@/components/planner/AlgorithmSelector.vue'
 import GridToolbar from '@/components/grid/GridToolbar.vue'
 import PlannerControls from '@/components/planner/PlannerControls.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import MapImportModal from '@/components/import/MapImportModal.vue'
 
 const grid = useGridStore()
 const planner = usePlannerStore()
-const fileInput = ref<HTMLInputElement | null>(null)
-const { importFile, exportMap, loadExample, exampleNames } = useMapImportExport()
+const { exportMap, loadExample, exampleNames } = useMapImportExport()
 const { show } = useToast()
 const nextWidth = ref(grid.width)
 const nextHeight = ref(grid.height)
 const selectedExample = ref<ExampleName>('simple_grid')
+const importModalOpen = ref(false)
+const currentMapSizeLimits = {
+  min: MAP_SIZE_LIMITS.min,
+  max: MAP_SIZE_LIMITS.recommendedMax,
+}
 
 const applySize = () => {
-  const width = Math.min(MAX_GRID_SIZE, Math.max(MIN_GRID_SIZE, Math.round(nextWidth.value)))
-  const height = Math.min(MAX_GRID_SIZE, Math.max(MIN_GRID_SIZE, Math.round(nextHeight.value)))
+  const width = Math.min(
+    currentMapSizeLimits.max,
+    Math.max(currentMapSizeLimits.min, Math.round(nextWidth.value)),
+  )
+  const height = Math.min(
+    currentMapSizeLimits.max,
+    Math.max(currentMapSizeLimits.min, Math.round(nextHeight.value)),
+  )
   nextWidth.value = width
   nextHeight.value = height
   grid.resize(width, height)
-}
-
-const handleFile = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  try {
-    await importFile(file)
-    nextWidth.value = grid.width
-    nextHeight.value = grid.height
-  } catch (error) {
-    show(error instanceof Error ? error.message : '导入地图失败', 'error')
-  } finally {
-    input.value = ''
-  }
 }
 
 const openExample = async () => {
@@ -52,6 +48,15 @@ const openExample = async () => {
     show(error instanceof Error ? error.message : '示例加载失败', 'error')
   }
 }
+
+const syncImportedSize = () => {
+  nextWidth.value = grid.width
+  nextHeight.value = grid.height
+}
+
+const openImportModal = () => {
+  importModalOpen.value = true
+}
 </script>
 
 <template>
@@ -62,9 +67,9 @@ const openExample = async () => {
         <div><h2>地图设置</h2><span>{{ grid.width }} × {{ grid.height }} 网格</span></div>
       </div>
       <div class="size-controls">
-        <label>宽度<input v-model.number="nextWidth" type="number" :min="MIN_GRID_SIZE" :max="MAX_GRID_SIZE" :disabled="planner.isRunning" /></label>
+        <label>宽度<input v-model.number="nextWidth" type="number" :min="currentMapSizeLimits.min" :max="currentMapSizeLimits.max" :disabled="planner.isRunning" /></label>
         <span>×</span>
-        <label>高度<input v-model.number="nextHeight" type="number" :min="MIN_GRID_SIZE" :max="MAX_GRID_SIZE" :disabled="planner.isRunning" /></label>
+        <label>高度<input v-model.number="nextHeight" type="number" :min="currentMapSizeLimits.min" :max="currentMapSizeLimits.max" :disabled="planner.isRunning" /></label>
         <button aria-label="应用地图尺寸" :disabled="planner.isRunning" @click="applySize">应用</button>
       </div>
       <label class="select-label">
@@ -105,13 +110,17 @@ const openExample = async () => {
         <button :disabled="planner.isRunning" @click="openExample">加载</button>
       </div>
       <div class="file-actions">
-        <BaseButton variant="ghost" :disabled="planner.isRunning" @click="fileInput?.click()">
+        <BaseButton variant="ghost" :disabled="planner.isRunning" @click="openImportModal">
           <FileUp :size="15" /> 导入
         </BaseButton>
         <BaseButton variant="ghost" @click="exportMap"><Download :size="15" /> 导出</BaseButton>
       </div>
-      <input ref="fileInput" class="sr-only" type="file" accept=".json,application/json" @change="handleFile" />
     </section>
     <PlannerControls />
   </aside>
+  <MapImportModal
+    :open="importModalOpen"
+    @close="importModalOpen = false"
+    @json-imported="syncImportedSize"
+  />
 </template>

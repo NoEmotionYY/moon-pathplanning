@@ -1,8 +1,8 @@
 import type { GridMapDocument, PointTuple } from '@/types/grid'
+import { IMPORT_FILE_SIZE_LIMITS } from '@/config/importLimits'
+import { MAP_SIZE_LIMITS } from '@/config/mapLimits'
 
-export const MIN_GRID_SIZE = 5
-export const MAX_GRID_SIZE = 60
-export const MAX_IMPORT_BYTES = 1_000_000
+export const MAX_IMPORT_BYTES = IMPORT_FILE_SIZE_LIMITS.json
 
 const isIntegerTuple = (value: unknown): value is PointTuple =>
   Array.isArray(value) &&
@@ -19,12 +19,15 @@ export function validateGridDocument(value: unknown): asserts value is GridMapDo
   if (
     !Number.isInteger(map.width) ||
     !Number.isInteger(map.height) ||
-    Number(map.width) < MIN_GRID_SIZE ||
-    Number(map.height) < MIN_GRID_SIZE ||
-    Number(map.width) > MAX_GRID_SIZE ||
-    Number(map.height) > MAX_GRID_SIZE
+    Number(map.width) < MAP_SIZE_LIMITS.min ||
+    Number(map.height) < MAP_SIZE_LIMITS.min ||
+    Number(map.width) > MAP_SIZE_LIMITS.recommendedMax ||
+    Number(map.height) > MAP_SIZE_LIMITS.recommendedMax
   ) {
-    throw new Error(`地图尺寸必须在 ${MIN_GRID_SIZE}×${MIN_GRID_SIZE} 到 ${MAX_GRID_SIZE}×${MAX_GRID_SIZE} 之间`)
+    throw new Error(
+      `地图尺寸必须在 ${MAP_SIZE_LIMITS.min}×${MAP_SIZE_LIMITS.min} 到 ` +
+      `${MAP_SIZE_LIMITS.recommendedMax}×${MAP_SIZE_LIMITS.recommendedMax} 之间`,
+    )
   }
   const width = Number(map.width)
   const height = Number(map.height)

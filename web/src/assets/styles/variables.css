@@ -39,6 +39,12 @@
   --trace-expanded: rgba(67, 199, 244, 0.28);
   --trace-current: #fbbf24;
   --trace-current-ring: rgba(251, 191, 36, 0.56);
+  --import-drop-bg: rgba(67, 199, 244, 0.04);
+  --import-drop-active: rgba(67, 199, 244, 0.14);
+  --import-preview-bg: #091624;
+  --import-checker-light: #46596d;
+  --import-checker-dark: #2b3b4e;
+  --import-error-bg: rgba(251, 113, 133, 0.1);
   --shadow-panel: 0 22px 60px rgba(1, 8, 20, 0.28);
   --radius-sm: 8px;
   --radius-md: 13px;
@@ -85,5 +91,11 @@
   --trace-expanded: rgba(2, 132, 199, 0.3);
   --trace-current: #f59e0b;
   --trace-current-ring: rgba(245, 158, 11, 0.52);
+  --import-drop-bg: rgba(2, 132, 199, 0.04);
+  --import-drop-active: rgba(2, 132, 199, 0.12);
+  --import-preview-bg: #eef4f8;
+  --import-checker-light: #e6edf3;
+  --import-checker-dark: #cbd7e1;
+  --import-error-bg: rgba(225, 29, 72, 0.08);
   --shadow-panel: 0 22px 60px rgba(62, 86, 116, 0.16);
 }
