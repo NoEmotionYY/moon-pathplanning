@@ -1,5 +1,9 @@
 import type { BinaryMask } from '@/types/imageAnalysis'
 import type { ImageMatrix } from '@/types/import'
+import type {
+  MazeCell,
+  MazePassageDefinition,
+} from '@/types/mazeTopology'
 
 export interface OrthogonalMazeMaskOptions {
   rows: number
@@ -17,6 +21,13 @@ export interface OrthogonalMazeMaskOptions {
     side: 'top' | 'right' | 'bottom' | 'left'
     cellIndex: number
   }>
+}
+
+export type GeneratedMazeOptions = OrthogonalMazeMaskOptions
+
+export interface GeneratedMazeFromPassages {
+  mask: BinaryMask
+  expectedEdges: MazePassageDefinition[]
 }
 
 const createRandom = (seed: number): (() => number) => {
@@ -217,6 +228,185 @@ export function generateOrthogonalMazeMask(
   }
 
   return { width, height, values }
+}
+
+const cellIndex = (cell: MazeCell, columns: number): number =>
+  cell.row * columns + cell.column
+
+const cellInRange = (
+  cell: MazeCell,
+  rows: number,
+  columns: number,
+): boolean =>
+  cell.row >= 0 &&
+  cell.row < rows &&
+  cell.column >= 0 &&
+  cell.column < columns
+
+export function generateMazeMaskFromPassages(
+  options: GeneratedMazeOptions,
+  passages: MazePassageDefinition[],
+): GeneratedMazeFromPassages {
+  const cellWidth = options.cellWidth ?? 12
+  const cellHeight = options.cellHeight ?? cellWidth
+  const wallThickness = options.wallThickness ?? 1
+  const padding = options.padding ?? 0
+  const mask = generateOrthogonalMazeMask({
+    ...options,
+    openings: false,
+    noiseRatio: 0,
+    noisePixels: 0,
+    missingSegmentRatio: 0,
+    missingWallSegments: 0,
+  })
+  const expectedEdges: MazePassageDefinition[] = []
+  const seen = new Set<number>()
+
+  for (const passage of passages) {
+    if (
+      !cellInRange(passage.from, options.rows, options.columns) ||
+      !cellInRange(passage.to, options.rows, options.columns) ||
+      Math.abs(passage.from.row - passage.to.row) +
+        Math.abs(passage.from.column - passage.to.column) !== 1
+    ) {
+      continue
+    }
+    const fromIndex = cellIndex(passage.from, options.columns)
+    const toIndex = cellIndex(passage.to, options.columns)
+    const from = fromIndex <= toIndex ? passage.from : passage.to
+    const to = fromIndex <= toIndex ? passage.to : passage.from
+    const key =
+      Math.min(fromIndex, toIndex) * options.rows * options.columns +
+      Math.max(fromIndex, toIndex)
+    if (seen.has(key)) {
+      continue
+    }
+    seen.add(key)
+    expectedEdges.push({
+      from: { ...from },
+      to: { ...to },
+    })
+
+    if (from.row === to.row) {
+      const wallColumn = Math.max(from.column, to.column)
+      fillRectangle(
+        mask.values,
+        mask.width,
+        mask.height,
+        padding + wallColumn * cellWidth,
+        padding + from.row * cellHeight + wallThickness,
+        wallThickness,
+        Math.max(1, cellHeight - wallThickness),
+        0,
+      )
+    } else {
+      const wallRow = Math.max(from.row, to.row)
+      fillRectangle(
+        mask.values,
+        mask.width,
+        mask.height,
+        padding + from.column * cellWidth + wallThickness,
+        padding + wallRow * cellHeight,
+        Math.max(1, cellWidth - wallThickness),
+        wallThickness,
+        0,
+      )
+    }
+  }
+
+  if (Array.isArray(options.openings)) {
+    for (const opening of options.openings) {
+      if (opening.side === 'top' || opening.side === 'bottom') {
+        const column = Math.max(
+          0,
+          Math.min(options.columns - 1, opening.cellIndex),
+        )
+        const y = opening.side === 'top'
+          ? padding
+          : padding + options.rows * cellHeight
+        fillRectangle(
+          mask.values,
+          mask.width,
+          mask.height,
+          padding + column * cellWidth + wallThickness,
+          y,
+          Math.max(1, cellWidth - wallThickness),
+          wallThickness,
+          0,
+        )
+      } else {
+        const row = Math.max(
+          0,
+          Math.min(options.rows - 1, opening.cellIndex),
+        )
+        const x = opening.side === 'left'
+          ? padding
+          : padding + options.columns * cellWidth
+        fillRectangle(
+          mask.values,
+          mask.width,
+          mask.height,
+          x,
+          padding + row * cellHeight + wallThickness,
+          wallThickness,
+          Math.max(1, cellHeight - wallThickness),
+          0,
+        )
+      }
+    }
+  }
+
+  const random = createRandom(options.seed ?? 12345)
+  for (let index = 0; index < (options.missingWallSegments ?? 0); index += 1) {
+    const horizontal = index % 2 === 0
+    if (horizontal && options.rows > 1) {
+      const line = 1 + Math.floor(random() * (options.rows - 1))
+      const column = Math.floor(random() * options.columns)
+      const damageWidth = Math.max(1, Math.floor(cellWidth / 2))
+      fillRectangle(
+        mask.values,
+        mask.width,
+        mask.height,
+        padding + column * cellWidth +
+          Math.floor((cellWidth - damageWidth) / 2),
+        padding + line * cellHeight,
+        damageWidth,
+        wallThickness,
+        0,
+      )
+    } else if (options.columns > 1) {
+      const line = 1 + Math.floor(random() * (options.columns - 1))
+      const row = Math.floor(random() * options.rows)
+      const damageHeight = Math.max(1, Math.floor(cellHeight / 2))
+      fillRectangle(
+        mask.values,
+        mask.width,
+        mask.height,
+        padding + line * cellWidth,
+        padding + row * cellHeight +
+          Math.floor((cellHeight - damageHeight) / 2),
+        wallThickness,
+        damageHeight,
+        0,
+      )
+    }
+  }
+
+  const noiseRatio = Math.max(0, Math.min(1, options.noiseRatio ?? 0))
+  const noisePixels = options.noisePixels ??
+    Math.floor(mask.values.length * noiseRatio)
+  for (let index = 0; index < noisePixels; index += 1) {
+    const position = Math.floor(random() * mask.values.length)
+    mask.values[position] = mask.values[position] === 1 ? 0 : 1
+  }
+
+  expectedEdges.sort((left, right) =>
+    cellIndex(left.from, options.columns) -
+      cellIndex(right.from, options.columns) ||
+    cellIndex(left.to, options.columns) -
+      cellIndex(right.to, options.columns),
+  )
+  return { mask, expectedEdges }
 }
 
 export function binaryMaskToImageMatrix(

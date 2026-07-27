@@ -7,6 +7,49 @@ import { assertBinaryMask } from './imageDataValidation'
 
 const clamp01 = (value: number): number => Math.max(0, Math.min(1, value))
 
+const sample = (
+  values: Uint8Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+): number =>
+  x >= 0 && x < width && y >= 0 && y < height
+    ? (values[y * width + x] ?? 0)
+    : 0
+
+const calculateNonAxisGradientScore = (
+  values: Uint8Array,
+  width: number,
+  height: number,
+): number => {
+  let diagonalEnergy = 0
+  let boundaryEnergy = 0
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const topLeft = sample(values, width, height, x - 1, y - 1)
+      const top = sample(values, width, height, x, y - 1)
+      const topRight = sample(values, width, height, x + 1, y - 1)
+      const left = sample(values, width, height, x - 1, y)
+      const right = sample(values, width, height, x + 1, y)
+      const bottomLeft = sample(values, width, height, x - 1, y + 1)
+      const bottom = sample(values, width, height, x, y + 1)
+      const bottomRight = sample(values, width, height, x + 1, y + 1)
+      const gradientX = Math.abs(
+        topRight + 2 * right + bottomRight -
+        topLeft - 2 * left - bottomLeft,
+      )
+      const gradientY = Math.abs(
+        bottomLeft + 2 * bottom + bottomRight -
+        topLeft - 2 * top - topRight,
+      )
+      boundaryEnergy += Math.max(gradientX, gradientY)
+      diagonalEnergy += Math.min(gradientX, gradientY)
+    }
+  }
+  return boundaryEnergy === 0 ? 0 : diagonalEnergy / boundaryEnergy
+}
+
 export function calculateOrientationEvidence(
   mask: BinaryMask,
 ): OrientationEvidence {
@@ -49,6 +92,7 @@ export function calculateOrientationEvidence(
       verticalEnergy: 0,
       horizontalScore: 0,
       verticalScore: 0,
+      nonAxisScore: 0,
       orthogonalityScore: 0,
     }
   }
@@ -63,6 +107,15 @@ export function calculateOrientationEvidence(
     ORTHOGONAL_DETECTION_THRESHOLDS.evidenceBalanceFloor +
     (1 - ORTHOGONAL_DETECTION_THRESHOLDS.evidenceBalanceFloor) * balance
   const continuity = (horizontalScore + verticalScore) / 2
+  const nonAxisScore = calculateNonAxisGradientScore(values, width, height)
+  const nonAxisRange =
+    ORTHOGONAL_DETECTION_THRESHOLDS.nonAxisGradientRejection -
+    ORTHOGONAL_DETECTION_THRESHOLDS.nonAxisGradientTolerance
+  const nonAxisPenalty = 1 - clamp01(
+    (nonAxisScore -
+      ORTHOGONAL_DETECTION_THRESHOLDS.nonAxisGradientTolerance) /
+      nonAxisRange,
+  )
 
   return {
     width,
@@ -73,6 +126,9 @@ export function calculateOrientationEvidence(
     verticalEnergy: verticalScore,
     horizontalScore,
     verticalScore,
-    orthogonalityScore: clamp01(continuity * balanceFactor),
+    nonAxisScore,
+    orthogonalityScore: clamp01(
+      continuity * balanceFactor * nonAxisPenalty,
+    ),
   }
 }

@@ -23,6 +23,7 @@ const drawLine = (
   fromY: number,
   toX: number,
   toY: number,
+  thickness = 1,
 ): void => {
   let x = Math.round(fromX)
   let y = Math.round(fromY)
@@ -35,8 +36,18 @@ const drawLine = (
   let error = deltaX - deltaY
 
   while (true) {
-    if (x >= 0 && x < mask.width && y >= 0 && y < mask.height) {
-      mask.values[y * mask.width + x] = 1
+    const radius = Math.floor(thickness / 2)
+    for (let paintY = y - radius; paintY <= y + radius; paintY += 1) {
+      for (let paintX = x - radius; paintX <= x + radius; paintX += 1) {
+        if (
+          paintX >= 0 &&
+          paintX < mask.width &&
+          paintY >= 0 &&
+          paintY < mask.height
+        ) {
+          mask.values[paintY * mask.width + paintX] = 1
+        }
+      }
     }
     if (x === endX && y === endY) {
       break
@@ -62,9 +73,18 @@ const diagonalMask = (size: number): BinaryMask => {
   return { width: size, height: size, values }
 }
 
-const hexagonalMask = (): BinaryMask => {
-  const size = 220
-  const radius = 14
+const hexagonalMask = (
+  options: {
+    scale?: number
+    thickness?: number
+    translateX?: number
+    translateY?: number
+    missingEvery?: number
+  } = {},
+): BinaryMask => {
+  const scale = options.scale ?? 1
+  const size = Math.ceil(220 * scale)
+  const radius = 14 * scale
   const mask = {
     width: size,
     height: size,
@@ -73,9 +93,13 @@ const hexagonalMask = (): BinaryMask => {
   const verticalStep = Math.sqrt(3) * radius
   for (let column = 0; column < 9; column += 1) {
     for (let row = 0; row < 8; row += 1) {
-      const centerX = 20 + column * radius * 1.5
+      const centerX =
+        20 * scale +
+        (options.translateX ?? 0) +
+        column * radius * 1.5
       const centerY =
-        20 +
+        20 * scale +
+        (options.translateY ?? 0) +
         row * verticalStep +
         (column % 2 === 0 ? 0 : verticalStep / 2)
       const vertices = Array.from({ length: 6 }, (_, index) => {
@@ -88,11 +112,76 @@ const hexagonalMask = (): BinaryMask => {
       for (let index = 0; index < vertices.length; index += 1) {
         const from = vertices[index]
         const to = vertices[(index + 1) % vertices.length]
+        const segmentIndex = (column * 8 + row) * 6 + index
+        const missing =
+          (options.missingEvery ?? 0) > 0 &&
+          segmentIndex % (options.missingEvery ?? 1) === 0
+        if (from && to && !missing) {
+          drawLine(
+            mask,
+            from[0],
+            from[1],
+            to[0],
+            to[1],
+            options.thickness ?? 1,
+          )
+        }
+      }
+    }
+  }
+  return mask
+}
+
+const diamondPatternMask = (): BinaryMask => {
+  const size = 190
+  const mask = {
+    width: size,
+    height: size,
+    values: new Uint8Array(size * size),
+  }
+  const radius = 12
+  for (let centerY = 18; centerY < size - 12; centerY += 24) {
+    for (let centerX = 18; centerX < size - 12; centerX += 24) {
+      const points = [
+        [centerX, centerY - radius],
+        [centerX + radius, centerY],
+        [centerX, centerY + radius],
+        [centerX - radius, centerY],
+      ] as const
+      for (let index = 0; index < points.length; index += 1) {
+        const from = points[index]
+        const to = points[(index + 1) % points.length]
         if (from && to) {
           drawLine(mask, from[0], from[1], to[0], to[1])
         }
       }
     }
+  }
+  return mask
+}
+
+const angledLinePatternMask = (angleDegrees: number): BinaryMask => {
+  const size = 180
+  const mask = {
+    width: size,
+    height: size,
+    values: new Uint8Array(size * size),
+  }
+  const angle = angleDegrees * Math.PI / 180
+  const directionX = Math.cos(angle)
+  const directionY = Math.sin(angle)
+  const normalX = -directionY
+  const normalY = directionX
+  for (let offset = -100; offset <= 100; offset += 16) {
+    const centerX = size / 2 + normalX * offset
+    const centerY = size / 2 + normalY * offset
+    drawLine(
+      mask,
+      centerX - directionX * size,
+      centerY - directionY * size,
+      centerX + directionX * size,
+      centerY + directionY * size,
+    )
   }
   return mask
 }
@@ -241,6 +330,25 @@ describe('detectOrthogonalMaze', () => {
     expect(result.detected).toBe(false)
     expectAxisLineInvariant(result.horizontal)
     expectAxisLineInvariant(result.vertical)
+  })
+
+  it.each([
+    ['蜂窝缩放 0.8 倍', hexagonalMask({ scale: 0.8 })],
+    ['蜂窝缩放 1.2 倍', hexagonalMask({ scale: 1.2 })],
+    ['蜂窝墙宽 3 像素', hexagonalMask({ thickness: 3 })],
+    ['蜂窝平移 1 像素', hexagonalMask({ translateX: 1, translateY: 1 })],
+    ['蜂窝平移 2 像素', hexagonalMask({ translateX: 2, translateY: 2 })],
+    ['蜂窝局部缺段', hexagonalMask({ missingEvery: 7 })],
+    ['菱形周期结构', diamondPatternMask()],
+    ['30 度斜线', angledLinePatternMask(30)],
+    ['45 度斜线', angledLinePatternMask(45)],
+    ['60 度斜线', angledLinePatternMask(60)],
+  ])('%s 不通过正交检测', (_name, mask) => {
+    const result = detectOrthogonalMaze(mask)
+    expect(result.detected).toBe(false)
+    expect(result.confidence).toBeLessThan(
+      ORTHOGONAL_DETECTION_DEFAULTS.minimumOverallConfidence,
+    )
   })
 
   it('正交门控在阈值以下为零并始终限制在 0 到 1', () => {

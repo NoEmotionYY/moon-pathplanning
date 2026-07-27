@@ -34,6 +34,8 @@ export const ORTHOGONAL_DETECTION_WEIGHTS = {
 
 export const ORTHOGONAL_DETECTION_THRESHOLDS = {
   evidenceBalanceFloor: 0.25,
+  nonAxisGradientTolerance: 0.28,
+  nonAxisGradientRejection: 0.38,
   ambiguousPitchScoreGap: 0.06,
   minimumPitchMatchRatio: 0.55,
   minimumObservedBandCoverage: 0.85,

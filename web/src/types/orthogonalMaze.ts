@@ -79,6 +79,7 @@ export interface OrientationEvidence {
   verticalEnergy: number
   horizontalScore: number
   verticalScore: number
+  nonAxisScore: number
   orthogonalityScore: number
 }
 
