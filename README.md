@@ -3,6 +3,10 @@
 Moon PathPlanning is a reusable MoonBit path planning library for grid search,
 graph primitives, examples, tests, CLI demos, SVG output, and HTML output.
 
+仓库同时提供一个可部署的 Vue 3 路径规划可视化前端。它在 Web Worker 中调用
+MoonBit JavaScript target 生成的结构化 Bridge，不使用 TypeScript 重写算法，也不解析
+CLI 普通文本输出。
+
 ## 项目简介
 
 项目面向机器人路径规划、游戏地图寻路、网格导航、算法教学和确定性仿真。初版先
@@ -140,6 +144,62 @@ RS-APSO 基础能力、LPA*/D* Lite 阶段入口、连续几何、基础 RRT/RRT
 `moon fmt --check`、`moon info`、`moon check --deny-warn` 和
 `moon test --deny-warn`，并运行 CLI、示例、native JSON、HTML 导出和 benchmark smoke test。
 当前 CI 通过官方安装脚本获取 MoonBit 稳定工具链；如官方脚本后续提供可靠版本固定参数，可再切换为固定版本。
+
+## Web 可视化
+
+`web/` 提供 Vue 3、TypeScript、Vite、Pinia 和原生 SVG 构建的交互式路径规划界面：
+
+- 编辑 5×5 到 60×60 网格，设置障碍、起终点和 2/4/8 地形代价；
+- 选择经典搜索、增量规划阶段入口、群智能与采样规划共 12 种算法；
+- 在 Web Worker 中调用 MoonBit `plan_json`，显示连续 SVG 路径、结果指标与经典搜索回放；
+- BFS、DFS、Dijkstra 和 A 星由 MoonBit 记录真实的 discovered/expanded 事件，前端支持暂停、单步、seek 和 0.5×～8× 回放；
+- 导入/导出 `moon-pathplanning.grid.v1`，加载仓库 5 个原始示例；
+- 支持深浅主题、桌面/移动响应式布局、键盘焦点和减少动画。
+
+本地启动与验证：
+
+```bash
+cd web
+npm install
+npm run dev
+npm run type-check
+npm run test
+npm run build
+```
+
+`npm run dev`、`type-check` 和 `build` 会先执行 `web/scripts/build-bridge.mjs`：
+
+```text
+Vue → plannerWorkerClient → planner.worker.ts
+    → MoonBit plan_json → grid_from_json → planner.plan_with_trace
+    → TracedPathResult JSON → trace-batch → request/map/algorithm 校验 → RAF 回放
+```
+
+MoonBit Bridge 也可独立检查：
+
+```bash
+moon check web_bridge --target js
+moon test web_bridge --target js
+moon build web_bridge_js --target js --release
+```
+
+当前 `web_bridge` 是可独立测试的结构化接口包；`web_bridge_js` 使用仓库工具链兼容的
+executable-style JS linker 与显式 `exports: ["plan_json"]` 生成 ESM，空 `main` 只满足
+链接器要求。Bridge 的输入输出均为稳定 JSON 字符串。BFS、DFS、Dijkstra 与 A 星使用
+各自的 `*_with_trace` 入口在 MoonBit 搜索循环内记录真实顺序；普通 Planner API 保持
+不变且不承担 Trace 开销。Worker 当前把一次返回的记录按 100 个事件分批发给主线程，
+协议已可兼容后续真正的增量 `trace-batch`，但当前不是边计算边推送。
+
+LPA* 与 D* Lite 在 Web 中明确标注为“阶段版”。统一 `PathResult` 当前未暴露的迭代数和
+采样树节点数显示为 `—`。详细前端架构、已知限制与命令见 `web/README.md`。
+
+Vite 已将 `base` 配置为 `/moon-pathplanning/`，并使用 Hash Router 避免 Pages 刷新
+回退问题。`.github/workflows/deploy-pages.yml` 会在 `main` 分支构建 MoonBit Bridge、
+运行前端测试并部署：
+
+```text
+https://noemotionyy.github.io/moon-pathplanning/
+```
 
 ## 可视化说明
 

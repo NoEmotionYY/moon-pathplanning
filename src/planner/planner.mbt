@@ -104,3 +104,22 @@ pub fn plan(
     RrtStar => plan_rrt_star(map)
   }
 }
+
+///|
+/// Web-facing traced planning keeps the existing low-overhead Planner API
+/// unchanged. Algorithms without recorded trace return the normal result with
+/// `supported = false`.
+pub fn plan_with_trace(
+  map : @grid.GridMap,
+  algorithm : AlgorithmType,
+  options : PlannerOptions,
+) -> @algorithms.TracedPathResult {
+  match algorithm {
+    Bfs => @algorithms.bfs_with_trace(map, options.movement)
+    Dfs => @algorithms.dfs_with_trace(map, options.movement)
+    Dijkstra => @algorithms.dijkstra_with_trace(map, options.movement)
+    AStar =>
+      @algorithms.astar_with_trace(map, options.movement, options.heuristic)
+    _ => @algorithms.without_trace(plan(map, algorithm, options))
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "moon-pathplanning-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "bridge:build": "node scripts/build-bridge.mjs",
+    "predev": "npm run bridge:build",
+    "dev": "vite",
+    "pretype-check": "npm run bridge:build",
+    "type-check": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "prebuild": "npm run bridge:build",
+    "build": "npm run type-check && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.27.0",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@types/node": "^22.10.2",
+    "jsdom": "^25.0.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^3.0.5",
+    "vue-tsc": "^3.3.8"
+  }
+}

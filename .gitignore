@@ -8,3 +8,8 @@ Thumbs.db
 *.core
 *.log
 docs/codex-execution-log.md
+web/node_modules/
+web/node_modules.incomplete/
+web/dist/
+web/src/generated/*.js
+web/public/examples/*.json

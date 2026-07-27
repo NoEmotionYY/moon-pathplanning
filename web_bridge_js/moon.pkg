@@ -1,0 +1,8 @@
+import {
+  "NoEmotionYY/moon-pathplanning/web_bridge" @bridge,
+}
+
+options(
+  "is-main": true,
+  link: { "js": { "exports": [ "plan_json" ], "format": "esm" } },
+)

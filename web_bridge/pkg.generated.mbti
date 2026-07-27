@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "NoEmotionYY/moon-pathplanning/web_bridge"
+
+import {
+  "NoEmotionYY/moon-pathplanning/src/core",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn plan_json(String) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct SearchTrace {
+  result : @core.PathResult
+  visited_order : Array[@core.Point]
+  expanded_order : Array[@core.Point]
+  frames : Array[TraceFrame]
+} derive(@debug.Debug)
+
+pub(all) struct TraceFrame {
+  index : Int
+  visited : Array[@core.Point]
+  expanded : Array[@core.Point]
+  frontier : Array[@core.Point]
+  current : @core.Point?
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+
