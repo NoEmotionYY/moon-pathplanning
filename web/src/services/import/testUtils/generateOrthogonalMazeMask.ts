@@ -5,6 +5,12 @@ import type {
   MazePassageDefinition,
 } from '@/types/mazeTopology'
 
+export interface OuterOpeningDefinition {
+  side: 'top' | 'right' | 'bottom' | 'left'
+  cellIndex: number
+  widthInCells?: number
+}
+
 export interface OrthogonalMazeMaskOptions {
   rows: number
   columns: number
@@ -17,10 +23,7 @@ export interface OrthogonalMazeMaskOptions {
   noisePixels?: number
   missingSegmentRatio?: number
   missingWallSegments?: number
-  openings?: boolean | Array<{
-    side: 'top' | 'right' | 'bottom' | 'left'
-    cellIndex: number
-  }>
+  openings?: boolean | OuterOpeningDefinition[]
 }
 
 export type GeneratedMazeOptions = OrthogonalMazeMaskOptions
@@ -55,6 +58,71 @@ const fillRectangle = (
   for (let row = startY; row < endY; row += 1) {
     values.fill(value, row * width + startX, row * width + endX)
   }
+}
+
+const eraseOuterOpening = (
+  mask: BinaryMask,
+  options: {
+    rows: number
+    columns: number
+    cellWidth: number
+    cellHeight: number
+    wallThickness: number
+    padding: number
+  },
+  opening: OuterOpeningDefinition,
+): void => {
+  const horizontal = opening.side === 'top' || opening.side === 'bottom'
+  const cellCount = horizontal ? options.columns : options.rows
+  if (cellCount <= 0) {
+    return
+  }
+  const startIndex = Math.max(
+    0,
+    Math.min(cellCount - 1, opening.cellIndex),
+  )
+  const requestedWidth = Math.max(
+    1,
+    Math.floor(opening.widthInCells ?? 1),
+  )
+  const widthInCells = Math.min(requestedWidth, cellCount - startIndex)
+  if (horizontal) {
+    const y = opening.side === 'top'
+      ? options.padding
+      : options.padding + options.rows * options.cellHeight
+    fillRectangle(
+      mask.values,
+      mask.width,
+      mask.height,
+      options.padding + startIndex * options.cellWidth +
+        options.wallThickness,
+      y,
+      Math.max(
+        1,
+        widthInCells * options.cellWidth - options.wallThickness,
+      ),
+      options.wallThickness,
+      0,
+    )
+    return
+  }
+  const x = opening.side === 'left'
+    ? options.padding
+    : options.padding + options.columns * options.cellWidth
+  fillRectangle(
+    mask.values,
+    mask.width,
+    mask.height,
+    x,
+    options.padding + startIndex * options.cellHeight +
+      options.wallThickness,
+    options.wallThickness,
+    Math.max(
+      1,
+      widthInCells * options.cellHeight - options.wallThickness,
+    ),
+    0,
+  )
 }
 
 export function generateOrthogonalMazeMask(
@@ -180,42 +248,18 @@ export function generateOrthogonalMazeMask(
 
   if (Array.isArray(options.openings)) {
     for (const opening of options.openings) {
-      const horizontal = opening.side === 'top' || opening.side === 'bottom'
-      const cellSize = horizontal ? cellWidth : cellHeight
-      const cellCount = horizontal ? options.columns : options.rows
-      const cellIndex = Math.max(0, Math.min(cellCount - 1, opening.cellIndex))
-      const openingSize = Math.max(1, Math.floor(cellSize / 3))
-      const along = padding + cellIndex * cellSize +
-        Math.floor((cellSize - openingSize) / 2)
-      if (opening.side === 'top' || opening.side === 'bottom') {
-        const y = opening.side === 'top'
-          ? padding
-          : padding + options.rows * cellHeight
-        fillRectangle(
-          values,
-          width,
-          height,
-          along,
-          y,
-          openingSize,
+      eraseOuterOpening(
+        { width, height, values },
+        {
+          rows: options.rows,
+          columns: options.columns,
+          cellWidth,
+          cellHeight,
           wallThickness,
-          0,
-        )
-      } else {
-        const x = opening.side === 'left'
-          ? padding
-          : padding + options.columns * cellWidth
-        fillRectangle(
-          values,
-          width,
-          height,
-          x,
-          along,
-          wallThickness,
-          openingSize,
-          0,
-        )
-      }
+          padding,
+        },
+        opening,
+      )
     }
   }
 
@@ -242,6 +286,67 @@ const cellInRange = (
   cell.row < rows &&
   cell.column >= 0 &&
   cell.column < columns
+
+export function generateSpanningMazePassages(
+  rows: number,
+  columns: number,
+  seed = 2026,
+): MazePassageDefinition[] {
+  const candidates: MazePassageDefinition[] = []
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      if (column + 1 < columns) {
+        candidates.push({
+          from: { row, column },
+          to: { row, column: column + 1 },
+        })
+      }
+      if (row + 1 < rows) {
+        candidates.push({
+          from: { row, column },
+          to: { row: row + 1, column },
+        })
+      }
+    }
+  }
+  const random = createRandom(seed)
+  for (let index = candidates.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(random() * (index + 1))
+    const current = candidates[index]
+    const replacement = candidates[target]
+    if (current && replacement) {
+      candidates[index] = replacement
+      candidates[target] = current
+    }
+  }
+  const parents = Int32Array.from(
+    { length: rows * columns },
+    (_, index) => index,
+  )
+  const find = (value: number): number => {
+    let root = value
+    while ((parents[root] ?? root) !== root) {
+      root = parents[root] ?? root
+    }
+    let current = value
+    while ((parents[current] ?? current) !== root) {
+      const next = parents[current] ?? root
+      parents[current] = root
+      current = next
+    }
+    return root
+  }
+  const passages: MazePassageDefinition[] = []
+  for (const candidate of candidates) {
+    const from = find(cellIndex(candidate.from, columns))
+    const to = find(cellIndex(candidate.to, columns))
+    if (from !== to) {
+      parents[to] = from
+      passages.push(candidate)
+    }
+  }
+  return passages
+}
 
 export function generateMazeMaskFromPassages(
   options: GeneratedMazeOptions,
@@ -316,43 +421,18 @@ export function generateMazeMaskFromPassages(
 
   if (Array.isArray(options.openings)) {
     for (const opening of options.openings) {
-      if (opening.side === 'top' || opening.side === 'bottom') {
-        const column = Math.max(
-          0,
-          Math.min(options.columns - 1, opening.cellIndex),
-        )
-        const y = opening.side === 'top'
-          ? padding
-          : padding + options.rows * cellHeight
-        fillRectangle(
-          mask.values,
-          mask.width,
-          mask.height,
-          padding + column * cellWidth + wallThickness,
-          y,
-          Math.max(1, cellWidth - wallThickness),
+      eraseOuterOpening(
+        mask,
+        {
+          rows: options.rows,
+          columns: options.columns,
+          cellWidth,
+          cellHeight,
           wallThickness,
-          0,
-        )
-      } else {
-        const row = Math.max(
-          0,
-          Math.min(options.rows - 1, opening.cellIndex),
-        )
-        const x = opening.side === 'left'
-          ? padding
-          : padding + options.columns * cellWidth
-        fillRectangle(
-          mask.values,
-          mask.width,
-          mask.height,
-          x,
-          padding + row * cellHeight + wallThickness,
-          wallThickness,
-          Math.max(1, cellHeight - wallThickness),
-          0,
-        )
-      }
+          padding,
+        },
+        opening,
+      )
     }
   }
 
