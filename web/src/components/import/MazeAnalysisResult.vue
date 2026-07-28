@@ -26,6 +26,7 @@ const props = defineProps<{
   needsLowConfidenceConfirmation?: boolean
   entranceSelectionSource?: EntranceSelectionSource
   appliedEntranceSelection?: ManualEntranceSelection | null
+  disabled?: boolean
 }>()
 const emit = defineEmits<{
   selectEntrance: [role: EntranceRole, candidateId: string]
@@ -166,7 +167,7 @@ const resultRoleSummary = computed(() => {
       <div class="manual-selection-buttons">
         <BaseButton
           variant="ghost"
-          :disabled="!hasManualChoice"
+          :disabled="disabled || !hasManualChoice"
           @click="emit('clearSelection')"
         >
           清空选择
@@ -174,6 +175,7 @@ const resultRoleSummary = computed(() => {
         <BaseButton
           variant="secondary"
           :disabled="
+            disabled ||
             !manualSelection?.startCandidateId ||
             !manualSelection?.goalCandidateId
           "
@@ -183,7 +185,7 @@ const resultRoleSummary = computed(() => {
         </BaseButton>
         <BaseButton
           variant="primary"
-          :disabled="!canApplyManualSelection"
+          :disabled="disabled || !canApplyManualSelection"
           @click="emit('applySelection')"
         >
           应用入口选择
@@ -200,12 +202,14 @@ const resultRoleSummary = computed(() => {
         <div>
           <BaseButton
             variant="primary"
+            :disabled="disabled"
             @click="emit('confirmLowConfidence')"
           >
             仍然使用
           </BaseButton>
           <BaseButton
             variant="ghost"
+            :disabled="disabled"
             @click="emit('cancelLowConfidence')"
           >
             取消
@@ -223,7 +227,11 @@ const resultRoleSummary = computed(() => {
         <span>起点：<code>{{ resultRoleSummary.start }}</code></span>
         <span>终点：<code>{{ resultRoleSummary.goal }}</code></span>
       </div>
-      <BaseButton variant="secondary" @click="emit('swapApplied')">
+      <BaseButton
+        variant="secondary"
+        :disabled="disabled"
+        @click="emit('swapApplied')"
+      >
         交换起点终点
       </BaseButton>
     </section>

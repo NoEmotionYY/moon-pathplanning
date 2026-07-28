@@ -70,6 +70,23 @@ describe('gridStoreBulkApply', () => {
     expect(grid.toDocument()).toEqual(original)
   })
 
+  it('批量应用和回滚都会清除旧 hoveredCell', () => {
+    const grid = useGridStore()
+    const original = grid.toDocument()
+    grid.hoveredCell = { x: 19, y: 19 }
+
+    grid.applyGridMapDocument(createDocument(10))
+    expect(grid.hoveredCell).toBeNull()
+
+    grid.hoveredCell = { x: 9, y: 9 }
+    grid.restoreGridMapSnapshot({
+      document: original,
+      mapVersion: 0,
+      dirty: false,
+    })
+    expect(grid.hoveredCell).toBeNull()
+  })
+
   it('记录 59×59 批量应用耗时，不设置脆弱阈值', () => {
     const grid = useGridStore()
     const document = createDocument(59)

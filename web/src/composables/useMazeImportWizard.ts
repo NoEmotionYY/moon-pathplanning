@@ -23,6 +23,14 @@ import type {
 } from '@/types/mazeImportSelection'
 import type { MazeImportPipelineProgress } from '@/types/mazeImportPipeline'
 import type { MazeImportWorkerResult } from '@/types/mazeImportWorker'
+import type {
+  MazeImportConfirmationSummary,
+} from '@/types/mazeImportApplication'
+import type {
+  MapImportCapability,
+  MapImportTransactionError,
+  MapImportTransactionResult,
+} from '@/types/mapImportTransaction'
 import { assertImageMatrix } from '@/services/import/imageDataValidation'
 import {
   swapManualEntranceSelection as swapSelection,
@@ -35,12 +43,21 @@ import {
   type UseMazeImportAnalysis,
 } from './useMazeImportAnalysis'
 import { useRasterImageImport } from './useRasterImageImport'
+import {
+  useMazeMapApplication,
+  type UseMazeMapApplication,
+} from './useMazeMapApplication'
+import { useGridStore } from '@/stores/grid'
 
 export type MazeImportViewStep = 'source' | 'analyzing' | 'result'
 export type RasterImageImport = ReturnType<typeof useRasterImageImport>
 export interface UseMazeImportWizardOptions {
   raster?: RasterImageImport
   analysisFactory?: MazeImportAnalysisFactory
+  grid?: Pick<ReturnType<typeof useGridStore>, 'version'>
+  applicationFactory?: (
+    document: Readonly<Ref<import('@/types/grid').GridMapDocument | null>>,
+  ) => UseMazeMapApplication
 }
 
 export interface UseMazeImportWizard {
@@ -52,6 +69,19 @@ export interface UseMazeImportWizard {
   isApplyingEntranceSelection: Readonly<Ref<boolean>>
   needsLowConfidenceConfirmation: Readonly<Ref<boolean>>
   isResultStale: Readonly<Ref<boolean>>
+  analysisBaseMapVersion: Readonly<Ref<number | null>>
+  analysisResultVersion: Readonly<Ref<number>>
+  isMapPreviewStale: Readonly<ComputedRef<boolean>>
+  canShowImportAction: Readonly<ComputedRef<boolean>>
+  canConfirmImport: Readonly<ComputedRef<boolean>>
+  isImportConfirmationOpen: Readonly<ComputedRef<boolean>>
+  isApplyingMap: Readonly<ComputedRef<boolean>>
+  importApplicationError:
+    Readonly<Ref<MapImportTransactionError | null>>
+  importApplicationWarnings: Readonly<Ref<readonly string[]>>
+  importCapability: Readonly<ComputedRef<MapImportCapability | null>>
+  importConfirmationSummary:
+    Readonly<ComputedRef<MazeImportConfirmationSummary | null>>
   analysisStatus: Readonly<Ref<MazeImportAnalysisStatus>>
   progress: Readonly<ShallowRef<MazeImportPipelineProgress | null>>
   result: Readonly<ShallowRef<MazeImportWorkerResult | null>>
@@ -71,6 +101,9 @@ export interface UseMazeImportWizard {
   confirmLowConfidenceSelection(): Promise<void>
   cancelLowConfidenceConfirmation(): void
   swapAppliedEntrances(): Promise<void>
+  openImportConfirmation(): void
+  cancelImportConfirmation(): void
+  confirmMapImport(): Promise<MapImportTransactionResult | null>
   returnToSource(): void
   invalidateResult(): void
   resetWizard(): void
@@ -140,10 +173,13 @@ export function useMazeImportWizard(
   options: UseMazeImportWizardOptions = {},
 ): UseMazeImportWizard {
   const raster = options.raster ?? useRasterImageImport()
+  const grid = options.grid ?? useGridStore()
   const analysisFactory =
     options.analysisFactory ?? useMazeImportAnalysis
   const step = ref<MazeImportViewStep>('source')
   const isResultStale = ref(false)
+  const analysisBaseMapVersion = ref<number | null>(null)
+  const analysisResultVersion = ref(0)
   const analysisStatus = ref<MazeImportAnalysisStatus>('idle')
   const progress = shallowRef<MazeImportPipelineProgress | null>(null)
   const result = shallowRef<MazeImportWorkerResult | null>(null)
@@ -159,10 +195,59 @@ export function useMazeImportWizard(
   let resultIdentity = 0
   let analyzedTransform: Readonly<ImageTransformState> | null = null
   let restoreState: RestoreState | null = null
+  const resultDocument = computed(() => result.value?.document ?? null)
+  const application = (
+    options.applicationFactory ?? useMazeMapApplication
+  )(resultDocument)
+  const isMapPreviewStale = computed(
+    () =>
+      analysisBaseMapVersion.value !== null &&
+      grid.version !== analysisBaseMapVersion.value,
+  )
+  const canShowImportAction = computed(
+    () =>
+      step.value === 'result' &&
+      analysisStatus.value === 'success' &&
+      result.value?.status === 'success' &&
+      result.value.document !== null,
+  )
+  const canConfirmImport = computed(
+    () =>
+      canShowImportAction.value &&
+      analysisBaseMapVersion.value !== null &&
+      !isMapPreviewStale.value &&
+      !isResultStale.value &&
+      analysisStatus.value !== 'running' &&
+      !isApplyingEntranceSelection.value &&
+      !application.isApplying.value &&
+      application.capability.value?.allowed === true,
+  )
+  const isImportConfirmationOpen = computed(
+    () => application.status.value === 'confirming',
+  )
+  const importConfirmationSummary = computed<
+    MazeImportConfirmationSummary | null
+  >(() => {
+    const document = resultDocument.value
+    const previousMapVersion = analysisBaseMapVersion.value
+    if (!document || previousMapVersion === null) return null
+    return {
+      width: document.width,
+      height: document.height,
+      obstacleCount: document.obstacles.length,
+      terrainCount: document.terrain.length,
+      start: [document.start[0], document.start[1]],
+      goal: [document.goal[0], document.goal[1]],
+      movement: document.movement,
+      previousMapVersion,
+    }
+  })
 
   const canAnalyze = computed(
     () =>
       analysisStatus.value !== 'running' &&
+      !application.isApplying.value &&
+      application.status.value !== 'confirming' &&
       !raster.isLoading.value &&
       raster.error.value === null &&
       isRasterFileType(raster.fileType.value) &&
@@ -177,7 +262,8 @@ export function useMazeImportWizard(
       (
         analysisStatus.value === 'manual-input-required' ||
         analysisStatus.value === 'failed'
-      ),
+      ) &&
+      !application.isApplying.value,
     )
   })
   const manualSelectionValidation = computed(() => {
@@ -190,7 +276,8 @@ export function useMazeImportWizard(
     () =>
       canSelectEntrances.value &&
       manualSelectionValidation.value.valid &&
-      !isApplyingEntranceSelection.value,
+      !isApplyingEntranceSelection.value &&
+      !application.isApplying.value,
   )
 
   const ensureAnalysis = (): UseMazeImportAnalysis => {
@@ -213,6 +300,9 @@ export function useMazeImportWizard(
     result.value = null
     analysisError.value = null
     analyzedTransform = null
+    analysisBaseMapVersion.value = null
+    analysisResultVersion.value += 1
+    application.resetApplication()
     resetSelectionState()
   }
 
@@ -248,12 +338,17 @@ export function useMazeImportWizard(
   }
 
   const startAnalysis = async (): Promise<void> => {
-    if (!canAnalyze.value || analysisStatus.value === 'running') return
+    if (
+      !canAnalyze.value ||
+      analysisStatus.value === 'running' ||
+      application.isApplying.value
+    ) return
     const decoded = raster.decodedImage.value
     if (!decoded) return
 
     const currentOperation = ++operationId
     const snapshot = transformSnapshot(raster.transformState.value)
+    const baseMapVersion = grid.version
     const service = ensureAnalysis()
     service.reset()
     step.value = 'analyzing'
@@ -262,6 +357,9 @@ export function useMazeImportWizard(
     result.value = null
     analysisError.value = null
     analyzedTransform = snapshot
+    analysisBaseMapVersion.value = baseMapVersion
+    analysisResultVersion.value += 1
+    application.resetApplication()
     resetSelectionState()
     isResultStale.value = false
 
@@ -276,6 +374,7 @@ export function useMazeImportWizard(
     if (completed) {
       result.value = completed
       resultIdentity += 1
+      analysisResultVersion.value += 1
       step.value = 'result'
       if (
         completed.status === 'success' &&
@@ -363,6 +462,7 @@ export function useMazeImportWizard(
     if (completed?.status === 'success') {
       result.value = completed
       resultIdentity += 1
+      analysisResultVersion.value += 1
       entranceSelectionSource.value = 'manual'
       appliedEntranceSelection.value = { ...requestedSelection }
       step.value = 'result'
@@ -372,6 +472,7 @@ export function useMazeImportWizard(
     if (completed?.status === 'manual-input-required') {
       result.value = completed
       resultIdentity += 1
+      analysisResultVersion.value += 1
       entranceSelectionSource.value = null
       appliedEntranceSelection.value = null
       step.value = 'result'
@@ -465,7 +566,12 @@ export function useMazeImportWizard(
   const swapAppliedEntrances = async (): Promise<void> => {
     const applied = appliedEntranceSelection.value
     const summary = result.value?.entranceSelection
-    if (!applied || !summary || analysisStatus.value !== 'success') return
+    if (
+      !applied ||
+      !summary ||
+      analysisStatus.value !== 'success' ||
+      application.isApplying.value
+    ) return
     const swapped = swapSelection(applied)
     const validation = validateManualEntranceSelection(swapped, summary)
     if (!validation.valid) return
@@ -499,7 +605,37 @@ export function useMazeImportWizard(
     }
   }
 
+  const openImportConfirmation = (): void => {
+    if (isMapPreviewStale.value) {
+      application.markStalePreview()
+      return
+    }
+    if (!canShowImportAction.value) return
+    application.requestConfirmation()
+  }
+
+  const cancelImportConfirmation = (): void => {
+    application.cancelConfirmation()
+  }
+
+  const confirmMapImport =
+    async (): Promise<MapImportTransactionResult | null> => {
+      const document = resultDocument.value
+      const expectedMapVersion = analysisBaseMapVersion.value
+      if (
+        !document ||
+        expectedMapVersion === null ||
+        !isImportConfirmationOpen.value ||
+        !canConfirmImport.value
+      ) {
+        if (isMapPreviewStale.value) application.markStalePreview()
+        return null
+      }
+      return application.applyDocument(document, expectedMapVersion)
+    }
+
   const invalidateResult = (): void => {
+    if (application.isApplying.value) return
     const hadCurrentAnalysis =
       analysisStatus.value === 'running' ||
       result.value !== null ||
@@ -513,6 +649,7 @@ export function useMazeImportWizard(
   }
 
   const returnToSource = (): void => {
+    if (application.isApplying.value) return
     operationId += 1
     analysis?.reset()
     clearResultState()
@@ -521,6 +658,7 @@ export function useMazeImportWizard(
   }
 
   const resetWizard = (): void => {
+    if (application.isApplying.value) return
     operationId += 1
     analysis?.reset()
     raster.reset()
@@ -530,6 +668,7 @@ export function useMazeImportWizard(
   }
 
   const disposeWizard = (): void => {
+    if (application.isApplying.value) return
     operationId += 1
     analysis?.dispose()
     analysis = null
@@ -560,6 +699,14 @@ export function useMazeImportWizard(
     { flush: 'sync' },
   )
 
+  watch(
+    isMapPreviewStale,
+    (stale) => {
+      if (stale) application.markStalePreview()
+    },
+    { flush: 'sync' },
+  )
+
   if (getCurrentScope()) onScopeDispose(disposeWizard)
 
   return {
@@ -572,6 +719,17 @@ export function useMazeImportWizard(
     needsLowConfidenceConfirmation:
       readonly(needsLowConfidenceConfirmation),
     isResultStale: readonly(isResultStale),
+    analysisBaseMapVersion: readonly(analysisBaseMapVersion),
+    analysisResultVersion: readonly(analysisResultVersion),
+    isMapPreviewStale,
+    canShowImportAction,
+    canConfirmImport,
+    isImportConfirmationOpen,
+    isApplyingMap: application.isApplying,
+    importApplicationError: application.error,
+    importApplicationWarnings: application.warnings,
+    importCapability: application.capability,
+    importConfirmationSummary,
     analysisStatus: readonly(analysisStatus),
     progress: shallowReadonly(progress),
     result: shallowReadonly(result),
@@ -589,6 +747,9 @@ export function useMazeImportWizard(
     confirmLowConfidenceSelection,
     cancelLowConfidenceConfirmation,
     swapAppliedEntrances,
+    openImportConfirmation,
+    cancelImportConfirmation,
+    confirmMapImport,
     returnToSource,
     invalidateResult,
     resetWizard,

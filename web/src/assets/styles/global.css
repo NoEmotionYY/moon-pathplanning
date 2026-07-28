@@ -1271,6 +1271,159 @@ body {
   gap: 10px;
 }
 
+.maze-import-result-panel,
+.maze-import-confirmation {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.maze-import-capability,
+.import-application-message,
+.maze-import-confirmation {
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-primary) 72%, transparent);
+}
+
+.maze-import-capability {
+  display: grid;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.maze-import-capability strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.maze-import-capability:not(.is-blocked) span {
+  color: var(--success);
+}
+
+.maze-import-capability.is-blocked {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border-color));
+}
+
+.maze-import-capability code,
+.import-application-message strong {
+  overflow-wrap: anywhere;
+  color: var(--warning);
+}
+
+.import-application-message {
+  display: grid;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.import-application-message.is-warning {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border-color));
+}
+
+.import-application-message.is-danger {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border-color));
+}
+
+.import-application-message.is-danger strong {
+  color: var(--danger);
+}
+
+.maze-import-confirmation {
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--border-color));
+}
+
+.maze-import-confirmation__heading {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.maze-import-confirmation__heading > svg {
+  flex: 0 0 auto;
+  color: var(--warning);
+}
+
+.maze-import-confirmation__heading h3,
+.maze-import-confirmation__heading p {
+  margin: 0;
+}
+
+.maze-import-confirmation__heading h3 {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.maze-import-confirmation__heading p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.maze-import-confirmation__summary {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.maze-import-confirmation__summary > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.maze-import-confirmation__summary dt,
+.maze-import-confirmation__effects small {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.maze-import-confirmation__summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.maze-import-confirmation__effects {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.maze-import-confirmation__effects strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-primary);
+}
+
+.maze-import-confirmation__effects ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.maze-import-confirmation__actions,
+.result-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .maze-analysis-progress {
   min-width: 0;
   display: grid;

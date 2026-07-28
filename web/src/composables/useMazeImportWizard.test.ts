@@ -5,6 +5,8 @@ import {
   type ShallowRef,
 } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
+import { beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import type {
   DecodedImage,
   ImageMatrix,
@@ -164,6 +166,8 @@ const createAnalysis = (
 }
 
 describe('useMazeImportWizard', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
   it('Worker 分析服务在首次识别前保持惰性', async () => {
     const factory = vi.fn(() => createAnalysis())
     const wizard = useMazeImportWizard({

@@ -122,5 +122,6 @@ const openImportModal = () => {
     :open="importModalOpen"
     @close="importModalOpen = false"
     @json-imported="syncImportedSize"
+    @image-imported="syncImportedSize"
   />
 </template>

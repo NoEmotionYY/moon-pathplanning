@@ -206,6 +206,7 @@ export const useGridStore = defineStore('grid', () => {
       dirty: options.dirty ?? false,
       version: state.value.version + (options.incrementVersion ?? true ? 1 : 0),
     }
+    hoveredCell.value = null
   }
 
   function restoreGridMapSnapshot(snapshot: GridMapImportState): void {
@@ -223,6 +224,7 @@ export const useGridStore = defineStore('grid', () => {
       dirty: snapshot.dirty,
       version: snapshot.mapVersion,
     }
+    hoveredCell.value = null
   }
 
   function loadDocument(document: GridMapDocument): void {

@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGridStore } from '@/stores/grid'
 import { usePlannerStore } from '@/stores/planner'
@@ -131,6 +138,17 @@ const handleWindowBlur = () => cancelStroke()
 watch(
   [() => grid.activeTool, width, height],
   cancelStroke,
+  { flush: 'sync' },
+)
+
+watch(
+  [width, height],
+  async () => {
+    await nextTick()
+    if (!canvas.value?.parentElement) return
+    canvas.value.parentElement.scrollLeft = 0
+    canvas.value.parentElement.scrollTop = 0
+  },
 )
 
 onMounted(() => {

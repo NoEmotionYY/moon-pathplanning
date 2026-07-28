@@ -43,6 +43,17 @@ vi.mock('@/composables/useMazeImportWizard', () => ({
     const needsLowConfidenceConfirmation = ref(false)
     const entranceSelectionSource = ref(null)
     const appliedEntranceSelection = ref(null)
+    const isApplyingMap = computed(() => false)
+    const isImportConfirmationOpen = computed(() => false)
+    const isMapPreviewStale = computed(() => false)
+    const canShowImportAction = computed(
+      () =>
+        analysisStatus.value === 'success' &&
+        result.value?.document !== null,
+    )
+    const importCapability = computed(() => null)
+    const canConfirmImport = computed(() => false)
+    const importConfirmationSummary = computed(() => null)
     const canAnalyze = computed(() => analysisStatus.value !== 'running')
     const canSelectEntrances = computed(
       () => result.value?.entranceSelection?.status === 'ambiguous',
@@ -144,6 +155,17 @@ vi.mock('@/composables/useMazeImportWizard', () => ({
       step,
       canAnalyze,
       isResultStale: ref(false),
+      analysisBaseMapVersion: ref(null),
+      analysisResultVersion: ref(0),
+      isMapPreviewStale,
+      canShowImportAction,
+      canConfirmImport,
+      isImportConfirmationOpen,
+      isApplyingMap,
+      importApplicationError: ref(null),
+      importApplicationWarnings: ref([]),
+      importCapability,
+      importConfirmationSummary,
       canSelectEntrances,
       canApplyManualSelection,
       isApplyingEntranceSelection,
@@ -170,6 +192,9 @@ vi.mock('@/composables/useMazeImportWizard', () => ({
       confirmLowConfidenceSelection: vi.fn(),
       cancelLowConfidenceConfirmation: vi.fn(),
       swapAppliedEntrances: vi.fn(),
+      openImportConfirmation: vi.fn(),
+      cancelImportConfirmation: vi.fn(),
+      confirmMapImport: vi.fn(),
       returnToSource: harness.returnToSource,
       invalidateResult: vi.fn(),
       resetWizard: vi.fn(),
