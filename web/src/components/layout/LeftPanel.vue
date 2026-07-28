@@ -14,7 +14,12 @@ import MapImportModal from '@/components/import/MapImportModal.vue'
 
 const grid = useGridStore()
 const planner = usePlannerStore()
-const { exportMap, loadExample, exampleNames } = useMapImportExport()
+const {
+  exportMap,
+  loadExample,
+  exampleNames,
+  isImporting: isLoadingExample,
+} = useMapImportExport()
 const { show } = useToast()
 const nextWidth = ref(grid.width)
 const nextHeight = ref(grid.height)
@@ -104,13 +109,23 @@ const openImportModal = () => {
       </div>
       <div class="example-row">
         <label class="sr-only" for="example-map">示例地图</label>
-        <select id="example-map" v-model="selectedExample" :disabled="planner.isRunning">
+        <select
+          id="example-map"
+          v-model="selectedExample"
+          :disabled="isLoadingExample"
+        >
           <option v-for="name in exampleNames" :key="name" :value="name">{{ name }}</option>
         </select>
-        <button :disabled="planner.isRunning" @click="openExample">加载</button>
+        <button :disabled="isLoadingExample" @click="openExample">
+          {{ isLoadingExample ? '加载中…' : '加载' }}
+        </button>
       </div>
       <div class="file-actions">
-        <BaseButton variant="ghost" :disabled="planner.isRunning" @click="openImportModal">
+        <BaseButton
+          variant="ghost"
+          :disabled="isLoadingExample"
+          @click="openImportModal"
+        >
           <FileUp :size="15" /> 导入
         </BaseButton>
         <BaseButton variant="ghost" @click="exportMap"><Download :size="15" /> 导出</BaseButton>

@@ -27,8 +27,13 @@ const emit = defineEmits<{
 }>()
 
 const activeKind = ref<'json' | 'image'>('json')
-const jsonError = ref<string | null>(null)
-const { importFile } = useMapImportExport()
+const {
+  importFile,
+  importStatus,
+  importError,
+  isImporting,
+  resetImportState,
+} = useMapImportExport()
 const { show } = useToast()
 const preferences = usePreferencesStore()
 const analysisFactory = inject(
@@ -38,41 +43,51 @@ const analysisFactory = inject(
 const wizard = useMazeImportWizard({ analysisFactory })
 const raster = wizard.raster
 const retainOpenDuringApplication = ref(false)
+const isApplicationBusy = computed(
+  () => wizard.isApplyingMap.value || isImporting.value,
+)
 const effectiveOpen = computed(
   () => props.open || retainOpenDuringApplication.value,
 )
 
 const close = () => {
-  if (wizard.isApplyingMap.value) {
+  if (isApplicationBusy.value) {
     retainOpenDuringApplication.value = true
-    show('地图正在安全替换，请稍候。', 'info')
+    show(
+      isImporting.value
+        ? 'JSON 地图正在安全读取或应用，请稍候。'
+        : '地图正在安全替换，请稍候。',
+      'info',
+    )
     return
   }
   retainOpenDuringApplication.value = false
   wizard.disposeWizard()
-  jsonError.value = null
+  resetImportState()
   activeKind.value = 'json'
   emit('close')
 }
 
 const importJson = async (file: File) => {
-  jsonError.value = null
   try {
     await importFile(file)
     emit('jsonImported')
     close()
-  } catch (error) {
-    jsonError.value = error instanceof Error ? error.message : 'JSON 地图导入失败'
+  } catch {
+    // 结构化错误由 useMapImportExport 保留，弹窗保持打开供重试。
+    if (importError.value) {
+      show(importError.value.message, 'error')
+    }
   }
 }
 
 const selectImage = async (file: File) => {
-  if (wizard.isApplyingMap.value) return
+  if (isApplicationBusy.value) return
   await raster.selectFile(file)
 }
 
 const selectKind = (kind: 'json' | 'image') => {
-  if (wizard.isApplyingMap.value) return
+  if (isApplicationBusy.value) return
   if (kind === activeKind.value) return
   if (kind === 'json') wizard.disposeWizard()
   activeKind.value = kind
@@ -91,7 +106,7 @@ const confirmImageImport = async () => {
   }
   show('迷宫地图已导入', 'success')
   wizard.disposeWizard()
-  jsonError.value = null
+  resetImportState()
   activeKind.value = 'json'
   retainOpenDuringApplication.value = false
   emit('imageImported', payload)
@@ -102,12 +117,12 @@ watch(
   () => props.open,
   (open) => {
     if (!open) {
-      if (wizard.isApplyingMap.value) {
+      if (isApplicationBusy.value) {
         retainOpenDuringApplication.value = true
         return
       }
       wizard.disposeWizard()
-      jsonError.value = null
+      resetImportState()
       activeKind.value = 'json'
       retainOpenDuringApplication.value = false
     }
@@ -120,7 +135,7 @@ watch(
     :open="effectiveOpen"
     title="导入地图"
     size="wide"
-    :close-disabled="wizard.isApplyingMap.value"
+    :close-disabled="isApplicationBusy"
     @close="close"
   >
     <div class="map-import-modal">
@@ -132,7 +147,8 @@ watch(
           :class="{ active: activeKind === 'json' }"
           :disabled="
             wizard.analysisStatus.value === 'running' ||
-            wizard.isApplyingMap.value
+            wizard.isApplyingMap.value ||
+            isImporting
           "
           @click="selectKind('json')"
         >
@@ -145,7 +161,8 @@ watch(
           :class="{ active: activeKind === 'image' }"
           :disabled="
             wizard.analysisStatus.value === 'running' ||
-            wizard.isApplyingMap.value
+            wizard.isApplyingMap.value ||
+            isImporting
           "
           @click="selectKind('image')"
         >
@@ -157,11 +174,26 @@ watch(
         <p>继续使用现有 moon-pathplanning.grid.v1 校验和导入流程。</p>
         <FileDropZone
           accept=".json,application/json"
+          :disabled="isImporting || wizard.isApplyingMap.value"
           label="选择或拖入 JSON 地图"
           hint="最大 1 MB；导入成功后会替换当前地图"
           @select="importJson"
         />
-        <div v-if="jsonError" class="import-error-card">{{ jsonError }}</div>
+        <div
+          v-if="isImporting"
+          class="import-application-message"
+          role="status"
+        >
+          {{
+            importStatus === 'reading'
+              ? '正在读取 JSON…'
+              : '正在应用地图…'
+          }}
+        </div>
+        <div v-else-if="importError" class="import-error-card" role="alert">
+          <strong>{{ importError.code }}</strong>
+          <span>{{ importError.message }}</span>
+        </div>
       </section>
 
       <section v-else class="import-image-panel">
@@ -374,7 +406,13 @@ watch(
 
       <footer class="import-modal-footer">
         <template v-if="activeKind === 'json'">
-          <BaseButton variant="ghost" @click="close">取消</BaseButton>
+          <BaseButton
+            variant="ghost"
+            :disabled="isImporting"
+            @click="close"
+          >
+            {{ isImporting ? '处理中…' : '取消' }}
+          </BaseButton>
         </template>
         <template v-else-if="wizard.step.value === 'source'">
           <BaseButton variant="ghost" @click="close">取消</BaseButton>
