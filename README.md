@@ -1,26 +1,37 @@
 # Moon PathPlanning
 
-Moon PathPlanning is a reusable MoonBit path planning library for grid search,
-graph primitives, examples, tests, CLI demos, SVG output, and HTML output.
+Moon PathPlanning 是一个以 MoonBit 为核心的路径规划工程项目，提供网格搜索、采样
+规划、动态避障基础能力、CLI、benchmark、SVG/HTML 输出和 Vue 3 可视化前端。
 
-仓库同时提供一个可部署的 Vue 3 路径规划可视化前端。它在 Web Worker 中调用
-MoonBit JavaScript target 生成的结构化 Bridge，不使用 TypeScript 重写算法，也不解析
-CLI 普通文本输出。
+Web 前端通过 Web Worker 调用 MoonBit JavaScript Bridge，不使用 TypeScript 重写规划
+算法；它还可以把 PNG、JPEG、WebP 正交迷宫图片识别为可预览、可确认导入的
+`GridMapDocument`。
 
 ## 项目简介
 
-项目面向机器人路径规划、游戏地图寻路、网格导航、算法教学和确定性仿真。初版先
-交付二维网格地图、统一结果模型和可审查的经典搜索算法，为后续增量规划和采样规划
-保留可复用边界。
+项目面向机器人路径规划、游戏地图寻路、网格导航、算法教学和确定性仿真。仓库同时
+包含可复用的 MoonBit 路径规划库、CLI 与 benchmark 工具、SVG/HTML 输出，以及用于
+编辑地图、观察搜索过程和导入图片迷宫的浏览器应用。
+
+## 在线演示
+
+[https://noemotionyy.github.io/moon-pathplanning/](https://noemotionyy.github.io/moon-pathplanning/)
+
+演示站点由 GitHub Pages 部署。浏览器首次加载时需要获取构建后的 Planner Worker、
+Maze Import Worker 和 MoonBit Bridge 资源；推荐使用现代 Chromium、Firefox 或
+Safari。
 
 ## 项目背景与引用
 
 本项目参考 `zhm-real/PathPlanning` 的路径规划主题、算法思想和案例方向。参考项目
 采用 MIT License；本仓库同样使用 MIT License，并在 MoonBit 原生包结构中重新组织
 数据模型、测试、Planner 和可视化能力，不直接照搬 Python 脚本式实现。
-完整上游来源、许可证和参考范围说明见 `docs/upstream.md`。
+完整上游来源、许可证和参考范围说明见
+[docs/upstream.md](docs/upstream.md)。
 
-## 功能列表
+## 核心能力
+
+### MoonBit 核心
 
 - `Point` / `Coord`、搜索状态、搜索错误和统一 `PathResult`。
 - `GridMap`、四方向和八方向移动、障碍物、障碍物膨胀、terrain cost 与合法性检查。
@@ -33,6 +44,82 @@ CLI 普通文本输出。
 - 动态避障基础组件：碰撞半径、移动障碍物碰撞检测、速度方向预测、边界往复预测、连续坐标时间预测、连续轨迹安全评估、连续碰撞诊断报告、连续轨迹最小安全间距评估、连续安全感知动态避障、连续等待避障和跳跃避障路径修正。
 - Planner 算法调度，包含经典搜索、LPA*/D* Lite 阶段入口、基础 PSO、RS-APSO、RRT、RRT-Connect 和 RRT*；JSON v1 示例、序列化、字符串解析、嵌入式示例地图、SVG/HTML 导出、RRT 系列路径对比 SVG/HTML、CLI demo，以及支持 JSON 文件、JSON 字符串和示例名输入的 benchmark runner。
 - LPA*/D* Lite 当前明确属于阶段入口：用于统一调度、状态结构和变化单元记录验证，尚不具备复用上一轮 open list 的增量状态能力。
+
+### Web 前端
+
+- 编辑 5×5～60×60 网格，设置起点、终点、障碍物和 terrain cost。
+- 切换四方向或八方向移动；八方向规划遵循 MoonBit 核心的禁止穿墙角规则。
+- 在独立 Planner Worker 中运行 12 种 MoonBit Planner 算法。
+- 回放 BFS、DFS、Dijkstra、A* 的真实 discovered/expanded Trace；其他算法只显示最终路径。
+- 导入、导出 `moon-pathplanning.grid.v1` JSON，并通过同一原子事务加载内置示例。
+- 导入 PNG、JPEG、WebP 正交矩形迷宫，支持旋转、翻转、反色、入口候选、手动入口 Pair 和起终点交换。
+- 提供深浅主题、响应式布局、结构化错误和事务状态反馈。
+
+## 图片迷宫导入
+
+```text
+选择 PNG / JPEG / WebP
+  → 旋转、翻转或反色
+  → Maze Import Worker 分析
+  → 正交结构检测
+  → 墙体、通道和拓扑分析
+  → 入口候选或手动入口 Pair
+  → 2n+1 GridMapDocument
+  → Canvas 预览
+  → 用户确认
+  → 原子地图导入事务
+```
+
+当前适合横纵墙体构成的正交矩形迷宫，包括深墙浅底、浅墙深底、透明背景、1～数
+像素墙宽，以及单入口、双入口或多入口候选图片。当前不支持蜂窝/六边形迷宫、主要
+由斜线构成的迷宫、SVG/PDF 图片导入、彩色答案路线自动剥离或任意自由形状墙体。
+
+尺寸边界：
+
+| 阶段 | 边界 |
+|---|---|
+| 文件与图片验证 | 图片文件最大 10 MiB；宽、高分别不超过 8192；总像素不超过 3200 万 |
+| 识别与 Canvas 预览 | 转换结果硬上限 151×151，约对应最大 75×75 逻辑迷宫；76×76 会转换为 153×153 并被拒绝 |
+| 正式导入主地图 | 当前上限 60×60；29×29 逻辑迷宫转换为 59×59，可以导入；30×30 转换为 61×61，只能预览 |
+
+151×151 是识别和 Canvas 预览上限，不代表主地图可以正式编辑该尺寸。主地图仍采用
+逐格 DOM 渲染，因此正式导入保持 60×60 上限。详细设计见
+[图片迷宫导入设计](docs/maze-image-import.md)。
+
+## 技术架构
+
+图片导入路径：
+
+```text
+图片文件
+   ↓ 浏览器安全解码
+ImageMatrix
+   ↓ transform snapshot
+Maze Import Worker
+   ↓
+预处理 → 正交结构检测 → 拓扑和入口分析
+   ↓
+2n+1 GridMapDocument
+   ↓
+Canvas 预览
+   ↓ 用户确认
+原子地图导入事务
+   ↓
+Grid Store + Planner Store
+   ↓
+MoonBit Planner Worker
+```
+
+路径规划路径：
+
+```text
+Grid Store
+  → usePlanner
+  → plannerWorkerClient
+  → planner.worker.ts
+  → MoonBit plan_json
+  → structured result / trace-batch
+```
 
 ## 实现边界
 
@@ -160,10 +247,10 @@ RS-APSO 基础能力、LPA*/D* Lite 阶段入口、连续几何、基础 RRT/RRT
 
 ```bash
 cd web
-npm install
+npm ci
 npm run dev
 npm run type-check
-npm run test
+npm test
 npm run build
 ```
 
@@ -191,7 +278,8 @@ executable-style JS linker 与显式 `exports: ["plan_json"]` 生成 ESM，空 `
 协议已可兼容后续真正的增量 `trace-batch`，但当前不是边计算边推送。
 
 LPA* 与 D* Lite 在 Web 中明确标注为“阶段版”。统一 `PathResult` 当前未暴露的迭代数和
-采样树节点数显示为 `—`。详细前端架构、已知限制与命令见 `web/README.md`。
+采样树节点数显示为 `—`。详细前端架构、已知限制与命令见
+[web/README.md](web/README.md)。
 
 Vite 已将 `base` 配置为 `/moon-pathplanning/`，并使用 Hash Router 避免 Pages 刷新
 回退问题。`.github/workflows/deploy-pages.yml` 会在 `main` 分支构建 MoonBit Bridge、

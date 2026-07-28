@@ -11,7 +11,11 @@ import {
 // Values
 pub fn astar(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> @core.PathResult
 
+pub fn astar_with_trace(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> TracedPathResult
+
 pub fn bfs(@grid.GridMap, @grid.MovementMode) -> @core.PathResult
+
+pub fn bfs_with_trace(@grid.GridMap, @grid.MovementMode) -> TracedPathResult
 
 pub fn bidirectional_astar(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> @core.PathResult
 
@@ -21,11 +25,17 @@ pub fn d_star_lite_replan(@grid.GridMap, @grid.MovementMode, @heuristics.Heurist
 
 pub fn dfs(@grid.GridMap, @grid.MovementMode) -> @core.PathResult
 
+pub fn dfs_with_trace(@grid.GridMap, @grid.MovementMode) -> TracedPathResult
+
 pub fn dijkstra(@grid.GridMap, @grid.MovementMode) -> @core.PathResult
+
+pub fn dijkstra_with_trace(@grid.GridMap, @grid.MovementMode) -> TracedPathResult
 
 pub fn lpa_star_plan(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind) -> IncrementalPlanResult
 
 pub fn lpa_star_replan(@grid.GridMap, @grid.MovementMode, @heuristics.HeuristicKind, Array[@core.Point]) -> IncrementalPlanResult
+
+pub fn without_trace(@core.PathResult) -> TracedPathResult
 
 // Errors
 
@@ -42,6 +52,31 @@ pub(all) struct IncrementalPlanResult {
   result : @core.PathResult
   nodes : Array[IncrementalNode]
   changed_cells : Array[@core.Point]
+} derive(@debug.Debug)
+
+pub(all) struct SearchEvent {
+  step : Int
+  kind : SearchEventKind
+  point : @core.Point
+  frontier_size : Int
+  source : String?
+} derive(@debug.Debug)
+
+pub(all) enum SearchEventKind {
+  Discovered
+  Expanded
+  Current
+} derive(@debug.Debug)
+
+pub(all) struct SearchTrace {
+  supported : Bool
+  events : Array[SearchEvent]
+  total_steps : Int
+} derive(@debug.Debug)
+
+pub(all) struct TracedPathResult {
+  result : @core.PathResult
+  trace : SearchTrace
 } derive(@debug.Debug)
 
 // Type aliases

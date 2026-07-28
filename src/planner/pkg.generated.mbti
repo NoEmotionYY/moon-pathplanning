@@ -2,6 +2,7 @@
 package "NoEmotionYY/moon-pathplanning/src/planner"
 
 import {
+  "NoEmotionYY/moon-pathplanning/src/algorithms",
   "NoEmotionYY/moon-pathplanning/src/core",
   "NoEmotionYY/moon-pathplanning/src/grid",
   "NoEmotionYY/moon-pathplanning/src/heuristics",
@@ -16,6 +17,8 @@ pub fn eight_way_options() -> PlannerOptions
 pub fn options(@grid.MovementMode, @heuristics.HeuristicKind) -> PlannerOptions
 
 pub fn plan(@grid.GridMap, AlgorithmType, PlannerOptions) -> @core.PathResult
+
+pub fn plan_with_trace(@grid.GridMap, AlgorithmType, PlannerOptions) -> @algorithms.TracedPathResult
 
 // Errors
 

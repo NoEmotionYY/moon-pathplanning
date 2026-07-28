@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Web 可视化与图片迷宫导入
+
+- 新增 Vue 3、TypeScript、Vite 和 Pinia Web 可视化，支持网格编辑、深浅主题、响应式布局、JSON 导入导出和内置示例地图。
+- 新增独立 Planner Worker，通过 MoonBit JavaScript Bridge 执行规划，并支持 BFS、DFS、Dijkstra、A* 的真实搜索 Trace 回放。
+- 新增 PNG、JPEG、WebP 安全读取、Alpha/透明背景处理，以及旋转、翻转和反色变换。
+- 新增正交迷宫结构检测、墙体极性与 pitch 估计、迷宫拓扑、墙体/通道恢复和入口候选分析。
+- 新增手动入口 Pair、低置信度确认和起终点交换，并按 2n+1 规则转换为 `GridMapDocument`。
+- 新增独立 Maze Import Worker、requestId/workerGeneration 隔离、硬取消和 Canvas 结构/地图预览。
+- 新增图片分析弹窗和图片迷宫正式导入确认流程；导入后不会自动运行 Planner。
+- 新增原子地图导入事务，统一执行文档与版本校验、Planner 硬取消、Path/Trace 清理、mapVersion 单次递增、后置校验和失败回滚。
+- JSON 文件导入和内置示例地图加载迁移到同一原子事务，并增加 reading/applying、stale、busy 和结构化错误状态。
+- 主地图正式导入保持 60×60 上限；图片转换和 Canvas 预览硬上限为 151×151，不将大预览结果挂载到逐格 DOM 编辑器。
+
+### MoonBit 核心与工具链
+
 - 根据《基于区域搜索粒子群算法的机器人路径规划》新增 RS-APSO 后续开发准备文档。
 - 调整路线图，将区域搜索、RS-APSO 与动态避障列为下一阶段重点。
 - 补充 RS-APSO 预留 API 和 benchmark 指标准备。
