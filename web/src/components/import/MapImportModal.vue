@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { inject, ref, watch } from 'vue'
 import { FileJson2, Image as ImageIcon, Info } from '@lucide/vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import FileDropZone from './FileDropZone.vue'
 import ImageSourcePreview from './ImageSourcePreview.vue'
 import ImageTransformControls from './ImageTransformControls.vue'
+import MazeAnalysisProgress from './MazeAnalysisProgress.vue'
+import MazeAnalysisResult from './MazeAnalysisResult.vue'
+import MazeDetectionPreview from './MazeDetectionPreview.vue'
 import { useMapImportExport } from '@/composables/useMapImportExport'
-import { useRasterImageImport } from '@/composables/useRasterImageImport'
+import {
+  MAZE_IMPORT_ANALYSIS_FACTORY,
+  useMazeImportAnalysis,
+} from '@/composables/useMazeImportAnalysis'
+import { useMazeImportWizard } from '@/composables/useMazeImportWizard'
 import { usePreferencesStore } from '@/stores/preferences'
 
 const props = defineProps<{ open: boolean }>()
@@ -20,10 +27,15 @@ const activeKind = ref<'json' | 'image'>('json')
 const jsonError = ref<string | null>(null)
 const { importFile } = useMapImportExport()
 const preferences = usePreferencesStore()
-const raster = useRasterImageImport()
+const analysisFactory = inject(
+  MAZE_IMPORT_ANALYSIS_FACTORY,
+  useMazeImportAnalysis,
+)
+const wizard = useMazeImportWizard({ analysisFactory })
+const raster = wizard.raster
 
 const close = () => {
-  raster.reset()
+  wizard.disposeWizard()
   jsonError.value = null
   activeKind.value = 'json'
   emit('close')
@@ -44,11 +56,17 @@ const selectImage = async (file: File) => {
   await raster.selectFile(file)
 }
 
+const selectKind = (kind: 'json' | 'image') => {
+  if (kind === activeKind.value) return
+  if (kind === 'json') wizard.disposeWizard()
+  activeKind.value = kind
+}
+
 watch(
   () => props.open,
   (open) => {
     if (!open) {
-      raster.reset()
+      wizard.disposeWizard()
       jsonError.value = null
       activeKind.value = 'json'
     }
@@ -65,7 +83,8 @@ watch(
           role="tab"
           :aria-selected="activeKind === 'json'"
           :class="{ active: activeKind === 'json' }"
-          @click="activeKind = 'json'"
+          :disabled="wizard.analysisStatus.value === 'running'"
+          @click="selectKind('json')"
         >
           <FileJson2 :size="16" />JSON 地图
         </button>
@@ -74,7 +93,8 @@ watch(
           role="tab"
           :aria-selected="activeKind === 'image'"
           :class="{ active: activeKind === 'image' }"
-          @click="activeKind = 'image'"
+          :disabled="wizard.analysisStatus.value === 'running'"
+          @click="selectKind('image')"
         >
           <ImageIcon :size="16" />图片迷宫
         </button>
@@ -92,7 +112,10 @@ watch(
       </section>
 
       <section v-else class="import-image-panel">
-        <div class="import-image-layout">
+        <div
+          v-if="wizard.step.value === 'source'"
+          class="import-image-layout"
+        >
           <div class="import-image-sidebar">
             <FileDropZone
               accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
@@ -129,7 +152,11 @@ watch(
             />
             <ImageTransformControls
               :state="raster.transformState.value"
-              :disabled="!raster.decodedImage.value || raster.isLoading.value"
+              :disabled="
+                !raster.decodedImage.value ||
+                raster.isLoading.value ||
+                wizard.analysisStatus.value === 'running'
+              "
               @rotate-left="raster.rotateLeft"
               @rotate-right="raster.rotateRight"
               @flip-horizontal="raster.toggleHorizontal"
@@ -139,14 +166,95 @@ watch(
             />
           </div>
         </div>
+
+        <div
+          v-else-if="wizard.step.value === 'analyzing'"
+          class="import-analysis-layout"
+        >
+          <div class="import-analysis-preview">
+            <ImageSourcePreview
+              :image="raster.transformedImage.value"
+              :metadata="raster.decodedImage.value?.metadata ?? null"
+              :state="raster.transformState.value"
+              :file-type="raster.fileType.value"
+              :theme="preferences.theme"
+              :loading="false"
+            />
+            <ImageTransformControls
+              :state="raster.transformState.value"
+              disabled
+              @rotate-left="raster.rotateLeft"
+              @rotate-right="raster.rotateRight"
+              @flip-horizontal="raster.toggleHorizontal"
+              @flip-vertical="raster.toggleVertical"
+              @invert="raster.toggleInvert"
+              @reset="raster.resetTransform"
+            />
+          </div>
+          <MazeAnalysisProgress
+            :progress="wizard.progress.value"
+            @cancel="wizard.cancelAnalysis"
+          />
+        </div>
+
+        <div
+          v-else
+          class="import-result-layout"
+        >
+          <MazeDetectionPreview
+            v-if="wizard.result.value"
+            :result="wizard.result.value"
+            :theme="preferences.theme"
+          />
+          <section v-else class="result-preview-unavailable">
+            当前没有可用的识别预览。
+          </section>
+          <MazeAnalysisResult
+            :status="wizard.analysisStatus.value"
+            :result="wizard.result.value"
+            :error="wizard.analysisError.value"
+          />
+        </div>
       </section>
 
       <footer class="import-modal-footer">
-        <BaseButton variant="ghost" @click="close">取消</BaseButton>
-        <div v-if="activeKind === 'image'" class="import-next-step">
-          <BaseButton variant="primary" disabled>下一步：识别迷宫</BaseButton>
-          <span>迷宫墙体识别将在下一阶段实现</span>
-        </div>
+        <template v-if="activeKind === 'json'">
+          <BaseButton variant="ghost" @click="close">取消</BaseButton>
+        </template>
+        <template v-else-if="wizard.step.value === 'source'">
+          <BaseButton variant="ghost" @click="close">取消</BaseButton>
+          <div class="import-next-step">
+            <BaseButton
+              variant="primary"
+              :disabled="!wizard.canAnalyze.value"
+              @click="wizard.startAnalysis"
+            >
+              识别迷宫
+            </BaseButton>
+            <span v-if="wizard.analysisStatus.value === 'cancelled'">
+              已取消识别
+            </span>
+            <span v-else>仅分析和预览，不会修改当前地图</span>
+          </div>
+        </template>
+        <template v-else-if="wizard.step.value === 'analyzing'">
+          <span class="footer-status">Worker 正在分析图片</span>
+        </template>
+        <template v-else>
+          <div class="result-footer-actions">
+            <BaseButton variant="ghost" @click="wizard.returnToSource">
+              返回调整
+            </BaseButton>
+            <BaseButton
+              variant="secondary"
+              :disabled="!wizard.canAnalyze.value"
+              @click="wizard.startAnalysis"
+            >
+              重新识别
+            </BaseButton>
+          </div>
+          <BaseButton variant="primary" @click="close">关闭</BaseButton>
+        </template>
       </footer>
     </div>
   </BaseModal>

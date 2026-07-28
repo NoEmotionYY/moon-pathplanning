@@ -1255,6 +1255,355 @@ body {
   font-size: 9px;
 }
 
+.import-analysis-layout,
+.import-result-layout {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.import-analysis-preview,
+.maze-analysis-result {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.maze-analysis-progress {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-primary));
+}
+
+.analysis-progress-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analysis-progress-heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.analysis-progress-heading span,
+.maze-analysis-progress p,
+.footer-status,
+.readonly-preview-note {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.analysis-progress-heading strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.maze-analysis-progress progress {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--border-color);
+}
+
+.maze-analysis-progress progress::-webkit-progress-bar {
+  border-radius: inherit;
+  background: var(--border-color);
+}
+
+.maze-analysis-progress progress::-webkit-progress-value {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+}
+
+.maze-analysis-progress progress::-moz-progress-bar {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+}
+
+.analysis-result-hero {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg-primary) 58%, transparent);
+}
+
+.analysis-result-hero > svg {
+  flex: 0 0 auto;
+}
+
+.analysis-result-hero.is-success > svg { color: var(--success); }
+.analysis-result-hero.is-warning > svg { color: var(--warning); }
+.analysis-result-hero.is-danger > svg { color: var(--danger); }
+
+.analysis-result-hero h3,
+.maze-diagnostic-summary h3,
+.maze-analysis-warnings h3,
+.candidate-list-heading h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.analysis-result-hero p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.analysis-result-hero code,
+.maze-analysis-warnings code,
+.candidate-title code {
+  color: var(--text-muted);
+  font-size: 8px;
+  overflow-wrap: anywhere;
+}
+
+.maze-diagnostic-summary,
+.maze-analysis-warnings,
+.entrance-candidate-list {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg-primary) 48%, transparent);
+}
+
+.maze-diagnostic-summary dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin: 0;
+}
+
+.maze-diagnostic-summary dl > div {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 7px;
+  padding: 6px 7px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--bg-elevated) 68%, transparent);
+}
+
+.maze-diagnostic-summary dt,
+.maze-diagnostic-summary dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 9px;
+}
+
+.maze-diagnostic-summary dt { color: var(--text-muted); }
+.maze-diagnostic-summary dd {
+  color: var(--text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.maze-analysis-warnings h3 span,
+.candidate-list-heading span {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.maze-analysis-warnings details {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+.maze-analysis-warnings summary {
+  cursor: pointer;
+}
+
+.warning-groups {
+  max-height: 210px;
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  overflow: auto;
+}
+
+.warning-groups h4 {
+  margin: 0 0 4px;
+  color: var(--warning);
+  font-size: 9px;
+}
+
+.warning-groups ul,
+.entrance-candidate-list ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.warning-groups li {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 7px;
+  line-height: 1.45;
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  overflow-wrap: anywhere;
+}
+
+.candidate-list-heading,
+.candidate-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.entrance-candidate-list ul {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.entrance-candidate-list li {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.candidate-title strong {
+  color: var(--accent);
+  font-size: 8px;
+}
+
+.entrance-candidate-list li > span {
+  color: var(--text-primary);
+  font-size: 9px;
+}
+
+.entrance-candidate-list small,
+.empty-diagnostic {
+  color: var(--text-secondary);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.analysis-next-stage-note,
+.analysis-duration {
+  margin: 0;
+  padding: 8px 9px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 9px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.analysis-duration {
+  color: var(--text-muted);
+  background: transparent;
+  text-align: right;
+}
+
+.maze-detection-preview {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.detection-preview-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.detection-preview-tabs button {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-primary) 54%, transparent);
+}
+
+.detection-preview-tabs button.active {
+  color: var(--accent);
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.detection-preview-surface,
+.result-preview-unavailable {
+  min-width: 0;
+  height: min(44vh, 430px);
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 11px;
+  color: var(--text-secondary);
+  background: var(--import-preview-bg);
+}
+
+.detection-preview-surface canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.detection-preview-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  color: var(--text-secondary);
+  font-size: 8px;
+}
+
+.detection-preview-legend span::before {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  margin-right: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  content: "";
+}
+
+.detection-preview-legend .wall { color: var(--obstacle-fill); }
+.detection-preview-legend .open { color: var(--success); }
+.detection-preview-legend .uncertain { color: var(--warning); }
+.detection-preview-legend .entrance { color: var(--accent); }
+.detection-preview-legend .start { color: var(--start-fill); }
+.detection-preview-legend .goal { color: var(--goal-fill); }
+
+.readonly-preview-note { margin: 0; }
+
+.result-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: 260px minmax(420px, 1fr);
@@ -1319,8 +1668,11 @@ body {
   }
   .modal-backdrop { padding: 8px; }
   .modal-card { max-height: calc(100vh - 16px); padding: 14px; }
-  .import-image-layout { grid-template-columns: 1fr; }
+  .import-image-layout,
+  .import-analysis-layout,
+  .import-result-layout { grid-template-columns: 1fr; }
   .image-preview-surface { min-height: 260px; }
+  .detection-preview-surface { height: min(42vh, 380px); }
   .image-transform-controls { grid-template-columns: repeat(3, 1fr); }
   .import-modal-footer { align-items: stretch; flex-direction: column; }
   .import-modal-footer > .base-button { align-self: flex-start; }
@@ -1335,5 +1687,19 @@ body {
   .toast-stack { inset: auto 10px 10px; }
   .toast { min-width: 0; width: 100%; }
   .image-metadata { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .maze-diagnostic-summary dl { grid-template-columns: 1fr; }
   .image-transform-controls { grid-template-columns: repeat(2, 1fr); }
+  .modal-card,
+  .map-import-modal,
+  .import-image-panel,
+  .import-result-layout,
+  .maze-analysis-result { max-width: 100%; }
+  .detection-preview-surface {
+    height: 300px;
+    min-height: 220px;
+  }
+  .result-footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }
