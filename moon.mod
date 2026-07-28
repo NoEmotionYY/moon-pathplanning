@@ -1,6 +1,6 @@
 name = "NoEmotionYY/moon-pathplanning"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.md"
 
@@ -10,4 +10,4 @@ license = "MIT"
 
 keywords = [ "path-planning", "pathfinding", "robotics", "moonbit" ]
 
-description = "Reusable MoonBit path planning primitives and grid search algorithms."
+description = "MoonBit path planning engine with Vue visualization and maze import."

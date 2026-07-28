@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.0 - 2026-07-28
+
+### Added
+
+- Vue 3 + TypeScript Web 可视化平台。
+- Planner Worker 与 MoonBit JavaScript Bridge 调用链。
+- PNG/JPEG/WebP 图片迷宫识别与 GridMap 导入。
+- 多算法路径规划展示、JSON 地图导入导出和 benchmark 支持。
+
+### Changed
+
+- 项目版本升级至 v0.2.0。
+- README 重新设计，突出工程架构、能力边界和路线图。
+- 明确经典算法、高级基础实现和阶段入口的能力范围。
+
+### Notes
+
+- LPA*/D* Lite 当前为阶段入口，不代表完整增量规划实现。
+- 主地图编辑仍保持 60×60 上限。
+
 ## Unreleased
 
 ### Web 可视化与图片迷宫导入
@@ -7,64 +27,10 @@
 - 新增 Vue 3、TypeScript、Vite 和 Pinia Web 可视化，支持网格编辑、深浅主题、响应式布局、JSON 导入导出和内置示例地图。
 - 新增独立 Planner Worker，通过 MoonBit JavaScript Bridge 执行规划，并支持 BFS、DFS、Dijkstra、A* 的真实搜索 Trace 回放。
 - 新增 PNG、JPEG、WebP 安全读取、Alpha/透明背景处理，以及旋转、翻转和反色变换。
-- 新增正交迷宫结构检测、墙体极性与 pitch 估计、迷宫拓扑、墙体/通道恢复和入口候选分析。
-- 新增手动入口 Pair、低置信度确认和起终点交换，并按 2n+1 规则转换为 `GridMapDocument`。
-- 新增独立 Maze Import Worker、requestId/workerGeneration 隔离、硬取消和 Canvas 结构/地图预览。
-- 新增图片分析弹窗和图片迷宫正式导入确认流程；导入后不会自动运行 Planner。
-- 新增原子地图导入事务，统一执行文档与版本校验、Planner 硬取消、Path/Trace 清理、mapVersion 单次递增、后置校验和失败回滚。
-- JSON 文件导入和内置示例地图加载迁移到同一原子事务，并增加 reading/applying、stale、busy 和结构化错误状态。
-- 主地图正式导入保持 60×60 上限；图片转换和 Canvas 预览硬上限为 151×151，不将大预览结果挂载到逐格 DOM 编辑器。
-
-### MoonBit 核心与工具链
-
-- 根据《基于区域搜索粒子群算法的机器人路径规划》新增 RS-APSO 后续开发准备文档。
-- 调整路线图，将区域搜索、RS-APSO 与动态避障列为下一阶段重点。
-- 补充 RS-APSO 预留 API 和 benchmark 指标准备。
-- 新增 `GridMap::inflate_obstacles(radius)` 与测试，支持障碍物膨胀安全边距建模。
-- 新增 `src/region` 区域搜索模块与测试，支持障碍物边界角识别和候选搜索区域生成。
-- 新增 `src/swarm` 基础模块与测试，支持路径适应度、固定 seed 随机源和 PSO 参数默认值。
-- 新增 `src/continuous` 连续几何基础模块与测试，支持栅格中心线段栅格化、静态线段可见性检查和路径快捷平滑。
-- 新增基础 `rrt_plan()` 连续采样规划，支持固定 seed、目标采样率、可见线段连接和路径快捷平滑。
-- 新增基础 `rrt_connect_plan()` 双树采样规划，支持从起点和终点双向扩展并连接可见采样点。
-- 新增基础 `rrt_star_plan()` 重连规划，支持邻域择优父节点和可见邻域重连。
-- 新增基础离散 `pso_plan()`，支持从区域候选中间路点生成可行路径并保持固定 seed 可复现。
-- 新增 `src/dynamic` 动态避障基础模块与测试，支持碰撞半径、碰撞判断、速度方向预测和跳跃避障路径修正。
-- 新增 `adaptive_parameters()` 与基础离散 `rs_apso_plan()`，支持论文自适应参数调度和固定 seed 复现。
-- RS-APSO 停滞逃逸增强为多候选重采样，按逃逸因子比较全局最优与随机候选适应度，并保持固定 seed 可复现。
-- Planner 新增 `Pso`、`RsApso`、`Rrt`、`RrtConnect` 与 `RrtStar` 算法类型，通过区域搜索候选集或基础采样树统一返回 `PathResult`。
-- 新增 `grid_region_to_svg()` 与测试，支持候选搜索区域和障碍物边界角 SVG 叠加导出。
-- 新增 `grid_paths_to_svg()` 与 `rrt_comparison_to_svg()`，支持多条命名路径叠加和 RRT/RRT-Connect/RRT* SVG 对比导出。
-- 新增 `rs_apso_20x20_simple.json` 与 `rs_apso_20x20_complex.json`，固定 RS-APSO benchmark 代表性输入。
-- 新增 `bench` main 包，可通过 `moon run ./bench` 输出 20x20 simple/complex 场景下 A 星、Dijkstra、PSO、RS-APSO、RRT、RRT-Connect 和 RRT* 的 CSV 指标。
-- benchmark runner 新增 RRT、RRT-Connect 与 RRT* 静态场景 CSV 行，记录固定 seed、采样参数、采样树节点数和重复耗时。
-- benchmark runner 新增 RS-APSO 参数对比行 `rs_apso_p30_i60_s2` 和 `rs_apso_p80_i80_s4`，用于比较种群规模、最大迭代次数和停滞阈值影响。
-- 新增 HTML 可视化导出入口，可将基础路径、区域搜索、多路径和 RRT 系列对比 SVG 包装为自包含 HTML 文档。
-- 新增 LPA* 与 D* Lite 阶段入口，保留 `g/rhs/key` 状态、变化单元记录和 Planner 统一调度，为后续增量状态复用保留 API 边界。
-- 补齐验收 CI 步骤，直接执行当前工具链真实支持的 `moon fmt --check`、`moon info`、`moon check --deny-warn`、`moon test --deny-warn` 和 CLI/示例/native/HTML/benchmark smoke test；提交 `moon info` 生成的 `pkg.generated.mbti` 接口文件，并在文档中明确 LPA*/D* Lite 当前仍为阶段入口。
-- benchmark runner 新增默认 5 次重复运行、总耗时和平均耗时字段。
-- 新增 `grid_from_json(text)`，支持 JSON v1 地图字符串解析并返回地图和移动模式。
-- 动态避障新增边界往复反射预测和对应跳跃避障场景测试。
-- CLI 新增 native 后端 JSON 文件输入，支持 `moon run cli --target native -- <map.json>`。
-- CLI 与 benchmark runner 新增 `--json/-j` JSON 字符串输入参数，复用 JSON v1 解析入口且不依赖文件系统。
-- CLI 新增 native 后端 `--html/-o <output.html>` 可视化导出参数，可将当前 A 星规划结果写成自包含 HTML 文件。
-- 新增嵌入式示例地图入口 `example_json(name)` 和 `example_grid_data(name)`，CLI 与 benchmark runner 支持 `--example/-e`，可在非 native 后端通过示例名复用 JSON v1 地图。
-- 动态避障新增连续坐标动态障碍物、按时间步预测、连续碰撞检测和跳跃避障测试。
-- 动态避障新增连续轨迹安全评估，支持从离散路径生成带时间线段并采样检测连续动态障碍物碰撞风险。
-- 动态避障新增连续碰撞诊断报告，支持返回首个碰撞线段、采样点、障碍物索引、碰撞时间和双方连续坐标。
-- 动态避障新增连续轨迹最小安全间距评估，支持返回最接近采样点的距离、碰撞半径和净安全间距。
-- 动态避障新增连续安全感知修正，按连续线段最小安全间距选择横向候选跳点。
-- 动态避障新增连续等待修正，支持在狭窄通道中插入原地等待点并延后后续连续时间线。
-- benchmark runner 新增 `dynamic_5x1` 场景，覆盖静态 A 星、整数速度、边界往复和连续坐标时间步动态避障修正。
-- benchmark runner 新增 native 后端 JSON 文件输入参数，支持位置参数和 `--map/-m` 读取 JSON v1 地图并输出 CSV 指标。
-- benchmark runner 新增 `dynamic_10x10_crossing` 场景，覆盖 10x10 多方向穿越动态障碍物下的路径修正指标。
-- benchmark runner 新增连续动态安全指标列：`safety_evaluated`、`continuous_safe` 和 `min_clearance`。
-- benchmark runner 新增 `dynamic_12x12_mixed` 场景，覆盖静态障碍、三类移动障碍物、边界往复、连续安全感知和连续等待修正的混合动态组合。
-- 使用官方 MoonBit `0.1.20260529` 便携工具链完成 `moon check` 与 `moon test`，当前 80 项测试全部通过。
-- 按当前 MoonBit 工具链迁移模块清单，从已弃用的 `moon.mod.json` 切换为 `moon.mod`。
+- 新增正交迷宫结构检测、墙体极性与入口候选分析。
 
 ## 0.1.0 - 2026-05-23
 
 - 初始化 MoonBit 模块、MIT License、中文执行日志和工程文档。
 - 实现网格地图、移动模式、terrain cost、加权图与启发函数。
 - 实现 BFS、DFS、Dijkstra、A 星、双向 A 星和统一 Planner。
-- 添加 MoonBit 测试、JSON 示例与序列化、SVG 导出、CLI demo 和 CI。
