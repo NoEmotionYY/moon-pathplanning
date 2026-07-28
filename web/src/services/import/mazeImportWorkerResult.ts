@@ -80,6 +80,16 @@ const summarizeEntrance = (
       ? [selection.selectedPair.first.id, selection.selectedPair.second.id]
       : null,
     candidates: selection.candidates.map(summarizeCandidate),
+    pairCandidates: selection.pairCandidates.map((pair) => ({
+      firstCandidateId: pair.first.id,
+      secondCandidateId: pair.second.id,
+      connected: pair.connected,
+      sameComponent: pair.sameComponent,
+      graphDistance: pair.graphDistance,
+      boundaryDistance: pair.boundaryDistance,
+      confidence: pair.confidence,
+      warnings: [...pair.warnings],
+    })),
     warnings: [...selection.warnings],
   }
 }

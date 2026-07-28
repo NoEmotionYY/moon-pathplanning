@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
-import { afterEach, describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { ManualEntranceSelection } from '@/types/mazeImportSelection'
 import type { EntranceSelectionSummary } from '@/types/mazeImportWorker'
 import EntranceCandidateList from './EntranceCandidateList.vue'
 
@@ -28,10 +30,17 @@ const candidate = (
   warnings: [],
 })
 
-const mountList = (selection: EntranceSelectionSummary) => {
+const mountList = (
+  selection: EntranceSelectionSummary,
+  options: {
+    mode?: 'readonly' | 'select'
+    manualSelection?: ManualEntranceSelection
+    onSelect?: (role: 'start' | 'goal', candidateId: string) => void
+  } = {},
+) => {
   const host = document.createElement('div')
   document.body.append(host)
-  app = createApp(EntranceCandidateList, { selection })
+  app = createApp(EntranceCandidateList, { selection, ...options })
   app.mount(host)
   return host
 }
@@ -47,6 +56,18 @@ const selection = (
   selectedCandidateIds:
     candidates.length >= 2 ? [candidates[0]!.id, candidates[1]!.id] : null,
   candidates,
+  pairCandidates: candidates.length >= 2
+    ? [{
+        firstCandidateId: candidates[0]!.id,
+        secondCandidateId: candidates[1]!.id,
+        connected: true,
+        sameComponent: true,
+        graphDistance: 12,
+        boundaryDistance: 80,
+        confidence: 0.9,
+        warnings: [],
+      }]
+    : [],
   warnings: [],
 })
 
@@ -69,5 +90,54 @@ describe('EntranceCandidateList', () => {
     expect(host.textContent).toContain('第 3～4 格')
     expect(host.textContent).toContain('宽 2 格')
     expect(host.querySelector('button')).toBeNull()
+    expect(host.querySelector('input')).toBeNull()
+  })
+
+  it('选择模式为起点和终点使用独立 radio 组并发出明确角色', async () => {
+    const onSelect = vi.fn()
+    const current = selection([
+      candidate('first', 0, 0),
+      candidate('second', 7, 7),
+    ])
+    const host = mountList(current, {
+      mode: 'select',
+      manualSelection: {
+        startCandidateId: 'first',
+        goalCandidateId: null,
+      },
+      onSelect,
+    })
+    const radios = host.querySelectorAll<HTMLInputElement>('input[type=radio]')
+    expect(radios).toHaveLength(4)
+    expect(radios[0]?.name).not.toBe(radios[1]?.name)
+    expect(radios[0]?.name).toBe(radios[2]?.name)
+    expect(radios[1]?.name).toBe(radios[3]?.name)
+    expect(radios[0]?.checked).toBe(true)
+    radios[3]?.click()
+    await nextTick()
+    expect(onSelect).toHaveBeenCalledWith('goal', 'second')
+  })
+
+  it('无效候选仍可查看但不能通过键盘或鼠标选为角色', () => {
+    const invalid = {
+      ...candidate('invalid', 1, 1),
+      state: 'invalid' as const,
+    }
+    const host = mountList(selection([
+      candidate('first', 0, 0),
+      invalid,
+    ]), {
+      mode: 'select',
+      manualSelection: {
+        startCandidateId: null,
+        goalCandidateId: null,
+      },
+    })
+    const disabled = host.querySelectorAll<HTMLInputElement>(
+      'li:last-child input',
+    )
+    expect(disabled).toHaveLength(2)
+    expect([...disabled].every((input) => input.disabled)).toBe(true)
+    expect(host.textContent).toContain('无效')
   })
 })

@@ -20,6 +20,7 @@ export interface MazeDetectionPreviewRenderOptions {
   height: number
   devicePixelRatio?: number
   selectedCandidateIds?: [string, string] | null
+  pendingCandidateIds?: [string | null, string | null] | null
   colors: MazeDetectionPreviewColors
 }
 
@@ -122,6 +123,7 @@ const drawCandidate = (
   viewport: Viewport,
   colors: MazeDetectionPreviewColors,
   selectedIds: [string, string] | null,
+  pendingIds: [string | null, string | null] | null,
 ): void => {
   const mask = preview.croppedMask
   if (!mask) return
@@ -142,14 +144,27 @@ const drawCandidate = (
   const x2 = isHorizontal ? end : edge
   const y2 = isHorizontal ? edge : end
   const selectedIndex = selectedIds?.indexOf(candidate.id) ?? -1
+  const pendingIndex = pendingIds?.indexOf(candidate.id) ?? -1
 
   context.save()
   context.lineCap = 'round'
-  context.lineWidth = selectedIndex >= 0 ? 5 : 3
+  context.lineWidth = selectedIndex >= 0
+    ? 5
+    : pendingIndex >= 0
+      ? 4
+      : 3
+  context.globalAlpha = pendingIndex >= 0 && selectedIndex < 0 ? 0.72 : 1
+  context.setLineDash(
+    pendingIndex >= 0 && selectedIndex < 0 ? [6, 4] : [],
+  )
   context.strokeStyle = selectedIndex === 0
     ? colors.start
     : selectedIndex === 1
       ? colors.goal
+      : pendingIndex === 0
+        ? colors.start
+        : pendingIndex === 1
+          ? colors.goal
       : colors.entrance
   context.beginPath()
   context.moveTo(
@@ -297,6 +312,7 @@ export function renderMazeDetectionPreview(
       viewport,
       options.colors,
       options.selectedCandidateIds ?? null,
+      options.pendingCandidateIds ?? null,
     )
   }
 }

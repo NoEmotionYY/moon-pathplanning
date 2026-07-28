@@ -25,6 +25,13 @@ describe('createWorkerSafeResult', () => {
       columns: 5,
     })
     expect(result.entranceSelection?.candidates).toHaveLength(2)
+    expect(result.entranceSelection?.pairCandidates).toHaveLength(1)
+    expect(result.entranceSelection?.pairCandidates[0]).toMatchObject({
+      firstCandidateId: expect.any(String),
+      secondCandidateId: expect.any(String),
+      connected: true,
+      sameComponent: true,
+    })
   })
 
   it('preview 默认包含裁剪蒙版和必要结构，但不包含积分图', () => {

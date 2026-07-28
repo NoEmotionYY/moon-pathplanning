@@ -23,6 +23,7 @@ import type { MazeImportWorkerError } from '@/services/import/mazeImportWorkerEr
 import {
   createProgressFixture,
   createWorkerResultFixture,
+  createWorkerResultWithEntrances,
 } from '@/services/import/testUtils/mazeImportWorkerFixtures'
 import type {
   MazeImportAnalysisStatus,
@@ -342,5 +343,242 @@ describe('useMazeImportWizard', () => {
     await wizard.startAnalysis()
     expect(factory).toHaveBeenCalledTimes(2)
     expect(second.analyze).toHaveBeenCalledOnce()
+  })
+
+  it('明确选择起点终点后用同一原图和变换快照重新调用 Worker', async () => {
+    const manual = createWorkerResultWithEntrances(
+      'manual-input-required',
+      'ambiguous',
+    )
+    const success = createWorkerResultWithEntrances('success', 'selected')
+    const analysis = createAnalysis(manual)
+    let call = 0
+    analysis.analyze.mockImplementation(async (
+      _image: ImageMatrix,
+      options?: MazeImportWorkerAnalyzeOptions,
+    ) => {
+      const outcome = call === 0 ? manual : success
+      call += 1
+      analysis.status.value = outcome.status
+      options?.onProgress?.(createProgressFixture(0.5))
+      return outcome
+    })
+    const wizard = useMazeImportWizard({
+      raster: createRaster(),
+      analysisFactory: () => analysis,
+    })
+    await wizard.startAnalysis()
+    wizard.setManualEntrance('start', 'top:0-0')
+    wizard.setManualEntrance('goal', 'bottom:4-4')
+    expect(wizard.canApplyManualSelection.value).toBe(true)
+    await wizard.applyManualEntranceSelection()
+
+    expect(analysis.analyze).toHaveBeenCalledTimes(2)
+    const [sentImage, options] = analysis.analyze.mock.calls[1]!
+    expect(sentImage).toBe(source)
+    expect(options).toMatchObject({
+      pipeline: {
+        transform: {
+          rotation: 90,
+          flipHorizontal: false,
+          flipVertical: false,
+          invert: false,
+        },
+        manualEntrancePair: {
+          firstCandidateId: 'top:0-0',
+          secondCandidateId: 'bottom:4-4',
+        },
+        gridConversion: {
+          allowLowConfidenceManualPair: false,
+        },
+      },
+      resultDetail: 'preview',
+    })
+    expect(wizard.analysisStatus.value).toBe('success')
+    expect(wizard.canSelectEntrances.value).toBe(false)
+    expect(wizard.entranceSelectionSource.value).toBe('manual')
+    expect(wizard.appliedEntranceSelection.value).toEqual({
+      startCandidateId: 'top:0-0',
+      goalCandidateId: 'bottom:4-4',
+    })
+  })
+
+  it('同一候选切换角色会清除另一角色，断开候选对不能应用', async () => {
+    const manual = createWorkerResultWithEntrances(
+      'manual-input-required',
+      'disconnected',
+    )
+    const summary = manual.entranceSelection!
+    summary.candidates[1] = {
+      ...summary.candidates[1]!,
+      componentId: 2,
+    }
+    summary.pairCandidates[0] = {
+      ...summary.pairCandidates[0]!,
+      connected: false,
+      sameComponent: false,
+    }
+    const wizard = useMazeImportWizard({
+      raster: createRaster(),
+      analysisFactory: () => createAnalysis(manual),
+    })
+    await wizard.startAnalysis()
+    wizard.setManualEntrance('start', 'top:0-0')
+    wizard.setManualEntrance('goal', 'top:0-0')
+    expect(wizard.manualSelection.value).toEqual({
+      startCandidateId: null,
+      goalCandidateId: 'top:0-0',
+    })
+    wizard.setManualEntrance('start', 'top:0-0')
+    wizard.setManualEntrance('goal', 'bottom:4-4')
+    expect(wizard.canApplyManualSelection.value).toBe(false)
+    expect(wizard.manualSelectionValidation.value.connected).toBe(false)
+  })
+
+  it('低置信度入口先显示行内确认，确认后才允许 Worker 转换', async () => {
+    const manual = createWorkerResultWithEntrances(
+      'manual-input-required',
+      'low-confidence',
+    )
+    const success = createWorkerResultWithEntrances('success', 'selected')
+    const analysis = createAnalysis(manual)
+    analysis.analyze
+      .mockImplementationOnce(async () => {
+        analysis.status.value = manual.status
+        return manual
+      })
+      .mockImplementationOnce(async () => {
+        analysis.status.value = success.status
+        return success
+      })
+    const wizard = useMazeImportWizard({
+      raster: createRaster(),
+      analysisFactory: () => analysis,
+    })
+    await wizard.startAnalysis()
+    wizard.setManualEntrance('start', 'top:0-0')
+    wizard.setManualEntrance('goal', 'bottom:4-4')
+    await wizard.applyManualEntranceSelection()
+    expect(wizard.needsLowConfidenceConfirmation.value).toBe(true)
+    expect(analysis.analyze).toHaveBeenCalledOnce()
+
+    await wizard.confirmLowConfidenceSelection()
+    expect(analysis.analyze).toHaveBeenCalledTimes(2)
+    expect(analysis.analyze.mock.calls[1]?.[1]).toMatchObject({
+      pipeline: {
+        gridConversion: {
+          allowLowConfidenceManualPair: true,
+        },
+      },
+    })
+  })
+
+  it('取消应用入口时恢复原候选结果并保留用户选择', async () => {
+    const manual = createWorkerResultWithEntrances()
+    const analysis = createAnalysis(manual)
+    analysis.analyze
+      .mockImplementationOnce(async () => {
+        analysis.status.value = manual.status
+        return manual
+      })
+      .mockImplementationOnce(() => {
+        analysis.status.value = 'running'
+        return new Promise(() => undefined)
+      })
+    const wizard = useMazeImportWizard({
+      raster: createRaster(),
+      analysisFactory: () => analysis,
+    })
+    await wizard.startAnalysis()
+    wizard.setManualEntrance('start', 'top:0-0')
+    wizard.setManualEntrance('goal', 'bottom:4-4')
+    void wizard.applyManualEntranceSelection()
+    expect(wizard.isApplyingEntranceSelection.value).toBe(true)
+    wizard.cancelAnalysis()
+    expect(wizard.step.value).toBe('result')
+    expect(wizard.result.value).toBe(manual)
+    expect(wizard.analysisStatus.value).toBe('manual-input-required')
+    expect(wizard.manualSelection.value).toEqual({
+      startCandidateId: 'top:0-0',
+      goalCandidateId: 'bottom:4-4',
+    })
+  })
+
+  it('自动成功结果可交换起终点并通过 Worker 重新生成预览', async () => {
+    const automatic = createWorkerResultWithEntrances(
+      'success',
+      'selected',
+    )
+    const swapped = createWorkerResultWithEntrances('success', 'selected')
+    const analysis = createAnalysis(automatic)
+    analysis.analyze
+      .mockImplementationOnce(async () => {
+        analysis.status.value = automatic.status
+        return automatic
+      })
+      .mockImplementationOnce(async () => {
+        analysis.status.value = swapped.status
+        return swapped
+      })
+    const wizard = useMazeImportWizard({
+      raster: createRaster(),
+      analysisFactory: () => analysis,
+    })
+    await wizard.startAnalysis()
+    expect(wizard.entranceSelectionSource.value).toBe('automatic')
+    await wizard.swapAppliedEntrances()
+    expect(analysis.analyze.mock.calls[1]?.[1]).toMatchObject({
+      pipeline: {
+        manualEntrancePair: {
+          firstCandidateId: 'bottom:4-4',
+          secondCandidateId: 'top:0-0',
+        },
+      },
+    })
+    expect(wizard.entranceSelectionSource.value).toBe('manual')
+    expect(wizard.appliedEntranceSelection.value).toEqual({
+      startCandidateId: 'bottom:4-4',
+      goalCandidateId: 'top:0-0',
+    })
+  })
+
+  it('图片改变会清空选择，旧的应用请求即使返回也不能覆盖新状态', async () => {
+    const manual = createWorkerResultWithEntrances()
+    const success = createWorkerResultWithEntrances('success', 'selected')
+    const analysis = createAnalysis(manual)
+    let resolveApply!: (value: MazeImportWorkerResult) => void
+    analysis.analyze
+      .mockImplementationOnce(async () => {
+        analysis.status.value = manual.status
+        return manual
+      })
+      .mockImplementationOnce(() => {
+        analysis.status.value = 'running'
+        return new Promise((resolve) => {
+          resolveApply = resolve
+        })
+      })
+    const raster = createRaster()
+    const wizard = useMazeImportWizard({
+      raster,
+      analysisFactory: () => analysis,
+    })
+    await wizard.startAnalysis()
+    wizard.setManualEntrance('start', 'top:0-0')
+    wizard.setManualEntrance('goal', 'bottom:4-4')
+    const applying = wizard.applyManualEntranceSelection()
+    raster.selectedFile.value = new File(
+      ['new'],
+      'new.png',
+      { type: 'image/png' },
+    )
+    resolveApply(success)
+    await applying
+    expect(wizard.step.value).toBe('source')
+    expect(wizard.result.value).toBeNull()
+    expect(wizard.manualSelection.value).toEqual({
+      startCandidateId: null,
+      goalCandidateId: null,
+    })
   })
 })

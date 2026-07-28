@@ -8,12 +8,14 @@ import {
   watch,
 } from 'vue'
 import type { MazeImportWorkerResult } from '@/types/mazeImportWorker'
+import type { ManualEntranceSelection } from '@/types/mazeImportSelection'
 import { renderMazeDetectionPreview } from '@/services/import/mazeDetectionPreviewRenderer'
 import { renderGridDocumentPreview } from '@/services/import/gridDocumentPreviewRenderer'
 
 const props = defineProps<{
   result: MazeImportWorkerResult
   theme: 'dark' | 'light'
+  pendingSelection?: ManualEntranceSelection | null
 }>()
 
 const activeView = ref<'detection' | 'grid'>('detection')
@@ -25,6 +27,16 @@ const preview = computed(() =>
   props.result.detail === 'preview' ? props.result.preview : null,
 )
 const canShowGrid = computed(() => props.result.document !== null)
+const appliedCandidateIds = computed<[string, string] | null>(() => {
+  const conversion = props.result.conversion
+  if (conversion?.startCandidateId && conversion.goalCandidateId) {
+    return [
+      conversion.startCandidateId,
+      conversion.goalCandidateId,
+    ]
+  }
+  return props.result.entranceSelection?.selectedCandidateIds ?? null
+})
 
 const cssColor = (
   styles: CSSStyleDeclaration,
@@ -62,8 +74,13 @@ const draw = async (): Promise<void> => {
       width,
       height,
       devicePixelRatio,
-      selectedCandidateIds:
-        props.result.entranceSelection?.selectedCandidateIds ?? null,
+      selectedCandidateIds: appliedCandidateIds.value,
+      pendingCandidateIds: props.pendingSelection
+        ? [
+            props.pendingSelection.startCandidateId,
+            props.pendingSelection.goalCandidateId,
+          ]
+        : null,
       colors: {
         background: cssColor(styles, '--import-preview-bg', '#091624'),
         wall: cssColor(styles, '--obstacle-fill', '#34455d'),

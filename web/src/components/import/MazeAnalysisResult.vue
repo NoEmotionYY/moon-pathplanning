@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { CheckCircle2, CircleAlert, CircleHelp, XCircle } from '@lucide/vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import type { MazeImportError } from '@/types/import'
+import type {
+  EntranceRole,
+  EntranceSelectionSource,
+  ManualEntranceSelection,
+  ManualEntranceSelectionValidation,
+} from '@/types/mazeImportSelection'
 import type { MazeImportAnalysisStatus } from '@/composables/useMazeImportAnalysis'
 import type { MazeImportWorkerResult } from '@/types/mazeImportWorker'
 import MazeDiagnosticSummary from './MazeDiagnosticSummary.vue'
@@ -12,6 +19,22 @@ const props = defineProps<{
   status: MazeImportAnalysisStatus
   result: MazeImportWorkerResult | null
   error: MazeImportError | null
+  canSelectEntrances?: boolean
+  canApplyManualSelection?: boolean
+  manualSelection?: ManualEntranceSelection
+  manualSelectionValidation?: ManualEntranceSelectionValidation
+  needsLowConfidenceConfirmation?: boolean
+  entranceSelectionSource?: EntranceSelectionSource
+  appliedEntranceSelection?: ManualEntranceSelection | null
+}>()
+const emit = defineEmits<{
+  selectEntrance: [role: EntranceRole, candidateId: string]
+  clearSelection: []
+  swapSelection: []
+  applySelection: []
+  confirmLowConfidence: []
+  cancelLowConfidence: []
+  swapApplied: []
 }>()
 
 const manualMessages = {
@@ -67,6 +90,34 @@ const tone = computed(() =>
       ? 'danger'
       : 'warning',
 )
+
+const hasManualChoice = computed(
+  () =>
+    Boolean(
+      props.manualSelection?.startCandidateId ||
+      props.manualSelection?.goalCandidateId,
+    ),
+)
+
+const candidateName = (id: string | null | undefined): string => {
+  if (!id) return '未选择'
+  const candidate = props.result?.entranceSelection?.candidates.find(
+    (item) => item.id === id,
+  )
+  return candidate ? candidate.id : id
+}
+
+const resultRoleSummary = computed(() => {
+  const selection = props.appliedEntranceSelection
+  if (!selection?.startCandidateId || !selection.goalCandidateId) return null
+  return {
+    source: props.entranceSelectionSource === 'manual'
+      ? '用户选择'
+      : '自动识别',
+    start: candidateName(selection.startCandidateId),
+    goal: candidateName(selection.goalCandidateId),
+  }
+})
 </script>
 
 <template>
@@ -89,15 +140,95 @@ const tone = computed(() =>
     <EntranceCandidateList
       v-if="result?.entranceSelection"
       :selection="result.entranceSelection"
+      :mode="canSelectEntrances ? 'select' : 'readonly'"
+      :manual-selection="manualSelection"
+      @select="
+        (role, candidateId) =>
+          emit('selectEntrance', role, candidateId)
+      "
     />
-    <p
-      v-if="status === 'manual-input-required'"
-      class="analysis-next-stage-note"
+    <section
+      v-if="canSelectEntrances"
+      class="manual-entrance-actions"
+      aria-label="手动入口选择"
     >
-      入口手动选择将在下一阶段开放。
-    </p>
+      <div class="manual-selection-summary">
+        <span>起点：<code>{{ candidateName(manualSelection?.startCandidateId) }}</code></span>
+        <span>终点：<code>{{ candidateName(manualSelection?.goalCandidateId) }}</code></span>
+      </div>
+      <p
+        v-if="manualSelectionValidation?.warnings.length"
+        class="manual-selection-warning"
+        aria-live="polite"
+      >
+        {{ manualSelectionValidation.warnings[0] }}
+      </p>
+      <div class="manual-selection-buttons">
+        <BaseButton
+          variant="ghost"
+          :disabled="!hasManualChoice"
+          @click="emit('clearSelection')"
+        >
+          清空选择
+        </BaseButton>
+        <BaseButton
+          variant="secondary"
+          :disabled="
+            !manualSelection?.startCandidateId ||
+            !manualSelection?.goalCandidateId
+          "
+          @click="emit('swapSelection')"
+        >
+          交换起点终点
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          :disabled="!canApplyManualSelection"
+          @click="emit('applySelection')"
+        >
+          应用入口选择
+        </BaseButton>
+      </div>
+      <div
+        v-if="needsLowConfidenceConfirmation"
+        class="low-confidence-confirmation"
+        role="alert"
+      >
+        <p>
+          该入口对置信度较低，可能生成不准确的地图。是否仍然使用？
+        </p>
+        <div>
+          <BaseButton
+            variant="primary"
+            @click="emit('confirmLowConfidence')"
+          >
+            仍然使用
+          </BaseButton>
+          <BaseButton
+            variant="ghost"
+            @click="emit('cancelLowConfidence')"
+          >
+            取消
+          </BaseButton>
+        </div>
+      </div>
+    </section>
+    <section
+      v-if="status === 'success' && resultRoleSummary"
+      class="entrance-result-summary"
+      aria-label="入口应用结果"
+    >
+      <div>
+        <strong>{{ resultRoleSummary.source }}</strong>
+        <span>起点：<code>{{ resultRoleSummary.start }}</code></span>
+        <span>终点：<code>{{ resultRoleSummary.goal }}</code></span>
+      </div>
+      <BaseButton variant="secondary" @click="emit('swapApplied')">
+        交换起点终点
+      </BaseButton>
+    </section>
     <p v-if="status === 'success'" class="analysis-next-stage-note">
-      下一阶段将支持确认导入和手动修正。
+      结果仅供预览，尚未写入当前地图。
     </p>
     <MazeAnalysisWarnings
       v-if="result"

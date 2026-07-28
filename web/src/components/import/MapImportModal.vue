@@ -193,6 +193,11 @@ watch(
           </div>
           <MazeAnalysisProgress
             :progress="wizard.progress.value"
+            :action="
+              wizard.isApplyingEntranceSelection.value
+                ? 'apply-selection'
+                : 'analyze'
+            "
             @cancel="wizard.cancelAnalysis"
           />
         </div>
@@ -205,6 +210,11 @@ watch(
             v-if="wizard.result.value"
             :result="wizard.result.value"
             :theme="preferences.theme"
+            :pending-selection="
+              wizard.canSelectEntrances.value
+                ? wizard.manualSelection.value
+                : null
+            "
           />
           <section v-else class="result-preview-unavailable">
             当前没有可用的识别预览。
@@ -213,6 +223,34 @@ watch(
             :status="wizard.analysisStatus.value"
             :result="wizard.result.value"
             :error="wizard.analysisError.value"
+            :can-select-entrances="wizard.canSelectEntrances.value"
+            :can-apply-manual-selection="
+              wizard.canApplyManualSelection.value
+            "
+            :manual-selection="wizard.manualSelection.value"
+            :manual-selection-validation="
+              wizard.manualSelectionValidation.value
+            "
+            :needs-low-confidence-confirmation="
+              wizard.needsLowConfidenceConfirmation.value
+            "
+            :entrance-selection-source="
+              wizard.entranceSelectionSource.value
+            "
+            :applied-entrance-selection="
+              wizard.appliedEntranceSelection.value
+            "
+            @select-entrance="wizard.setManualEntrance"
+            @clear-selection="wizard.clearManualEntranceSelection"
+            @swap-selection="wizard.swapManualEntrances"
+            @apply-selection="wizard.applyManualEntranceSelection"
+            @confirm-low-confidence="
+              wizard.confirmLowConfidenceSelection
+            "
+            @cancel-low-confidence="
+              wizard.cancelLowConfidenceConfirmation
+            "
+            @swap-applied="wizard.swapAppliedEntrances"
           />
         </div>
       </section>
@@ -238,7 +276,13 @@ watch(
           </div>
         </template>
         <template v-else-if="wizard.step.value === 'analyzing'">
-          <span class="footer-status">Worker 正在分析图片</span>
+          <span class="footer-status">
+            {{
+              wizard.isApplyingEntranceSelection.value
+                ? 'Worker 正在应用入口选择'
+                : 'Worker 正在分析图片'
+            }}
+          </span>
         </template>
         <template v-else>
           <div class="result-footer-actions">

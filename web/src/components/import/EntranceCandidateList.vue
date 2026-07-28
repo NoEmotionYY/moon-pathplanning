@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
+import type {
+  EntranceRole,
+  ManualEntranceSelection,
+} from '@/types/mazeImportSelection'
 import type { EntranceSelectionSummary } from '@/types/mazeImportWorker'
 
 const props = defineProps<{
   selection: EntranceSelectionSummary
+  mode?: 'readonly' | 'select'
+  manualSelection?: ManualEntranceSelection
+  disabled?: boolean
 }>()
+const emit = defineEmits<{
+  select: [role: EntranceRole, candidateId: string]
+}>()
+const instanceId = useId()
 
 const sideNames = {
   top: '顶部',
@@ -42,13 +53,24 @@ const candidates = computed(() =>
     }
   }),
 )
+
+const isChecked = (
+  role: EntranceRole,
+  candidateId: string,
+): boolean =>
+  role === 'start'
+    ? props.manualSelection?.startCandidateId === candidateId
+    : props.manualSelection?.goalCandidateId === candidateId
 </script>
 
 <template>
   <section class="entrance-candidate-list">
     <div class="candidate-list-heading">
       <h3>入口候选</h3>
-      <span>只读 · {{ candidates.length }} 个</span>
+      <span>
+        {{ mode === 'select' ? '选择起点与终点' : '只读' }} ·
+        {{ candidates.length }} 个
+      </span>
     </div>
     <p v-if="!candidates.length" class="empty-diagnostic">没有检测到入口候选。</p>
     <ul v-else>
@@ -56,6 +78,34 @@ const candidates = computed(() =>
         <div class="candidate-title">
           <code>{{ candidate.id }}</code>
           <strong v-if="candidate.selectedLabel">{{ candidate.selectedLabel }}</strong>
+        </div>
+        <div
+          v-if="mode === 'select'"
+          class="candidate-role-options"
+          :aria-label="`${candidate.id} 的入口角色`"
+        >
+          <label>
+            <input
+              type="radio"
+              :name="`${instanceId}-start`"
+              :checked="isChecked('start', candidate.id)"
+              :disabled="disabled || candidate.state === 'invalid'"
+              :aria-label="`将 ${candidate.id} 设为起点`"
+              @change="emit('select', 'start', candidate.id)"
+            />
+            起点
+          </label>
+          <label>
+            <input
+              type="radio"
+              :name="`${instanceId}-goal`"
+              :checked="isChecked('goal', candidate.id)"
+              :disabled="disabled || candidate.state === 'invalid'"
+              :aria-label="`将 ${candidate.id} 设为终点`"
+              @change="emit('select', 'goal', candidate.id)"
+            />
+            终点
+          </label>
         </div>
         <span>
           {{ candidate.sideLabel }}，{{ candidate.rangeLabel }}，宽

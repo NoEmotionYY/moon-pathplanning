@@ -134,6 +134,17 @@ export interface EntranceCandidateSummary {
   warnings: string[]
 }
 
+export interface EntrancePairSummary {
+  firstCandidateId: string
+  secondCandidateId: string
+  connected: boolean
+  sameComponent: boolean
+  graphDistance: number | null
+  boundaryDistance: number
+  confidence: number
+  warnings: string[]
+}
+
 export interface EntranceSelectionSummary {
   status: EntranceSelectionStatus
   automatic: boolean
@@ -142,6 +153,7 @@ export interface EntranceSelectionSummary {
   pairCandidateCount: number
   selectedCandidateIds: [string, string] | null
   candidates: EntranceCandidateSummary[]
+  pairCandidates: EntrancePairSummary[]
   warnings: string[]
 }
 

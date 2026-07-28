@@ -8,6 +8,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 
 const props = defineProps<{
   progress: MazeImportPipelineProgress | null
+  action?: 'analyze' | 'apply-selection'
 }>()
 defineEmits<{ cancel: [] }>()
 
@@ -44,7 +45,13 @@ const stageName = computed(() =>
   <section class="maze-analysis-progress" aria-live="polite">
     <div class="analysis-progress-heading">
       <div>
-        <span>正在识别迷宫</span>
+        <span>
+          {{
+            action === 'apply-selection'
+              ? '正在应用入口选择'
+              : '正在识别迷宫'
+          }}
+        </span>
         <strong>{{ stageName }}</strong>
       </div>
       <strong>{{ percent }}%</strong>
@@ -52,7 +59,7 @@ const stageName = computed(() =>
     <progress :value="percent" max="100">{{ percent }}%</progress>
     <p>分析在独立 Worker 中运行，不会修改当前地图。</p>
     <BaseButton variant="ghost" @click="$emit('cancel')">
-      取消识别
+      {{ action === 'apply-selection' ? '取消应用' : '取消识别' }}
     </BaseButton>
   </section>
 </template>

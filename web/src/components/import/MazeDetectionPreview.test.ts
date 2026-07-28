@@ -59,6 +59,7 @@ const result: MazeImportWorkerPreviewResult = {
     pairCandidateCount: 1,
     selectedCandidateIds: ['top:0-0', 'bottom:9-9'],
     candidates: [],
+    pairCandidates: [],
     warnings: [],
   },
   conversion: null,
@@ -110,12 +111,18 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-const mountPreview = async () => {
+const mountPreview = async (
+  pendingSelection: {
+    startCandidateId: string | null
+    goalCandidateId: string | null
+  } | null = null,
+) => {
   const host = document.createElement('div')
   document.body.append(host)
   app = createApp(MazeDetectionPreview, {
     result,
     theme: 'dark',
+    pendingSelection,
   })
   app.mount(host)
   await nextTick()
@@ -152,5 +159,17 @@ describe('MazeDetectionPreview', () => {
     app?.unmount()
     app = null
     expect(observer?.disconnect).toHaveBeenCalledOnce()
+  })
+
+  it('把待应用角色与正式 Worker 结果分开传给 renderer', async () => {
+    await mountPreview({
+      startCandidateId: 'left:2-2',
+      goalCandidateId: 'top:0-0',
+    })
+    const options = rendererSpies.detection.mock.calls.at(-1)?.[2]
+    expect(options).toMatchObject({
+      selectedCandidateIds: ['top:0-0', 'bottom:9-9'],
+      pendingCandidateIds: ['left:2-2', 'top:0-0'],
+    })
   })
 })

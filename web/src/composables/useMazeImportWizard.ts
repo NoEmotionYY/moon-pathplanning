@@ -11,10 +11,23 @@ import {
   type Ref,
   type ShallowRef,
 } from 'vue'
-import type { MazeImportError } from '@/types/import'
+import type {
+  ImageTransformState,
+  MazeImportError,
+} from '@/types/import'
+import type {
+  EntranceRole,
+  ManualEntranceSelection,
+  ManualEntranceSelectionValidation,
+  EntranceSelectionSource,
+} from '@/types/mazeImportSelection'
 import type { MazeImportPipelineProgress } from '@/types/mazeImportPipeline'
 import type { MazeImportWorkerResult } from '@/types/mazeImportWorker'
 import { assertImageMatrix } from '@/services/import/imageDataValidation'
+import {
+  swapManualEntranceSelection as swapSelection,
+  validateManualEntranceSelection,
+} from '@/services/import/manualEntranceSelection'
 import {
   useMazeImportAnalysis,
   type MazeImportAnalysisFactory,
@@ -25,7 +38,6 @@ import { useRasterImageImport } from './useRasterImageImport'
 
 export type MazeImportViewStep = 'source' | 'analyzing' | 'result'
 export type RasterImageImport = ReturnType<typeof useRasterImageImport>
-
 export interface UseMazeImportWizardOptions {
   raster?: RasterImageImport
   analysisFactory?: MazeImportAnalysisFactory
@@ -35,18 +47,64 @@ export interface UseMazeImportWizard {
   raster: RasterImageImport
   step: Readonly<Ref<MazeImportViewStep>>
   canAnalyze: Readonly<ComputedRef<boolean>>
+  canSelectEntrances: Readonly<ComputedRef<boolean>>
+  canApplyManualSelection: Readonly<ComputedRef<boolean>>
+  isApplyingEntranceSelection: Readonly<Ref<boolean>>
+  needsLowConfidenceConfirmation: Readonly<Ref<boolean>>
   isResultStale: Readonly<Ref<boolean>>
   analysisStatus: Readonly<Ref<MazeImportAnalysisStatus>>
   progress: Readonly<ShallowRef<MazeImportPipelineProgress | null>>
   result: Readonly<ShallowRef<MazeImportWorkerResult | null>>
   analysisError: Readonly<Ref<MazeImportError | null>>
+  manualSelection: Readonly<Ref<ManualEntranceSelection>>
+  manualSelectionValidation:
+    Readonly<ComputedRef<ManualEntranceSelectionValidation>>
+  entranceSelectionSource: Readonly<Ref<EntranceSelectionSource>>
+  appliedEntranceSelection:
+    Readonly<Ref<ManualEntranceSelection | null>>
   startAnalysis(): Promise<void>
   cancelAnalysis(): void
+  setManualEntrance(role: EntranceRole, candidateId: string): void
+  clearManualEntranceSelection(): void
+  swapManualEntrances(): void
+  applyManualEntranceSelection(): Promise<void>
+  confirmLowConfidenceSelection(): Promise<void>
+  cancelLowConfidenceConfirmation(): void
+  swapAppliedEntrances(): Promise<void>
   returnToSource(): void
   invalidateResult(): void
   resetWizard(): void
   disposeWizard(): void
 }
+
+interface RestoreState {
+  result: MazeImportWorkerResult
+  status: MazeImportAnalysisStatus
+  source: EntranceSelectionSource
+  appliedSelection: ManualEntranceSelection | null
+  resultIdentity: number
+}
+
+const EMPTY_SELECTION = (): ManualEntranceSelection => ({
+  startCandidateId: null,
+  goalCandidateId: null,
+})
+
+const EMPTY_VALIDATION = (): ManualEntranceSelectionValidation => ({
+  valid: false,
+  sameCandidate: false,
+  connected: false,
+  pairExists: false,
+  startCandidateExists: false,
+  goalCandidateExists: false,
+  warnings: ['当前没有可供选择的入口候选。'],
+})
+
+const SELECTABLE_STATUSES = new Set([
+  'ambiguous',
+  'low-confidence',
+  'disconnected',
+])
 
 const isRasterFileType = (value: string): boolean =>
   value === 'png' || value === 'jpeg' || value === 'webp'
@@ -63,6 +121,21 @@ const isValidMatrix = (
   }
 }
 
+const copySelection = (
+  selection: ManualEntranceSelection | null,
+): ManualEntranceSelection | null =>
+  selection ? { ...selection } : null
+
+const transformSnapshot = (
+  transform: ImageTransformState,
+): Readonly<ImageTransformState> =>
+  Object.freeze({
+    rotation: transform.rotation,
+    flipHorizontal: transform.flipHorizontal,
+    flipVertical: transform.flipVertical,
+    invert: transform.invert,
+  })
+
 export function useMazeImportWizard(
   options: UseMazeImportWizardOptions = {},
 ): UseMazeImportWizard {
@@ -75,8 +148,17 @@ export function useMazeImportWizard(
   const progress = shallowRef<MazeImportPipelineProgress | null>(null)
   const result = shallowRef<MazeImportWorkerResult | null>(null)
   const analysisError = ref<MazeImportError | null>(null)
+  const manualSelection = ref<ManualEntranceSelection>(EMPTY_SELECTION())
+  const entranceSelectionSource = ref<EntranceSelectionSource>(null)
+  const appliedEntranceSelection =
+    ref<ManualEntranceSelection | null>(null)
+  const isApplyingEntranceSelection = ref(false)
+  const needsLowConfidenceConfirmation = ref(false)
   let analysis: UseMazeImportAnalysis | null = null
   let operationId = 0
+  let resultIdentity = 0
+  let analyzedTransform: Readonly<ImageTransformState> | null = null
+  let restoreState: RestoreState | null = null
 
   const canAnalyze = computed(
     () =>
@@ -86,10 +168,43 @@ export function useMazeImportWizard(
       isRasterFileType(raster.fileType.value) &&
       isValidMatrix(raster.decodedImage.value),
   )
+  const canSelectEntrances = computed(() => {
+    const selection = result.value?.entranceSelection
+    return Boolean(
+      selection &&
+      SELECTABLE_STATUSES.has(selection.status) &&
+      selection.candidates.length >= 2 &&
+      (
+        analysisStatus.value === 'manual-input-required' ||
+        analysisStatus.value === 'failed'
+      ),
+    )
+  })
+  const manualSelectionValidation = computed(() => {
+    const summary = result.value?.entranceSelection
+    return summary
+      ? validateManualEntranceSelection(manualSelection.value, summary)
+      : EMPTY_VALIDATION()
+  })
+  const canApplyManualSelection = computed(
+    () =>
+      canSelectEntrances.value &&
+      manualSelectionValidation.value.valid &&
+      !isApplyingEntranceSelection.value,
+  )
 
   const ensureAnalysis = (): UseMazeImportAnalysis => {
     analysis ??= analysisFactory()
     return analysis
+  }
+
+  const resetSelectionState = (): void => {
+    manualSelection.value = EMPTY_SELECTION()
+    entranceSelectionSource.value = null
+    appliedEntranceSelection.value = null
+    isApplyingEntranceSelection.value = false
+    needsLowConfidenceConfirmation.value = false
+    restoreState = null
   }
 
   const clearResultState = (): void => {
@@ -97,12 +212,285 @@ export function useMazeImportWizard(
     progress.value = null
     result.value = null
     analysisError.value = null
+    analyzedTransform = null
+    resetSelectionState()
+  }
+
+  const selectionRequiresConfirmation = (
+    summary: NonNullable<MazeImportWorkerResult['entranceSelection']>,
+    selection: ManualEntranceSelection,
+  ): boolean => {
+    const selectedCandidates = summary.candidates.filter((candidate) =>
+      candidate.id === selection.startCandidateId ||
+      candidate.id === selection.goalCandidateId)
+    const pair = summary.pairCandidates.find((candidatePair) =>
+      (candidatePair.firstCandidateId === selection.startCandidateId &&
+        candidatePair.secondCandidateId === selection.goalCandidateId) ||
+      (candidatePair.firstCandidateId === selection.goalCandidateId &&
+        candidatePair.secondCandidateId === selection.startCandidateId))
+    return (
+      summary.status === 'low-confidence' ||
+      selectedCandidates.some((candidate) => candidate.state !== 'reliable') ||
+      pair?.warnings.includes('ENTRANCE_PAIR_LOW_CONFIDENCE') === true
+    )
+  }
+
+  const updateProgress = (
+    currentOperation: number,
+    update: MazeImportPipelineProgress,
+  ): void => {
+    if (currentOperation !== operationId) return
+    const previous = progress.value?.progress ?? 0
+    progress.value = {
+      ...update,
+      progress: Math.max(previous, update.progress),
+    }
+  }
+
+  const startAnalysis = async (): Promise<void> => {
+    if (!canAnalyze.value || analysisStatus.value === 'running') return
+    const decoded = raster.decodedImage.value
+    if (!decoded) return
+
+    const currentOperation = ++operationId
+    const snapshot = transformSnapshot(raster.transformState.value)
+    const service = ensureAnalysis()
+    service.reset()
+    step.value = 'analyzing'
+    analysisStatus.value = 'running'
+    progress.value = null
+    result.value = null
+    analysisError.value = null
+    analyzedTransform = snapshot
+    resetSelectionState()
+    isResultStale.value = false
+
+    const completed = await service.analyze(decoded.matrix, {
+      pipeline: { transform: snapshot },
+      resultDetail: 'preview',
+      onProgress: (update) => updateProgress(currentOperation, update),
+    })
+    if (currentOperation !== operationId) return
+
+    analysisStatus.value = service.status.value
+    if (completed) {
+      result.value = completed
+      resultIdentity += 1
+      step.value = 'result'
+      if (
+        completed.status === 'success' &&
+        completed.conversion?.startCandidateId &&
+        completed.conversion.goalCandidateId
+      ) {
+        entranceSelectionSource.value = 'automatic'
+        appliedEntranceSelection.value = {
+          startCandidateId: completed.conversion.startCandidateId,
+          goalCandidateId: completed.conversion.goalCandidateId,
+        }
+      }
+      return
+    }
+    analysisError.value = service.error.value
+      ? {
+          code: service.error.value.code,
+          message: service.error.value.message,
+        }
+      : {
+          code: 'MAZE_IMPORT_ANALYSIS_FAILED',
+          message: '迷宫识别未返回结果。',
+        }
+    step.value = service.status.value === 'cancelled' ? 'source' : 'result'
+  }
+
+  const runManualAnalysis = async (
+    requestedSelection: ManualEntranceSelection,
+    allowLowConfidence: boolean,
+  ): Promise<void> => {
+    const decoded = raster.decodedImage.value
+    const currentResult = result.value
+    const snapshot = analyzedTransform
+    if (
+      !decoded ||
+      !currentResult ||
+      !snapshot ||
+      !requestedSelection.startCandidateId ||
+      !requestedSelection.goalCandidateId
+    ) {
+      return
+    }
+    const currentOperation = ++operationId
+    const sourceIdentity = resultIdentity
+    restoreState = {
+      result: currentResult,
+      status: analysisStatus.value,
+      source: entranceSelectionSource.value,
+      appliedSelection: copySelection(appliedEntranceSelection.value),
+      resultIdentity: sourceIdentity,
+    }
+    const service = ensureAnalysis()
+    service.reset()
+    isApplyingEntranceSelection.value = true
+    needsLowConfidenceConfirmation.value = false
+    step.value = 'analyzing'
+    analysisStatus.value = 'running'
+    progress.value = null
+    result.value = null
+    analysisError.value = null
+
+    const completed = await service.analyze(decoded.matrix, {
+      pipeline: {
+        transform: snapshot,
+        manualEntrancePair: {
+          firstCandidateId: requestedSelection.startCandidateId,
+          secondCandidateId: requestedSelection.goalCandidateId,
+        },
+        gridConversion: {
+          allowLowConfidenceManualPair: allowLowConfidence,
+        },
+      },
+      resultDetail: 'preview',
+      onProgress: (update) => updateProgress(currentOperation, update),
+    })
+    if (
+      currentOperation !== operationId ||
+      sourceIdentity !== restoreState?.resultIdentity
+    ) {
+      return
+    }
+
+    isApplyingEntranceSelection.value = false
+    analysisStatus.value = service.status.value
+    if (completed?.status === 'success') {
+      result.value = completed
+      resultIdentity += 1
+      entranceSelectionSource.value = 'manual'
+      appliedEntranceSelection.value = { ...requestedSelection }
+      step.value = 'result'
+      restoreState = null
+      return
+    }
+    if (completed?.status === 'manual-input-required') {
+      result.value = completed
+      resultIdentity += 1
+      entranceSelectionSource.value = null
+      appliedEntranceSelection.value = null
+      step.value = 'result'
+      restoreState = null
+      return
+    }
+
+    const previous = restoreState
+    if (previous) {
+      result.value = previous.result
+      entranceSelectionSource.value = previous.source
+      appliedEntranceSelection.value = copySelection(
+        previous.appliedSelection,
+      )
+    }
+    analysisStatus.value = completed?.status === 'unsupported-topology'
+      ? 'unsupported-topology'
+      : 'failed'
+    analysisError.value = completed?.error
+      ? {
+          code: completed.error.code,
+          message: completed.error.message,
+        }
+      : service.error.value
+        ? {
+            code: service.error.value.code,
+            message: service.error.value.message,
+          }
+        : {
+            code: 'MAZE_IMPORT_MANUAL_SELECTION_FAILED',
+            message: '入口选择未能生成地图预览，请调整后重试。',
+          }
+    step.value = 'result'
+    restoreState = null
+  }
+
+  const setManualEntrance = (
+    role: EntranceRole,
+    candidateId: string,
+  ): void => {
+    if (!canSelectEntrances.value) return
+    const next = { ...manualSelection.value }
+    if (role === 'start') {
+      next.startCandidateId = candidateId
+      if (next.goalCandidateId === candidateId) next.goalCandidateId = null
+    } else {
+      next.goalCandidateId = candidateId
+      if (next.startCandidateId === candidateId) next.startCandidateId = null
+    }
+    manualSelection.value = next
+    needsLowConfidenceConfirmation.value = false
+  }
+
+  const clearManualEntranceSelection = (): void => {
+    manualSelection.value = EMPTY_SELECTION()
+    needsLowConfidenceConfirmation.value = false
+  }
+
+  const swapManualEntrances = (): void => {
+    manualSelection.value = swapSelection(manualSelection.value)
+    needsLowConfidenceConfirmation.value = false
+  }
+
+  const applyManualEntranceSelection = async (): Promise<void> => {
+    const summary = result.value?.entranceSelection
+    if (!summary || !canApplyManualSelection.value) return
+    if (selectionRequiresConfirmation(summary, manualSelection.value)) {
+      needsLowConfidenceConfirmation.value = true
+      return
+    }
+    await runManualAnalysis({ ...manualSelection.value }, false)
+  }
+
+  const confirmLowConfidenceSelection = async (): Promise<void> => {
+    const summary = result.value?.entranceSelection
+    if (
+      !summary ||
+      !needsLowConfidenceConfirmation.value ||
+      !canApplyManualSelection.value
+    ) {
+      return
+    }
+    needsLowConfidenceConfirmation.value = false
+    await runManualAnalysis({ ...manualSelection.value }, true)
+  }
+
+  const cancelLowConfidenceConfirmation = (): void => {
+    needsLowConfidenceConfirmation.value = false
+  }
+
+  const swapAppliedEntrances = async (): Promise<void> => {
+    const applied = appliedEntranceSelection.value
+    const summary = result.value?.entranceSelection
+    if (!applied || !summary || analysisStatus.value !== 'success') return
+    const swapped = swapSelection(applied)
+    const validation = validateManualEntranceSelection(swapped, summary)
+    if (!validation.valid) return
+    manualSelection.value = swapped
+    await runManualAnalysis(swapped, true)
   }
 
   const cancelAnalysis = (): void => {
     if (analysisStatus.value !== 'running') return
     operationId += 1
     analysis?.cancel()
+    if (isApplyingEntranceSelection.value && restoreState) {
+      result.value = restoreState.result
+      analysisStatus.value = restoreState.status
+      entranceSelectionSource.value = restoreState.source
+      appliedEntranceSelection.value = copySelection(
+        restoreState.appliedSelection,
+      )
+      progress.value = null
+      analysisError.value = null
+      step.value = 'result'
+      isApplyingEntranceSelection.value = false
+      restoreState = null
+      return
+    }
     clearResultState()
     analysisStatus.value = 'cancelled'
     analysisError.value = {
@@ -116,67 +504,12 @@ export function useMazeImportWizard(
       analysisStatus.value === 'running' ||
       result.value !== null ||
       step.value === 'result'
-    if (analysisStatus.value === 'running') {
-      cancelAnalysis()
-    } else {
-      analysis?.reset()
-      clearResultState()
-      analysisStatus.value = 'idle'
-    }
+    operationId += 1
+    if (analysisStatus.value === 'running') analysis?.cancel()
+    else analysis?.reset()
+    clearResultState()
+    analysisStatus.value = 'idle'
     if (hadCurrentAnalysis) isResultStale.value = true
-  }
-
-  const startAnalysis = async (): Promise<void> => {
-    if (!canAnalyze.value || analysisStatus.value === 'running') return
-    const decoded = raster.decodedImage.value
-    if (!decoded) return
-
-    const currentOperation = ++operationId
-    const transformSnapshot = Object.freeze({
-      rotation: raster.transformState.value.rotation,
-      flipHorizontal: raster.transformState.value.flipHorizontal,
-      flipVertical: raster.transformState.value.flipVertical,
-      invert: raster.transformState.value.invert,
-    })
-    const service = ensureAnalysis()
-    service.reset()
-    step.value = 'analyzing'
-    analysisStatus.value = 'running'
-    progress.value = null
-    result.value = null
-    analysisError.value = null
-    isResultStale.value = false
-
-    const completed = await service.analyze(decoded.matrix, {
-      pipeline: { transform: transformSnapshot },
-      resultDetail: 'preview',
-      onProgress: (update) => {
-        if (currentOperation !== operationId) return
-        const previous = progress.value?.progress ?? 0
-        progress.value = {
-          ...update,
-          progress: Math.max(previous, update.progress),
-        }
-      },
-    })
-    if (currentOperation !== operationId) return
-
-    analysisStatus.value = service.status.value
-    if (completed) {
-      result.value = completed
-      step.value = 'result'
-      return
-    }
-    analysisError.value = service.error.value
-      ? {
-          code: service.error.value.code,
-          message: service.error.value.message,
-        }
-      : {
-          code: 'MAZE_IMPORT_ANALYSIS_FAILED',
-          message: '迷宫识别未返回结果。',
-        }
-    step.value = service.status.value === 'cancelled' ? 'source' : 'result'
   }
 
   const returnToSource = (): void => {
@@ -233,13 +566,29 @@ export function useMazeImportWizard(
     raster,
     step: readonly(step),
     canAnalyze,
+    canSelectEntrances,
+    canApplyManualSelection,
+    isApplyingEntranceSelection: readonly(isApplyingEntranceSelection),
+    needsLowConfidenceConfirmation:
+      readonly(needsLowConfidenceConfirmation),
     isResultStale: readonly(isResultStale),
     analysisStatus: readonly(analysisStatus),
     progress: shallowReadonly(progress),
     result: shallowReadonly(result),
     analysisError: readonly(analysisError),
+    manualSelection: readonly(manualSelection),
+    manualSelectionValidation,
+    entranceSelectionSource: readonly(entranceSelectionSource),
+    appliedEntranceSelection: readonly(appliedEntranceSelection),
     startAnalysis,
     cancelAnalysis,
+    setManualEntrance,
+    clearManualEntranceSelection,
+    swapManualEntrances,
+    applyManualEntranceSelection,
+    confirmLowConfidenceSelection,
+    cancelLowConfidenceConfirmation,
+    swapAppliedEntrances,
     returnToSource,
     invalidateResult,
     resetWizard,
