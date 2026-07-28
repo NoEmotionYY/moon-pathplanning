@@ -1,3 +1,5 @@
+import { MAP_SIZE_LIMITS } from './mapLimits'
+
 export const WORLD_CHUNK_SIZE = 32
 
 // Development-time guards. These are deliberately smaller than JavaScript's
@@ -25,4 +27,13 @@ export const SPARSE_MAP_PLANNING_HINT_LIMITS = {
   maximumExpandedNodes: 2_000_000,
   minimumTimeoutMs: 100,
   maximumTimeoutMs: 120_000,
+} as const
+
+export const SPARSE_PLANNING_WINDOW_LIMITS = {
+  minimumDimension: MAP_SIZE_LIMITS.min,
+  recommendedMaximumDimension: MAP_SIZE_LIMITS.recommendedMax,
+  hardMaximumDimension: MAP_SIZE_LIMITS.hardMax,
+  hardMaximumCellCount: MAP_SIZE_LIMITS.hardMax * MAP_SIZE_LIMITS.hardMax,
+  defaultMargin: 16,
+  maximumMargin: 4096,
 } as const
