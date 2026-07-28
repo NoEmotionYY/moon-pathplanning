@@ -1,5 +1,6 @@
 import { computed, getCurrentInstance, onBeforeUnmount } from 'vue'
 import { usePlannerStore } from '@/stores/planner'
+import { playbackFrameController } from '@/services/playbackFrameController'
 
 const BASE_EVENTS_PER_SECOND = 18
 const MAX_EVENTS_PER_FRAME = 120
@@ -21,11 +22,13 @@ export const usePlayback = () => {
     return Math.max(0, (planner.currentEventIndex + 1) / planner.traceTotalSteps)
   })
 
-  const stopFrame = () => {
+  const stopFrame = (): boolean => {
+    const hadFrame = animationFrame !== null
     if (animationFrame !== null) cancelAnimationFrame(animationFrame)
     animationFrame = null
     lastTimestamp = 0
     accumulatedMs = 0
+    return hadFrame
   }
 
   const tick = (timestamp: number) => {
@@ -105,7 +108,13 @@ export const usePlayback = () => {
     planner.playbackSpeed = speed
   }
 
-  if (getCurrentInstance()) onBeforeUnmount(stopFrame)
+  const unregisterFrameStopper = playbackFrameController.register(stopFrame)
+  const dispose = () => {
+    stopFrame()
+    unregisterFrameStopper()
+  }
+
+  if (getCurrentInstance()) onBeforeUnmount(dispose)
 
   return {
     currentEventIndex: computed(() => planner.currentEventIndex),
@@ -122,5 +131,6 @@ export const usePlayback = () => {
     stepBackward,
     seek,
     setSpeed,
+    dispose,
   }
 }

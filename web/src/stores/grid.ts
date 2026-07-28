@@ -1,6 +1,7 @@
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import { clampPoint, keyToPoint, pointKey, samePoint, toTuple, tupleKey } from '@/utils/coordinates'
+import type { GridMapImportState } from '@/types/mapImportTransaction'
 import type {
   GridMapDocument,
   GridTool,
@@ -9,95 +10,134 @@ import type {
   TerrainCost,
 } from '@/types/grid'
 
+interface GridState {
+  width: number
+  height: number
+  start: Point
+  goal: Point
+  movement: MovementMode
+  obstacles: string[]
+  terrain: Record<string, number>
+  dirty: boolean
+  version: number
+}
+
+function createInitialState(version = 0): GridState {
+  return {
+    width: 20,
+    height: 20,
+    start: { x: 1, y: 1 },
+    goal: { x: 18, y: 18 },
+    movement: 'four_way',
+    obstacles: [],
+    terrain: {},
+    dirty: false,
+    version,
+  }
+}
+
 export const useGridStore = defineStore('grid', () => {
-  const width = ref(20)
-  const height = ref(20)
-  const start = ref<Point>({ x: 1, y: 1 })
-  const goal = ref<Point>({ x: 18, y: 18 })
-  const movement = ref<MovementMode>('four_way')
-  const obstacles = ref<string[]>([])
-  const terrain = ref<Record<string, number>>({})
+  const state = shallowRef<GridState>(createInitialState())
+  const width = computed(() => state.value.width)
+  const height = computed(() => state.value.height)
+  const start = computed(() => state.value.start)
+  const goal = computed(() => state.value.goal)
+  const movement = computed({
+    get: () => state.value.movement,
+    set: (value: MovementMode) => {
+      state.value = { ...state.value, movement: value }
+    },
+  })
+  const obstacles = computed(() => state.value.obstacles)
+  const terrain = computed(() => state.value.terrain)
+  const dirty = computed(() => state.value.dirty)
+  const version = computed(() => state.value.version)
   const activeTool = ref<GridTool>('obstacle')
   const terrainCost = ref<TerrainCost>(2)
   const hoveredCell = ref<Point | null>(null)
-  const dirty = ref(false)
-  const version = ref(0)
 
-  const obstacleSet = computed(() => new Set(obstacles.value))
+  const obstacleSet = computed(() => new Set(state.value.obstacles))
 
-  function markChanged(): void {
-    dirty.value = true
-    version.value += 1
+  function replaceChangedState(next: Omit<GridState, 'dirty' | 'version'>): void {
+    state.value = {
+      ...next,
+      dirty: true,
+      version: state.value.version + 1,
+    }
   }
 
   function isInBounds(point: Point): boolean {
-    return point.x >= 0 && point.y >= 0 && point.x < width.value && point.y < height.value
+    return point.x >= 0 && point.y >= 0 && point.x < state.value.width && point.y < state.value.height
   }
 
   function setObstacle(point: Point, enabled = true): boolean {
-    if (!isInBounds(point) || samePoint(point, start.value) || samePoint(point, goal.value)) {
+    const current = state.value
+    if (!isInBounds(point) || samePoint(point, current.start) || samePoint(point, current.goal)) {
       return false
     }
     const key = pointKey(point)
     const exists = obstacleSet.value.has(key)
     if (exists === enabled) return false
-    obstacles.value = enabled
-      ? [...obstacles.value, key]
-      : obstacles.value.filter((item) => item !== key)
-    if (enabled && key in terrain.value) {
-      const nextTerrain = { ...terrain.value }
+    const nextObstacles = enabled
+      ? [...current.obstacles, key]
+      : current.obstacles.filter((item) => item !== key)
+    let nextTerrain = current.terrain
+    if (enabled && key in current.terrain) {
+      nextTerrain = { ...current.terrain }
       delete nextTerrain[key]
-      terrain.value = nextTerrain
     }
-    markChanged()
+    replaceChangedState({ ...current, obstacles: nextObstacles, terrain: nextTerrain })
     return true
   }
 
   function erasePoint(point: Point): boolean {
     if (!isInBounds(point)) return false
+    const current = state.value
     const key = pointKey(point)
     const hadObstacle = obstacleSet.value.has(key)
-    const hadTerrain = key in terrain.value
+    const hadTerrain = key in current.terrain
     if (!hadObstacle && !hadTerrain) return false
-    if (hadObstacle) obstacles.value = obstacles.value.filter((item) => item !== key)
+    const nextObstacles = hadObstacle
+      ? current.obstacles.filter((item) => item !== key)
+      : current.obstacles
+    let nextTerrain = current.terrain
     if (hadTerrain) {
-      const nextTerrain = { ...terrain.value }
+      nextTerrain = { ...current.terrain }
       delete nextTerrain[key]
-      terrain.value = nextTerrain
     }
-    markChanged()
+    replaceChangedState({ ...current, obstacles: nextObstacles, terrain: nextTerrain })
     return true
   }
 
   function setTerrain(point: Point, cost = terrainCost.value): boolean {
+    const current = state.value
     const key = pointKey(point)
     if (
       !isInBounds(point) ||
-      samePoint(point, start.value) ||
-      samePoint(point, goal.value) ||
+      samePoint(point, current.start) ||
+      samePoint(point, current.goal) ||
       obstacleSet.value.has(key) ||
-      terrain.value[key] === cost
+      current.terrain[key] === cost
     ) {
       return false
     }
-    terrain.value = { ...terrain.value, [key]: cost }
-    markChanged()
+    replaceChangedState({ ...current, terrain: { ...current.terrain, [key]: cost } })
     return true
   }
 
   function setStart(point: Point): boolean {
+    const current = state.value
     const key = pointKey(point)
-    if (!isInBounds(point) || obstacleSet.value.has(key) || samePoint(point, start.value)) return false
-    start.value = { ...point }
-    markChanged()
+    if (!isInBounds(point) || obstacleSet.value.has(key) || samePoint(point, current.start)) return false
+    replaceChangedState({ ...current, start: { ...point } })
     return true
   }
 
   function setGoal(point: Point): boolean {
+    const current = state.value
     const key = pointKey(point)
-    if (!isInBounds(point) || obstacleSet.value.has(key) || samePoint(point, goal.value)) return false
-    goal.value = { ...point }
-    markChanged()
+    if (!isInBounds(point) || obstacleSet.value.has(key) || samePoint(point, current.goal)) return false
+    replaceChangedState({ ...current, goal: { ...point } })
     return true
   }
 
@@ -110,66 +150,96 @@ export const useGridStore = defineStore('grid', () => {
   }
 
   function resize(nextWidth: number, nextHeight: number): void {
-    width.value = nextWidth
-    height.value = nextHeight
-    start.value = clampPoint(start.value, nextWidth, nextHeight)
-    goal.value = clampPoint(goal.value, nextWidth, nextHeight)
-    obstacles.value = obstacles.value.filter((key) => {
+    const current = state.value
+    const nextStart = clampPoint(current.start, nextWidth, nextHeight)
+    const nextGoal = clampPoint(current.goal, nextWidth, nextHeight)
+    const nextObstacles = current.obstacles.filter((key) => {
       const point = keyToPoint(key)
-      return point.x < nextWidth && point.y < nextHeight && !samePoint(point, start.value) && !samePoint(point, goal.value)
+      return point.x < nextWidth && point.y < nextHeight && !samePoint(point, nextStart) && !samePoint(point, nextGoal)
     })
-    terrain.value = Object.fromEntries(
-      Object.entries(terrain.value).filter(([key]) => {
+    const nextTerrain = Object.fromEntries(
+      Object.entries(current.terrain).filter(([key]) => {
         const point = keyToPoint(key)
         return point.x < nextWidth && point.y < nextHeight
       }),
     )
-    markChanged()
+    replaceChangedState({
+      ...current,
+      width: nextWidth,
+      height: nextHeight,
+      start: nextStart,
+      goal: nextGoal,
+      obstacles: nextObstacles,
+      terrain: nextTerrain,
+    })
   }
 
   function clearObstacles(): void {
-    if (!obstacles.value.length) return
-    obstacles.value = []
-    markChanged()
+    const current = state.value
+    if (!current.obstacles.length) return
+    replaceChangedState({ ...current, obstacles: [] })
   }
 
   function reset(): void {
-    width.value = 20
-    height.value = 20
-    start.value = { x: 1, y: 1 }
-    goal.value = { x: 18, y: 18 }
-    movement.value = 'four_way'
-    obstacles.value = []
-    terrain.value = {}
+    state.value = {
+      ...createInitialState(state.value.version + 1),
+      dirty: true,
+    }
     activeTool.value = 'obstacle'
     hoveredCell.value = null
-    markChanged()
+  }
+
+  function applyGridMapDocument(
+    document: GridMapDocument,
+    options: { incrementVersion?: boolean; dirty?: boolean } = {},
+  ): void {
+    state.value = {
+      width: document.width,
+      height: document.height,
+      start: { x: document.start[0], y: document.start[1] },
+      goal: { x: document.goal[0], y: document.goal[1] },
+      movement: document.movement,
+      obstacles: document.obstacles.map(tupleKey),
+      terrain: Object.fromEntries(
+        document.terrain.map((cell) => [tupleKey(cell.point), cell.cost]),
+      ),
+      dirty: options.dirty ?? false,
+      version: state.value.version + (options.incrementVersion ?? true ? 1 : 0),
+    }
+  }
+
+  function restoreGridMapSnapshot(snapshot: GridMapImportState): void {
+    const document = snapshot.document
+    state.value = {
+      width: document.width,
+      height: document.height,
+      start: { x: document.start[0], y: document.start[1] },
+      goal: { x: document.goal[0], y: document.goal[1] },
+      movement: document.movement,
+      obstacles: document.obstacles.map(tupleKey),
+      terrain: Object.fromEntries(
+        document.terrain.map((cell) => [tupleKey(cell.point), cell.cost]),
+      ),
+      dirty: snapshot.dirty,
+      version: snapshot.mapVersion,
+    }
   }
 
   function loadDocument(document: GridMapDocument): void {
-    width.value = document.width
-    height.value = document.height
-    start.value = { x: document.start[0], y: document.start[1] }
-    goal.value = { x: document.goal[0], y: document.goal[1] }
-    movement.value = document.movement
-    obstacles.value = document.obstacles.map(tupleKey)
-    terrain.value = Object.fromEntries(
-      document.terrain.map((cell) => [tupleKey(cell.point), cell.cost]),
-    )
-    dirty.value = false
-    version.value += 1
+    applyGridMapDocument(document)
   }
 
   function toDocument(): GridMapDocument {
+    const current = state.value
     return {
       format: 'moon-pathplanning.grid.v1',
-      width: width.value,
-      height: height.value,
-      start: toTuple(start.value),
-      goal: toTuple(goal.value),
-      movement: movement.value,
-      obstacles: obstacles.value.map((key) => toTuple(keyToPoint(key))),
-      terrain: Object.entries(terrain.value).map(([key, cost]) => ({
+      width: current.width,
+      height: current.height,
+      start: toTuple(current.start),
+      goal: toTuple(current.goal),
+      movement: current.movement,
+      obstacles: current.obstacles.map((key) => toTuple(keyToPoint(key))),
+      terrain: Object.entries(current.terrain).map(([key, cost]) => ({
         point: toTuple(keyToPoint(key)),
         cost,
       })),
@@ -200,6 +270,8 @@ export const useGridStore = defineStore('grid', () => {
     resize,
     clearObstacles,
     reset,
+    applyGridMapDocument,
+    restoreGridMapSnapshot,
     loadDocument,
     toDocument,
   }

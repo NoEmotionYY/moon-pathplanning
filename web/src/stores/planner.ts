@@ -9,6 +9,7 @@ import type {
 } from '@/types/planner'
 import type { PlaybackStatus, SearchEvent, TraceMode } from '@/types/trace'
 import type { PointTuple } from '@/types/grid'
+import type { PlannerImportState } from '@/types/mapImportTransaction'
 
 export const usePlannerStore = defineStore('planner', () => {
   const selectedAlgorithm = ref<AlgorithmId>('astar')
@@ -35,6 +36,8 @@ export const usePlannerStore = defineStore('planner', () => {
   const traceRequestId = ref<string | null>(null)
   const traceMapVersion = ref<number | null>(null)
   const traceAlgorithm = ref<AlgorithmId | null>(null)
+  const plannerStartsBlocked = ref(false)
+  const requestGeneration = ref(0)
   const cancelledRequestIds = new Set<string>()
 
   function clearPlaybackCells(): void {
@@ -58,7 +61,8 @@ export const usePlannerStore = defineStore('planner', () => {
     clearPlaybackCells()
   }
 
-  function begin(requestId: string, mapVersion: number, algorithm: AlgorithmId): void {
+  function begin(requestId: string, mapVersion: number, algorithm: AlgorithmId): boolean {
+    if (plannerStartsBlocked.value) return false
     if (currentRequestId.value) cancelledRequestIds.add(currentRequestId.value)
     clearTrace()
     currentRequestId.value = requestId
@@ -71,6 +75,7 @@ export const usePlannerStore = defineStore('planner', () => {
     result.value = null
     executionTime.value = null
     resultVersion.value = null
+    return true
   }
 
   function requestMatches(
@@ -140,6 +145,70 @@ export const usePlannerStore = defineStore('planner', () => {
   function cancelRequest(requestId: string): void {
     cancelledRequestIds.add(requestId)
     if (currentRequestId.value === requestId) currentRequestId.value = null
+  }
+
+  function setPlannerStartsBlocked(blocked: boolean): void {
+    plannerStartsBlocked.value = blocked
+  }
+
+  function invalidateRequestsForImport(): string | null {
+    const requestId = currentRequestId.value
+    if (requestId) cancelledRequestIds.add(requestId)
+    currentRequestId.value = null
+    traceRequestId.value = null
+    traceMapVersion.value = null
+    traceAlgorithm.value = null
+    requestGeneration.value += 1
+    if (status.value === 'running') status.value = 'idle'
+    return requestId
+  }
+
+  function clearForImportedMap(options: {
+    preserveSelectedAlgorithm: boolean
+    preservePlaybackSpeed: boolean
+  }): void {
+    if (!options.preserveSelectedAlgorithm) selectedAlgorithm.value = 'astar'
+    if (!options.preservePlaybackSpeed) playbackSpeed.value = 1
+    result.value = null
+    error.value = null
+    executionTime.value = null
+    resultVersion.value = null
+    currentRequestId.value = null
+    status.value = 'idle'
+    clearTrace()
+  }
+
+  function restorePlannerImportState(snapshot: PlannerImportState): void {
+    if (snapshot.currentRequestId) cancelledRequestIds.add(snapshot.currentRequestId)
+    selectedAlgorithm.value = snapshot.selectedAlgorithm
+    result.value = snapshot.result
+    error.value = snapshot.error
+    executionTime.value = snapshot.executionTime
+    resultVersion.value = snapshot.resultVersion
+    currentRequestId.value = null
+    status.value = 'idle'
+    requestGeneration.value = Math.max(
+      requestGeneration.value,
+      snapshot.requestGeneration + 1,
+    )
+    traceSupported.value = snapshot.trace.supported
+    traceMode.value = snapshot.trace.mode
+    traceEvents.value = snapshot.trace.events
+    traceTotalSteps.value = snapshot.trace.totalSteps
+    traceReceivedSteps.value = snapshot.trace.receivedSteps
+    traceRequestId.value = snapshot.trace.requestId
+    traceMapVersion.value = snapshot.trace.mapVersion
+    traceAlgorithm.value = snapshot.trace.algorithm
+    playbackStatus.value =
+      snapshot.playback.status === 'playing'
+        ? 'paused'
+        : snapshot.playback.status
+    playbackSpeed.value = snapshot.playback.speed
+    currentEventIndex.value = snapshot.playback.currentEventIndex
+    visitedCells.value = new Set(snapshot.playback.visitedCells)
+    expandedCells.value = new Set(snapshot.playback.expandedCells)
+    frontierCells.value = new Set(snapshot.playback.frontierCells)
+    currentCell.value = snapshot.playback.currentCell
   }
 
   function applyTraceIndex(index: number): void {
@@ -222,11 +291,17 @@ export const usePlannerStore = defineStore('planner', () => {
     traceRequestId,
     traceMapVersion,
     traceAlgorithm,
+    plannerStartsBlocked,
+    requestGeneration,
     begin,
     appendTraceBatch,
     complete,
     fail,
     cancelRequest,
+    setPlannerStartsBlocked,
+    invalidateRequestsForImport,
+    clearForImportedMap,
+    restorePlannerImportState,
     applyTraceIndex,
     invalidateForMapChange,
     clearTrace,

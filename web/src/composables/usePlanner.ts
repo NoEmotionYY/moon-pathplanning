@@ -16,7 +16,7 @@ export const usePlanner = () => {
     const mapVersion = grid.version
     const algorithm = planner.selectedAlgorithm
     const startedAt = performance.now()
-    planner.begin(requestId, mapVersion, algorithm)
+    if (!planner.begin(requestId, mapVersion, algorithm)) return
 
     try {
       const result = await plannerWorkerClient.request(

@@ -86,6 +86,14 @@ export class PlannerWorkerClient {
     this.disposeWorker()
   }
 
+  hardCancel(requestId: string | null = null): void {
+    if (requestId && this.pending.has(requestId)) {
+      this.worker?.postMessage({ type: 'cancel', requestId })
+    }
+    this.rejectAll('请求已取消')
+    this.disposeWorker()
+  }
+
   private rejectAll(message: string): void {
     for (const pending of this.pending.values()) {
       window.clearTimeout(pending.timeout)
