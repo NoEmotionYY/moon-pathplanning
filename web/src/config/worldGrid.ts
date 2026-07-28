@@ -29,6 +29,12 @@ export const SPARSE_MAP_PLANNING_HINT_LIMITS = {
   maximumTimeoutMs: 120_000,
 } as const
 
+export const SPARSE_PLANNER_EXECUTION_LIMITS = {
+  defaultTimeoutMs: 20_000,
+  minimumTimeoutMs: SPARSE_MAP_PLANNING_HINT_LIMITS.minimumTimeoutMs,
+  maximumTimeoutMs: SPARSE_MAP_PLANNING_HINT_LIMITS.maximumTimeoutMs,
+} as const
+
 export const SPARSE_PLANNING_WINDOW_LIMITS = {
   minimumDimension: MAP_SIZE_LIMITS.min,
   recommendedMaximumDimension: MAP_SIZE_LIMITS.recommendedMax,
